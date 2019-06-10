@@ -118,7 +118,8 @@ class StatsService(Service):
         '''
         Starts Stats service
         '''
-        log.info("starting Stats Service. Window  = {w} samples and T = {t} secs", w=self.options['size'], t=self.options['period'])
+        log.info("starting Stats Service: Window Size= {w} samples, T = {t} secs, Rounds = {r}", 
+            w=self.options['size'], t=self.options['period'],r=self.options['rounds'])
         Service.startService(self)
         self.statTask = task.LoopingCall(self._schedule)
         self.statTask.start(self.period, now=False)  # call every T seconds

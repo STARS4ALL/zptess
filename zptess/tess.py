@@ -231,7 +231,7 @@ class TESSService(MultiService):
         stats['old_zp']  = self.old_zp
         # transform dictionary into readable header columns for CSV export
         oldkeys = ['tess', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'old_zp', 'mac', 'tstamp', 'author', 'updated']
-        newkeys = ['Name', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP'.'OLD ZP', 'Station MAC', 'Timestamp', 'Author', 'Updated']
+        newkeys = ['Name', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'OLD ZP', 'Station MAC', 'Timestamp', 'Author', 'Updated']
         for old,new in zip(oldkeys,newkeys):
             stats[new] = stats.pop(old)
         # CSV file generation

@@ -31,9 +31,9 @@ from twisted.logger            import Logger, LogLevel
 from twisted.internet          import task, reactor, defer
 from twisted.internet.defer    import Deferred, inlineCallbacks, returnValue
 from twisted.internet.threads  import deferToThread
-from twisted.internet.protocol import Protocol
-from twisted.web.client        import Agent
-from twisted.web.http_headers  import Headers
+#from twisted.internet.protocol import Protocol
+#from twisted.web.client        import Agent
+#from twisted.web.http_headers  import Headers
 
 #--------------
 # local imports
@@ -74,27 +74,6 @@ REGEXP = {
 # -----------------------
 
 log = Logger(namespace='zptess')
-
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------    
-# -----------------------------------------------------------------------------  
-
-class HTMLProtocol(Protocol):
-    def __init__(self, deferred):
-        self.deferred  = deferred
-        self.remaining = 1024 * 10  # Bytes to receive
-        self.data = []
-
-    def dataReceived(self, bytes):
-        if self.remaining:
-            display = bytes[:self.remaining]
-            log.debug('Some data received:')
-            log.debug(display)
-            self.remaining -= len(display)
-
-    def connectionLost(self, reason):
-        log.debug('Finished receiving body: {txt}', txt=reason.getErrorMessage())
-        self.deferred.callback(None)
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------    
@@ -222,7 +201,7 @@ class TESSService(MultiService):
         '''Contact the TESS-W web server and get its name, MAC & current ZP'''
         try:
             log.debug("requesting URL {url}", url=self.options["state_url"])
-            resp = requests.get(self.options["state_url"], timeout=(2, 5))
+            resp = requests.get(self.options["state_url"], timeout=(2,5))
             resp.raise_for_status()
             self.text  = resp.text
         except Exception as e:
@@ -269,7 +248,7 @@ class TESSService(MultiService):
         try:
             url = "{0:s}?cons={1:0.2f}".format(self.options['save_url'], zp)
             log.debug("requesting URL {url}", url=url)
-            resp = requests.get(url, timeout=(2, 5))
+            resp = requests.get(url, timeout=(2,5))
             resp.raise_for_status()
         except Exception as e:
             log.error("{e}",e=e)

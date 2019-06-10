@@ -215,8 +215,8 @@ class TESSService(MultiService):
             self.tess_mac = matchobj.groups(1)[0]
             log.info("[TEST] TESS-W MAC : {name}", name=self.tess_mac)
             matchobj = REGEXP['zp'].search(self.text)
-            self.tess_old_zp = float(matchobj.groups(1)[0])
-            log.info("[TEST] TESS-W ZP  : {name} (old)", name=self.tess_old_zp)
+            self.old_zp = float(matchobj.groups(1)[0])
+            log.info("[TEST] TESS-W ZP  : {name} (old)", name=self.old_zp)
 
 
     def _exportCSV(self, stats):
@@ -228,9 +228,10 @@ class TESSService(MultiService):
         stats['author']  = self.author
         stats['tess']    = self.tess_name
         stats['updated'] = self.update
+        stats['old_zp']  = self.old_zp
         # transform dictionary into readable header columns for CSV export
-        oldkeys = ['tess', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'mac', 'tstamp', 'author', 'updated']
-        newkeys = ['Name', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'Station MAC', 'Timestamp', 'Author', 'Updated']
+        oldkeys = ['tess', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'old_zp', 'mac', 'tstamp', 'author', 'updated']
+        newkeys = ['Name', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP'.'OLD ZP', 'Station MAC', 'Timestamp', 'Author', 'Updated']
         for old,new in zip(oldkeys,newkeys):
             stats[new] = stats.pop(old)
         # CSV file generation

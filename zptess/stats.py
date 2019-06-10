@@ -156,7 +156,7 @@ class StatsService(Service):
         log.info("Best Ref  Freq list is {brf}",brf=self.best['refFreq'])
         log.info("Best Test Freq list is {btf}",btf=self.best['testFreq'])
         final = dict()
-        old_zp = float(self.parent.tess_old_zp)
+        old_zp = float(self.parent.old_zp)
         try:
             final['zp']       = statistics.mode(self.best['zp'])
         except statistics.StatisticsError as e:

@@ -220,15 +220,16 @@ class StatsService(Service):
         try:
             log.debug("queue = {q}",q=l)
             central = statistics.mean(l) if self.central == "mean" else statistics.median(l)
-            clabel = "Mean" if self.central == "mean" else "Median"
-            stddev = statistics.stdev(l, central)
-            start =  queue[0]['tstamp'].strftime("%H:%M:%S")
-            end   =  queue[-1]['tstamp'].strftime("%H:%M:%S")
+            clabel  = "Mean" if self.central == "mean" else "Median"
+            stddev  = statistics.stdev(l, central)
+            start   = queue[0]['tstamp'].strftime("%H:%M:%S")
+            end     = queue[-1]['tstamp'].strftime("%H:%M:%S")
+            window  = (queue[-1]['tstamp'] - queue[-1]['tstamp']).total_seconds()
         except statistics.StatisticsError as e:
             log.error("Fallo estadistico: {e}",e=e)
         else: 
-            log.info("[{label}] {name:10s} ({start}-{end}) => {clabel} = {central:0.3f} Hz, StDev = {stddev:0.2e} Hz",
-                name=name, label=label, start=start, end=end, clabel=clabel, central=central, stddev=stddev)
+            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s] => {clabel} = {central:0.3f} Hz, StDev = {stddev:0.2e} Hz",
+                name=name, label=label, start=start, end=end, clabel=clabel, central=central, stddev=stddev, w=window)
             return central, stddev
 
 

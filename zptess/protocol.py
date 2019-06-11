@@ -139,7 +139,7 @@ class TESSProtocol(LineOnlyReceiver):
 
 
     def lineReceived(self, line):
-        now = datetime.datetime.utcnow() + datetime.timedelta(seconds=0.5)
+        now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         log.debug("<== REF [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
@@ -182,27 +182,21 @@ class TESSProtocol(LineOnlyReceiver):
         ur, matchobj = match_unsolicited(line)
         if not ur:
             return False
+        reading = {}
+        reading['tbox']   = float(matchobj.group(2))/100.0
+        reading['tsky']   = float(matchobj.group(3))/100.0
+        reading['zp']     = float(matchobj.group(4))/100.0
+        reading['tstamp'] = tstamp
         if ur['name'] == 'Hz reading':
-            reading = {}
             reading['freq']   = float(matchobj.group(1))/1.0
-            reading['tbox']   = float(matchobj.group(2))/100.0
-            reading['tsky']   = float(matchobj.group(3))/100.0
-            reading['zp']     = float(matchobj.group(4))/100.0
-            reading['tstamp'] = tstamp
-            for callback in self._onReading:
-                callback(reading)
-            return True
-        if ur['name'] == 'mHz reading':
-            reading = {}
+        elif ur['name'] == 'mHz reading':
             reading['freq'] = float(matchobj.group(1))/1000.0
-            reading['tbox']   = float(matchobj.group(2))/100.0
-            reading['tsky']   = float(matchobj.group(3))/100.0
-            reading['zp']     = float(matchobj.group(4))/100.0
-            reading['tstamp'] = tstamp
-            for callback in self._onReading:
-                callback(reading)
-            return True
-        return False
+        else:
+            return False  
+        for callback in self._onReading:
+            callback(reading)
+        return True
+        
         
 #---------------------------------------------------------------------
 # --------------------------------------------------------------------

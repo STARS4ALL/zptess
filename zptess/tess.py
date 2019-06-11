@@ -98,6 +98,7 @@ class TESSService(MultiService):
         cmdline_options  = cmdline()
         self.update      = cmdline_options.update
         self.author      = cmdline_options.author
+        self.dry_run     = cmdline_options.dry_run
         self.serialService = None
         self.statsService  = None
         self.tcpService    = None
@@ -129,14 +130,17 @@ class TESSService(MultiService):
             name=self.name,
             version=__version__, 
             tw_version=__twisted_version__)
+        self._getTessInfo()
+        if self.dry_run:
+            log.info('Dry run. Will stop here ...') 
+            reactor.callLater(0,reactor.stop)
+            return
         self.serialService  = self.getServiceNamed(SerialService.NAME)
         self.serialService.setFactory(self.factory) 
         self.tcpService   = self.getServiceNamed(MyTCPService.NAME)
         self.tcpService.setFactory(self.factory) 
         self.statsService = self.getServiceNamed(StatsService.NAME)
-        self._getTessInfo()
         self.statsService.testname = self.tess_name
-        
         try:
             self.serialService.startService()
             self.statsService.startService()

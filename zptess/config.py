@@ -63,6 +63,7 @@ def cmdline():
     parser = argparse.ArgumentParser(prog='zptess')
     parser.add_argument('--version',        action='version', version='{0}'.format(VERSION_STRING))
     parser.add_argument('-k' , '--console', action='store_true', help='log to console')
+    parser.add_argument('-d' , '--dry-run', action='store_true', help='connect to TEST TESS-W, display info and exit')
     parser.add_argument('-u' , '--update',  action='store_true', help='automatically update TESS-W with new calibrated ZP')
     parser.add_argument('-a' , '--author',  type=str, required=True, help='person performing the calibration process')
     parser.add_argument('-c' , '--config',  type=str,  default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')

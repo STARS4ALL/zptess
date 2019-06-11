@@ -224,7 +224,7 @@ class StatsService(Service):
             stddev  = statistics.stdev(l, central)
             start   = queue[0]['tstamp'].strftime("%H:%M:%S")
             end     = queue[-1]['tstamp'].strftime("%H:%M:%S")
-            window  = (queue[-1]['tstamp'] - queue[-1]['tstamp']).total_seconds()
+            window  = (queue[-1]['tstamp'] - queue[0]['tstamp']).total_seconds()
         except statistics.StatisticsError as e:
             log.error("Fallo estadistico: {e}",e=e)
         else: 

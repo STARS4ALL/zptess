@@ -110,6 +110,7 @@ class StatsService(Service):
         Service.startService(self)
         self.statTask = task.LoopingCall(self._schedule)
         self.statTask.start(self.period, now=False)  # call every T seconds
+        self.photomService = self.parent.getServiceNamed('test')
 
        
     def stopService(self):
@@ -130,12 +131,12 @@ class StatsService(Service):
             self.accumulateRounds()
         else:
             self.accumulateRounds()
-            self.parent.onStatsComplete(self.choose())
+            self.onStatsComplete(self.choose())
 
     
-    # ----------------------
-    # Other Helper functions
-    # ----------------------
+    # ---------------------------
+    # Statistics Helper functions
+    # ----------------------------
 
     def accumulateRounds(self):
         zpc = self.options['zp_calib']
@@ -224,6 +225,63 @@ class StatsService(Service):
 
 
 
+    # ----------------------
+    # Other Helper functions
+    # ----------------------
+
+    def _exportCSV(self, stats):
+        '''Exports summary statistics to a common CSV file'''
+        log.debug("Appending to CSV file {file}",file=self.options['csv_file'])
+        # Adding metadata to the estimation
+        stats['mac']     = self.tess_mac    # Is it station or AP MAC ?????
+        stats['tstamp']  = (datetime.datetime.utcnow() + datetime.timedelta(seconds=0.5)).strftime(TSTAMP_FORMAT)
+        stats['author']  = self.author
+        stats['tess']    = self.tess_name
+        stats['updated'] = self.update
+        stats['old_zp']  = self.old_zp
+        # transform dictionary into readable header columns for CSV export
+        oldkeys = ['tess', 'tstamp', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'mac', 'old_zp', 'author', 'updated']
+        newkeys = ['Name', 'Timestamp', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'Station MAC', 'OLD ZP', 'Author', 'Updated']
+        for old,new in zip(oldkeys,newkeys):
+            stats[new] = stats.pop(old)
+        # CSV file generation
+        writeheader = not os.path.exists(self.options['csv_file'])
+        with open(self.options['csv_file'], mode='a+') as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=newkeys, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            if writeheader:
+                writer.writeheader()
+            writer.writerow(stats)
+        log.info("updated CSV file {file}",file=self.options['csv_file'])
+
+
+    def _flashZeroPoint(self, zp):
+        '''Flash new ZP. Synchronous request to be executed in a separate thread'''
+        try:
+            url = "{0:s}?cons={1:0.2f}".format(self.options['save_url'], zp)
+            log.debug("requesting URL {url}", url=url)
+            resp = requests.get(url, timeout=(2,5))
+            resp.raise_for_status()
+        except Exception as e:
+            log.error("{e}",e=e)
+        else:
+            matchobj = REGEXP['flash'].search(self.text)
+            if matchobj:
+                flashed_zp = float(matchobj.groups(1)[0])
+                log.info("Flashed ZP of {tess} is {fzp}", tess=self.tess_name, fzp=flashed_zp)
+
+    @inlineCallbacks
+    def onStatsComplete(self, stats):
+        yield self.stopService()
+        if self.update:
+            log.info("updating {tess} ZP to {zp}", tess=self.tess_name, zp=stats['zp'])
+            # This should not be synchronous, but I could not make it work either with
+            # the Twisted Agent or even deferring to thread
+            self._flashZeroPoint(stats['zp'])   
+        else:
+            log.info("skipping updating of {tess} ZP",tess=self.tess_name)
+
+        yield deferToThread(self._exportCSV, stats)
+        yield self.stopService()
 
     
 

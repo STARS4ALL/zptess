@@ -147,9 +147,9 @@ class TESSProtocol(LineOnlyReceiver):
         self.nunknown += 1
         #log.warn("Unknown/Unexpected message {line}", line=line)
 
-    # ================
+    # =================
     # TESS Protocol API
-    # ================
+    # =================
 
 
     def setReadingCallback(self, callback):
@@ -166,6 +166,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.nresponse = 0
         self.nunsolici = 0
         self.nunknown  = 0
+
 
     # --------------
     # Helper methods

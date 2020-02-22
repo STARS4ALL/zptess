@@ -35,7 +35,4 @@ PY3 = sys.version_info[0] == 3
 # -----------------------
 
 __version__ = get_versions()['version']
-
-
-
 del get_versions

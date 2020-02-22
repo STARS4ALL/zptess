@@ -22,7 +22,7 @@ from twisted.application.service import IService
 # local imports
 # -------------
 
-from zptess  import __version__
+from zptess             import __version__
 from zptess.application import application
 from zptess.logger      import sysLogInfo
 

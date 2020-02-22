@@ -28,8 +28,6 @@ from twisted.protocols.basic      import LineOnlyReceiver
 # local imports
 # -------------
 
-from zptess.logger   import setLogLevel
-from zptess.utils    import chop
 
 # ----------------
 # Module constants
@@ -40,11 +38,11 @@ from zptess.utils    import chop
 UNSOLICITED_RESPONSES = (
     {
         'name'    : 'Hz reading',
-        'pattern' : '^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'pattern' : r'^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
     {
         'name'    : 'mHz reading',
-        'pattern' : '^<fm (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'pattern' : r'^<fm (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
     
 )
@@ -109,7 +107,7 @@ class TESSProtocolFactory(ClientFactory):
         log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
 
     def clientConnectionFailed(self, connector, reason):
-        log.febug('Factory: Connection failed. Reason: {reason}', reason=reason)
+        log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -128,7 +126,7 @@ class TESSProtocol(LineOnlyReceiver):
     def __init__(self):
         '''Sets the delimiter to the closihg parenthesis'''
         # LineOnlyReceiver.delimiter = b'\n'
-        self._onReading     = set()                # callback sets
+        self._onReading = set()                # callback sets
         # stat counters
         self.nreceived = 0
         self.nunsolici = 0
@@ -154,11 +152,11 @@ class TESSProtocol(LineOnlyReceiver):
     # ================
 
 
-    def addReadingCallback(self, callback):
+    def setReadingCallback(self, callback):
         '''
         API Entry Point
         '''
-        self._onReading.add(callback)
+        self._onReading = callback
 
     def resetStats(self):
         '''
@@ -193,8 +191,7 @@ class TESSProtocol(LineOnlyReceiver):
             reading['freq'] = float(matchobj.group(1))/1000.0
         else:
             return False  
-        for callback in self._onReading:
-            callback(reading)
+        self._onReading(reading)
         return True
         
         

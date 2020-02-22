@@ -29,7 +29,7 @@ from twisted.logger   import Logger, LogLevel
 from twisted.internet import task, reactor, defer
 from twisted.internet.defer  import inlineCallbacks, returnValue, DeferredList
 from twisted.internet.threads import deferToThread
-
+from twisted.application.service import Service
 #--------------
 # local imports
 # -------------
@@ -37,8 +37,7 @@ from twisted.internet.threads import deferToThread
 from zptess import __version__
 from zptess.config import VERSION_STRING, loadCfgFile
 from zptess.logger import setLogLevel
-from zptess.service.reloadable import Service
-from zptess.config import cmdline
+from zptess.config import loglevel
 
 
 # ----------------
@@ -76,10 +75,11 @@ class StatsService(Service):
     NAME = 'Statistics Service'
 
 
-    def __init__(self, options):
+    def __init__(self, options, cmdopts):
         Service.__init__(self)
-        setLogLevel(namespace='stats', levelStr=options['log_level'])
+        setLogLevel(namespace='stats', levelStr=loglevel(cmdopts))
         self.options = options
+        self.cmdopts = cmdopts
         self.refname = self.options['refname']
         self.period  = self.options['period']
         self.qsize   = self.options['size']
@@ -99,20 +99,7 @@ class StatsService(Service):
             'testFreq' : list(),
         }
 
-    @inlineCallbacks
-    def reloadService(self, options):
-        '''
-        Reload application parameters
-        '''
-        log.warn("{tess} config being reloaded", tess=VERSION_STRING)
-        try:
-            options  = yield deferToThread(loadCfgFile, self.cfgFilePath)
-        except Exception as e:
-            log.error("Error trying to reload: {excp!s}", excp=e)
-        else:
-            self.options                  = options['stats']
-            Service.reloadService(self, options)
-           
+   
 
     def startService(self):
         '''
@@ -150,7 +137,34 @@ class StatsService(Service):
     # Other Helper functions
     # ----------------------
 
+    def accumulateRounds(self):
+        zpc = self.options['zp_calib']
+        zpf = self.options['zp_fict']
+        log.info("-"*72)
+        refFreq,  refStddev  = self.statsFor(self.queue['reference'], "REF.", self.refname)
+        testFreq, testStddev = self.statsFor(self.queue['test'], "TEST", self.testname)
+        if refFreq is not None and testFreq is not None:
+            diff = 2.5*math.log10(testFreq/refFreq)
+            refMag  = zpf - 2.5*math.log10(refFreq)
+            testMag = zpf - 2.5*math.log10(testFreq)
+            testZP = round(zpc + diff,2)     
+            if refStddev != 0.0 and testStddev != 0.0:
+                log.info('ROUND {i:02d}: REF. Mag = {rM:0.2f}. TEST Mag = {tM:0.2f}, Diff = {d:0.3f} => TEST ZP = {zp:0.2f}',
+                i=self.curRound, rM=refMag, tM=testMag, d=diff, zp=testZP)
+                self.best['zp'].append(testZP)
+                self.best['refFreq'].append(refFreq)
+                self.best['testFreq'].append(testFreq)
+                self.curRound += 1
+            elif refStddev == 0.0 and testStddev != 0.0:
+                log.warn('FROZEN REF. Mag = {rM:0.2f}, TEST Mag = {tM:0.2f}', rM=refMag, tM=testMag)
+            elif testStddev == 0.0 and refStddev != 0.0: 
+                log.warn('REF. Mag = {rM:0.2f}, FROZEN TEST Mag = {tM:0.2f}',rM=refMag, tM=testMag)
+            else:
+                log.warn('FROZEN REF. Mag = {rM:0.2f}, FROZEN TEST Mag = {tM:0.2f}',rM=refMag, tM=testMag)
+
+
     def choose(self):
+        '''Choose the best statistics at the end of the round'''
         log.info("#"*72) 
         log.info("Best ZP        list is {bzp}",bzp=self.best['zp'])
         log.info("Best Ref  Freq list is {brf}",brf=self.best['refFreq'])
@@ -183,33 +197,9 @@ class StatsService(Service):
         return final
 
 
-    def accumulateRounds(self):
-        zpc = self.options['zp_calib']
-        zpf = self.options['zp_fict']
-        log.info("-"*72)
-        refFreq,  refStddev  = self.statsFor(self.queue['reference'], "REF.", self.refname)
-        testFreq, testStddev = self.statsFor(self.queue['test'], "TEST", self.testname)
-        if refFreq is not None and testFreq is not None:
-            diff = 2.5*math.log10(testFreq/refFreq)
-            refMag  = zpf - 2.5*math.log10(refFreq)
-            testMag = zpf - 2.5*math.log10(testFreq)
-            testZP = round(zpc + diff,2)     
-            if refStddev != 0.0 and testStddev != 0.0:
-                log.info('ROUND {i:02d}: REF. Mag = {rM:0.2f}. TEST Mag = {tM:0.2f}, Diff = {d:0.3f} => TEST ZP = {zp:0.2f}',
-                i=self.curRound, rM=refMag, tM=testMag, d=diff, zp=testZP)
-                self.best['zp'].append(testZP)
-                self.best['refFreq'].append(refFreq)
-                self.best['testFreq'].append(testFreq)
-                self.curRound += 1
-            elif refStddev == 0.0 and testStddev != 0.0:
-                log.warn('FROZEN REF. Mag = {rM:0.2f}, TEST Mag = {tM:0.2f}', rM=refMag, tM=testMag)
-            elif testStddev == 0.0 and refStddev != 0.0: 
-                log.warn('REF. Mag = {rM:0.2f}, FROZEN TEST Mag = {tM:0.2f}',rM=refMag, tM=testMag)
-            else:
-                log.warn('FROZEN REF. Mag = {rM:0.2f}, FROZEN TEST Mag = {tM:0.2f}',rM=refMag, tM=testMag)
-
 
     def statsFor(self, queue, label, name):
+        '''compute statistics for a given queue'''
         s = len(queue)
         l =  [ item['freq'] for item in queue]
         log.debug("{label} Frequencies: {lista}", label=label, lista=l)
@@ -235,7 +225,10 @@ class StatsService(Service):
 
 
 
+    
 
-        
 
-__all__ = [ "CalibService" ]
+    
+
+
+__all__ = [ "StatsService" ]

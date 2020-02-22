@@ -48,7 +48,7 @@ long_description = open('README.md').read()
 
 PKG_NAME     = 'zptess'
 AUTHOR       = 'Rafael Gonzalez'
-AUTHOR_EMAIL = 'astrorafael@yahoo.es'
+AUTHOR_EMAIL = 'astrorafael@gmail.es'
 DESCRIPTION  = 'Utility to calibrate TESS-W photometers',
 LICENSE      = 'MIT'
 KEYWORDS     = 'Astronomy Python RaspberryPi'

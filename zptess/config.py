@@ -93,6 +93,9 @@ def cmdline():
     group1.add_argument('--tess-p', type=str, default="/dev/ttyUSB1", action='store', metavar='<serial port device>', help='Calibrate a TESS-P using specified serial port')
     group1.add_argument('--tas',    type=str, default="/dev/ttyUSB1", action='store', metavar='<serial port device>', help='Calibrate a TAS using specified serial port')
   
+    parser.add_argument('-i', '--iterations',  type=int, help='process iterations')
+    parser.add_argument('-n', '--number',      type=int, help='# samples in each iteration')
+
     group2 = parser.add_mutually_exclusive_group()
     group2.add_argument('-v', '--verbose',  action='store_true', help='verbose output')
     group2.add_argument('-m', '--messages', action='store_true', help='verbose output with serial port messages shown')
@@ -148,6 +151,10 @@ def loadCmdLine(cmdline_options):
     options['test']['log_messages']   = log_messages
 
     options['stats'] = {}
+    if cmdline_options.number is not None:
+        options['stats']['size']      = cmdline_options.number
+    if cmdline_options.iterations is not None:
+        options['stats']['rounds']    = cmdline_options.iterations
     options['stats']['log_level']     = log_level
    
     return options
@@ -194,8 +201,8 @@ def read_options():
     # Read the command line arguments and config file options
     options = {}
     cmdline_obj  = cmdline()
-    config_file  =  cmdline_obj.config
     cmdline_opts = loadCmdLine(cmdline_obj)
+    config_file  =  cmdline_obj.config
     if config_file:
        file_opts  = loadCfgFile(config_file)
        for key in file_opts.keys():
@@ -203,7 +210,9 @@ def read_options():
     else:
        file_opts = {}
        options = cmdline_opts
-
+    print(file_opts)
+    print(cmdline_opts)
+    print(options)
     return options, cmdline_obj
 
 __all__ = ["VERSION_STRING", "read_options"]

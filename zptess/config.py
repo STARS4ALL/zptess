@@ -16,6 +16,7 @@ import os.path
 import argparse
 import errno
 import copy
+import string
 
 # Only Python 2
 import ConfigParser
@@ -30,7 +31,7 @@ from twisted.logger import LogLevel
 # local imports
 # -------------
 
-from zptess.utils import chop
+import zptess.utils
 from zptess import __version__
 
 # ----------------
@@ -38,7 +39,7 @@ from zptess import __version__
 # ----------------
 
 
-VERSION_STRING = "zptess/{0}/Python {1}.{2}".format(__version__, sys.version_info.major, sys.version_info.minor)
+VERSION_STRING = "{0} on Python {1}.{2}".format(__version__, sys.version_info.major, sys.version_info.minor)
 
 # Default config file path
 if os.name == "nt":
@@ -58,20 +59,11 @@ else:
 # Module Utility Functions
 # ------------------------
 
-def merge_two_dicts(d1, d2):
-    '''Valid for Python 2 & Python 3'''
-    merged = d1.copy()   # start with d1 keys and values
-    merged.update(d2)    # modifies merged with d2 keys and values & returns None
-    return merged
 
 
-def toEndpointString(port):
-    '''Helps forming and endpoint string from cmd line options'''
-    if port == "tcp":
-        result = "tcp:192.168.4.1:23"
-    else:
-        result = "serial:" + port + ":9600"
-    return result
+def mkendpoint(value):
+    return zptess.utils.mkendpoint(value,"192.168.4.1", 23, "/dev/ttyUSB0", 9600)
+
 
 
 
@@ -81,17 +73,18 @@ def cmdline():
     Minimal options are passed in the command line.
     The rest goes into the config file.
     '''
-    parser = argparse.ArgumentParser(prog='zptess')
-    parser.add_argument('--version',        action='version', version='{0}'.format(VERSION_STRING))
+    name = os.path.split(os.path.dirname(sys.argv[0]))[-1]
+    parser = argparse.ArgumentParser(prog=name)
+    parser.add_argument('--version', action='version', version='{0} {1}'.format(name, VERSION_STRING))
     parser.add_argument('-k' , '--console', action='store_true', help='log to console')
     parser.add_argument('-d' , '--dry-run', action='store_true', help='connect to TEST photometer, display info and exit')
     parser.add_argument('-u' , '--update',  action='store_true', help='automatically update photometer with new calibrated ZP')
     parser.add_argument('-a' , '--author',  type=str, required=True, help='person performing the calibration process')
     
     group1 = parser.add_mutually_exclusive_group(required=True)
-    group1.add_argument('--tess-w', type=str, default="tcp",          action='store', metavar='<optional serial port device>', help='Calibrate a TESS-W')
-    group1.add_argument('--tess-p', type=str, default="/dev/ttyUSB1", action='store', metavar='<serial port device>', help='Calibrate a TESS-P using specified serial port')
-    group1.add_argument('--tas',    type=str, default="/dev/ttyUSB1", action='store', metavar='<serial port device>', help='Calibrate a TAS using specified serial port')
+    group1.add_argument('--tess-w', type=mkendpoint, default="tcp:192.168.4.1:23",       action='store', metavar='<serial or tcp endpoint>', help='Calibrate a TESS-W')
+    group1.add_argument('--tess-p', type=mkendpoint, default="serial:/dev/ttyUSB1:9600", action='store', metavar='<serial endpoint>', help='Calibrate a TESS-P using specified serial endpoint')
+    group1.add_argument('--tas',    type=mkendpoint, default="serial:/dev/ttyUSB1:9600", action='store', metavar='<serial endpoint>', help='Calibrate a TAS using specified serial endpoint')
   
     parser.add_argument('-i', '--iterations',  type=int, help='process iterations')
     parser.add_argument('-n', '--number',      type=int, help='# samples in each iteration')
@@ -101,7 +94,8 @@ def cmdline():
     group2.add_argument('-m', '--messages', action='store_true', help='verbose output with serial port messages shown')
     group2.add_argument('-q', '--quiet',    action='store_true', help='quiet output')
  
-    parser.add_argument('--ref-port', type=str, default="/dev/ttyUSB0", action='store', metavar='<serial port device>', help='Reference photometer serial port')
+    parser.add_argument('--ref-port', type=mkendpoint, default="serial:/dev/ttyUSB0:9600", action='store', metavar='<serial port device>', help='Reference photometer serial port')
+    #parser.add_argument('--ref-port', type=mkendpoint, action='store', metavar='<serial port device>', help='Reference photometer serial port')
     parser.add_argument('--config',   type=str, default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')
     parser.add_argument('--log-file', type=str, default=LOG_FILE,    action='store', metavar='<log file>', help='log file path')
 
@@ -129,18 +123,18 @@ def loadCmdLine(cmdline_options):
         log_messages = False
 
     if cmdline_options.tess_w:
-        endpoint = toEndpointString(cmdline_options.tess_w)
+        endpoint = cmdline_options.tess_w
         model = "TESS-W"
     elif cmdline_options.tess_p:
-        endpoint = toEndpointString(cmdline_options.tess_p)
+        endpoint = cmdline_options.tess_p
         model = "TESS-P"
     else:
-        endpoint = toEndpointString(cmdline_options.tas)
+        endpoint = cmdline_options.tas
         model = "TAS"
 
     options['reference'] = {}
     options['reference']['model']        = "TESS-W"
-    options['reference']['endpoint']     = toEndpointString(cmdline_options.ref_port)
+    options['reference']['endpoint']     = cmdline_options.ref_port
     options['reference']['log_level']    = log_level
     options['reference']['log_messages'] = log_messages
   
@@ -206,13 +200,10 @@ def read_options():
     if config_file:
        file_opts  = loadCfgFile(config_file)
        for key in file_opts.keys():
-            options[key] = merge_two_dicts(file_opts[key], cmdline_opts[key])
+            options[key] = zptess.utils.merge_two_dicts(file_opts[key], cmdline_opts[key])
     else:
        file_opts = {}
        options = cmdline_opts
-    print(file_opts)
-    print(cmdline_opts)
-    print(options)
     return options, cmdline_obj
 
 __all__ = ["VERSION_STRING", "read_options"]

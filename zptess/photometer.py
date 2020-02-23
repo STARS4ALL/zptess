@@ -30,7 +30,6 @@ from twisted.internet.endpoints   import clientFromString
 
 from zptess.logger   import setLogLevel
 from zptess.utils    import chop
-from zptess.config   import loglevel
 
 # -----------------------
 # Module global variables
@@ -58,7 +57,7 @@ class PhotometerService(ClientService):
     NAME = 'Photometer Service'
 
 
-    def __init__(self, options, cmdopts, reference):
+    def __init__(self, options, reference):
 
         def backoffPolicy(initialDelay=4.0, maxDelay=60.0, factor=2):
             '''Custom made backoff policy to exit after a number of reconnection attempts'''
@@ -69,69 +68,53 @@ class PhotometerService(ClientService):
                 return delay
             return policy
 
+        self.options   = options
         self.namespace = 'refe' if reference else 'test'
         self.log = Logger(namespace=self.namespace)
-        setLogLevel(namespace=self.namespace, levelStr=loglevel(cmdopts))
+        setLogLevel(namespace=self.namespace, levelStr=options['log_level'])
         protocol_level  = 'info' if options['log_messages'] else 'warn'
         setLogLevel(namespace='protoc', levelStr=protocol_level)
         self.reference = reference  # Flag, is this instance for the reference photometer
-        self.options   = options
-        self.cmdopts   = cmdopts
-        self.serport   = None
+        self.factory   = self.buildFactory()
         self.protocol  = None
-        self.buildFactory()
+        self.serport   = None
         parts = chop(self.options['endpoint'], sep=':')
-        if parts[0] == 'serial':
-            self.endpoint = parts[1:]
-            self.usingSerial = True
-            if not self.reference and self.cmdopts.tcp:
-                self.log.error("Inconsistency between command line option and endpoint spec")
-                reactor.callLater(0,reactor.stop)
-                return
-        else:
-            if not self.reference and self.cmdopts.serial:
-                self.log.error("Inconsistency between command line option and endpoint spec")
-                reactor.callLater(0,reactor.stop)
-                return
-            self.endpoint = clientFromString(reactor, self.options['endpoint'])
-            self.usingSerial = False
-            ClientService.__init__(self, self.endpoint, self.factory, retryPolicy=backoffPolicy())
+        if parts[0] != 'serial':
+            endpoint = clientFromString(reactor, self.options['endpoint'])
+            ClientService.__init__(self, endpoint, self.factory, retryPolicy=backoffPolicy())
 
-    
     def buildFactory(self):
-        if self.reference:
-            self.log.debug("Choosing a TESS-W factory fro the reference")
-            from zptess.tessw import TESSProtocolFactory
-            self.factory = TESSProtocolFactory()
-        elif self.cmdopts.tess_w:
+        if self.options['model'] == "TESS-W":
             self.log.debug("Choosing a TESS-W factory")
             from zptess.tessw import TESSProtocolFactory
-            self.factory = TESSProtocolFactory()
-        elif self.cmdopts.tess_p:
+            factory = TESSProtocolFactory()
+        elif self.options['model'] == "TESS-P":
             self.log.debug("Choosing a TESS-P factory")
             from zptess.tessp import TESSProtocolFactory
-            self.factory = TESSProtocolFactory()
+            factory = TESSProtocolFactory()
         else:
             self.log.debug("Choosing a TAS factory")
             from zptess.tas import TESSProtocolFactory
-            self.factory = TESSProtocolFactory()
-
+            factory = TESSProtocolFactory()
+        return factory
 
     def startService(self):
         '''
         Starts the photometer service listens to a TESS
         '''
         self.log.info("starting Photometer Service")
-        if self.usingSerial:
+        parts = chop(self.options['endpoint'], sep=':')
+        if parts[0] == 'serial':
+            endpoint = parts[1:]
             self.protocol = self.factory.buildProtocol(0)
-            self.serport  = SerialPort(self.protocol, self.endpoint[0], reactor, baudrate=self.endpoint[1])
+            self.serport  = SerialPort(self.protocol, endpoint[0], reactor, baudrate=endpoint[1])
             self.gotProtocol(self.protocol)
-            self.log.info("Using serial port {tty} at {baud} bps", tty=self.endpoint[0], baud=self.endpoint[1])
+            self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
         else:
             ClientService.startService(self)
             d = self.whenConnected()
             d.addCallback(self.gotProtocol)
-            self.log.info("Using TCP endpopint {endpoint}", endpoint=self.endpoint)
+            self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
             return d 
             
 

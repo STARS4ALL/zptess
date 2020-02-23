@@ -15,6 +15,7 @@ import os
 import os.path
 import argparse
 import errno
+import copy
 
 # Only Python 2
 import ConfigParser
@@ -57,25 +58,22 @@ else:
 # Module Utility Functions
 # ------------------------
 
-def read_options():
-    # Read the command line arguments and config file options
-    cmdline_opts = cmdline()
-    config_file = cmdline_opts.config
-    if config_file:
-       file_options  = loadCfgFile(config_file)
-    else:
-       file_options = None
-    return cmdline_opts, file_options
+def merge_two_dicts(d1, d2):
+    '''Valid for Python 2 & Python 3'''
+    merged = d1.copy()   # start with d1 keys and values
+    merged.update(d2)    # modifies merged with d2 keys and values & returns None
+    return merged
 
 
-def loglevel(cmdline_options):
-    if cmdline_options.verbose:
-        level = "debug"
-    elif cmdline_options.quiet:
-        level = "warn"
+def toEndpointString(port):
+    '''Helps forming and endpoint string from cmd line options'''
+    if port == "tcp":
+        result = "tcp:192.168.4.1:23"
     else:
-        level = "info"
-    return level
+        result = "serial:" + port + ":9600"
+    return result
+
+
 
 def cmdline():
     '''
@@ -86,27 +84,73 @@ def cmdline():
     parser = argparse.ArgumentParser(prog='zptess')
     parser.add_argument('--version',        action='version', version='{0}'.format(VERSION_STRING))
     parser.add_argument('-k' , '--console', action='store_true', help='log to console')
-    parser.add_argument('-d' , '--dry-run', action='store_true', help='connect to TEST TESS-W, display info and exit')
-    parser.add_argument('-u' , '--update',  action='store_true', help='automatically update TESS-W with new calibrated ZP')
+    parser.add_argument('-d' , '--dry-run', action='store_true', help='connect to TEST photometer, display info and exit')
+    parser.add_argument('-u' , '--update',  action='store_true', help='automatically update photometer with new calibrated ZP')
     parser.add_argument('-a' , '--author',  type=str, required=True, help='person performing the calibration process')
-    parser.add_argument('--config',   type=str, default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')
-    parser.add_argument('--log-file', type=str, default=LOG_FILE,    action='store', metavar='<log file>', help='log file path')
     
     group1 = parser.add_mutually_exclusive_group(required=True)
-    group1.add_argument('--tess-w',  action='store_true', help='Calibrate a TESS-W')
-    group1.add_argument('--tess-p',  action='store_true', help='Calibrate a TESS-P')
-    group1.add_argument('--tass',    action='store_true', help='Calibrate a TAS')
-
-    group2 = parser.add_mutually_exclusive_group(required=True)
-    group2.add_argument('--serial',  action='store_true', help='Calibrate photometer using a serial port')
-    group2.add_argument('--tcp',     action='store_true', help='Calibrate photometer using a TCP port')
-
-    group3 = parser.add_mutually_exclusive_group()
-    group3.add_argument('-v', '--verbose',  action='store_true', help='verbose output')
-    group3.add_argument('-q', '--quiet',    action='store_true', help='quiet output')
+    group1.add_argument('--tess-w', type=str, default="tcp",          action='store', metavar='<optional serial port device>', help='Calibrate a TESS-W')
+    group1.add_argument('--tess-p', type=str, default="/dev/ttyUSB1", action='store', metavar='<serial port device>', help='Calibrate a TESS-P using specified serial port')
+    group1.add_argument('--tas',    type=str, default="/dev/ttyUSB1", action='store', metavar='<serial port device>', help='Calibrate a TAS using specified serial port')
+  
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('-v', '--verbose',  action='store_true', help='verbose output')
+    group2.add_argument('-m', '--messages', action='store_true', help='verbose output with serial port messages shown')
+    group2.add_argument('-q', '--quiet',    action='store_true', help='quiet output')
  
+    parser.add_argument('--ref-port', type=str, default="/dev/ttyUSB0", action='store', metavar='<serial port device>', help='Reference photometer serial port')
+    parser.add_argument('--config',   type=str, default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')
+    parser.add_argument('--log-file', type=str, default=LOG_FILE,    action='store', metavar='<log file>', help='log file path')
+
     return parser.parse_args()
 
+def loadCmdLine(cmdline_options):
+    '''
+    Load options from the command line object formed
+    Returns a dictionary
+    '''
+
+    options = {}
+    
+    if cmdline_options.verbose:
+        log_level     = "debug"
+        log_messages = False
+    elif cmdline_options.messages:
+        log_level    = "debug"
+        log_messages = True
+    elif cmdline_options.quiet:
+        log_level    = "warn"
+        log_messages = False
+    else:
+        log_level    = "info"
+        log_messages = False
+
+    if cmdline_options.tess_w:
+        endpoint = toEndpointString(cmdline_options.tess_w)
+        model = "TESS-W"
+    elif cmdline_options.tess_p:
+        endpoint = toEndpointString(cmdline_options.tess_p)
+        model = "TESS-P"
+    else:
+        endpoint = toEndpointString(cmdline_options.tas)
+        model = "TAS"
+
+    options['reference'] = {}
+    options['reference']['model']        = "TESS-W"
+    options['reference']['endpoint']     = toEndpointString(cmdline_options.ref_port)
+    options['reference']['log_level']    = log_level
+    options['reference']['log_messages'] = log_messages
+  
+    options['test'] = {}
+    options['test']['model']          = model
+    options['test']['endpoint']       = endpoint
+    options['test']['log_level']      = log_level
+    options['test']['log_messages']   = log_messages
+
+    options['stats'] = {}
+    options['stats']['log_level']     = log_level
+   
+    return options
 
 def loadCfgFile(path):
     '''
@@ -146,4 +190,19 @@ def loadCfgFile(path):
     return options
 
 
-__all__ = ["VERSION_STRING", "loadCfgFile", "cmdline"]
+def read_options():
+    # Read the command line arguments and config file options
+    options = {}
+    cmdline_obj  = cmdline()
+    config_file  =  cmdline_obj.config
+    cmdline_opts = loadCmdLine(cmdline_obj)
+    if config_file:
+       file_opts  = loadCfgFile(config_file)
+    else:
+       file_opts = {}
+
+    for key in file_opts.keys():
+        options[key] = merge_two_dicts(file_opts[key], cmdline_opts[key])
+    return options, cmdline_obj
+
+__all__ = ["VERSION_STRING", "read_options"]

@@ -51,7 +51,7 @@ def Application(name, uid=None, gid=None):
 # Main
 # ====
 
-cmdline_opts, file_opts = read_options()
+options, cmdline_opts = read_options()
 startLogging(console=cmdline_opts.console, filepath=cmdline_opts.log_file)
 
 # ------------------------------------------------
@@ -60,37 +60,17 @@ startLogging(console=cmdline_opts.console, filepath=cmdline_opts.log_file)
 
 application = Application("zptess")
 
-statsService = StatsService(file_opts['stats'], cmdline_opts)
+statsService = StatsService(options['stats'])
 statsService.setName(StatsService.NAME)
 statsService.setServiceParent(application)
 
-referenceService = PhotometerService(file_opts['reference'],cmdline_opts,True)
+referenceService = PhotometerService(options['reference'],True)
 referenceService.setName('reference')
 referenceService.setServiceParent(application)
 
-testService = PhotometerService(file_opts['test'],cmdline_opts,False)
+testService = PhotometerService(options['test'],False)
 testService.setName('test')
 testService.setServiceParent(application)
-
-# tessService  = TESSService(options['tess'],config_file)
-# tessService.setName(TESSService.NAME)
-# tessService.setServiceParent(application)
-
-# serialService = SerialService(options['serial'])
-# serialService.setName(SerialService.NAME)
-# serialService.setServiceParent(tessService)
-
-# tcpService = MyTCPService(options['tcp'])
-# tcpService.setName(MyTCPService.NAME)
-# tcpService.setServiceParent(tessService)
-
-# statsService = StatsService(options['stats'])
-# statsService.setName(StatsService.NAME)
-# statsService.setServiceParent(tessService)
-
-# --------------------------------------------------------
-# Store direct links to subservices in our manager service
-# --------------------------------------------------------
 
 
 __all__ = [ "application" ]

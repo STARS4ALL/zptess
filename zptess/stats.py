@@ -24,20 +24,17 @@ from collections import deque
 # Twisted imports
 # ---------------
 
-from twisted          import __version__ as __twisted_version__
 from twisted.logger   import Logger, LogLevel
 from twisted.internet import task, reactor, defer
 from twisted.internet.defer  import inlineCallbacks, returnValue, DeferredList
 from twisted.internet.threads import deferToThread
 from twisted.application.service import Service
+
 #--------------
 # local imports
 # -------------
 
-from zptess import __version__
-from zptess.config import VERSION_STRING, loadCfgFile
 from zptess.logger import setLogLevel
-from zptess.config import loglevel
 
 
 # ----------------
@@ -75,11 +72,10 @@ class StatsService(Service):
     NAME = 'Statistics Service'
 
 
-    def __init__(self, options, cmdopts):
+    def __init__(self, options):
         Service.__init__(self)
-        setLogLevel(namespace='stats', levelStr=loglevel(cmdopts))
+        setLogLevel(namespace='stats', levelStr=options['log_level'])
         self.options = options
-        self.cmdopts = cmdopts
         self.refname = self.options['refname']
         self.period  = self.options['period']
         self.qsize   = self.options['size']
@@ -254,20 +250,7 @@ class StatsService(Service):
         log.info("updated CSV file {file}",file=self.options['csv_file'])
 
 
-    def _flashZeroPoint(self, zp):
-        '''Flash new ZP. Synchronous request to be executed in a separate thread'''
-        try:
-            url = "{0:s}?cons={1:0.2f}".format(self.options['save_url'], zp)
-            log.debug("requesting URL {url}", url=url)
-            resp = requests.get(url, timeout=(2,5))
-            resp.raise_for_status()
-        except Exception as e:
-            log.error("{e}",e=e)
-        else:
-            matchobj = REGEXP['flash'].search(self.text)
-            if matchobj:
-                flashed_zp = float(matchobj.groups(1)[0])
-                log.info("Flashed ZP of {tess} is {fzp}", tess=self.tess_name, fzp=flashed_zp)
+    
 
     @inlineCallbacks
     def onStatsComplete(self, stats):

@@ -72,8 +72,8 @@ class PhotometerService(ClientService):
         self.namespace = 'refe' if reference else 'test'
         self.log = Logger(namespace=self.namespace)
         setLogLevel(namespace=self.namespace, levelStr=options['log_level'])
-        protocol_level  = 'info' if options['log_messages'] else 'warn'
-        setLogLevel(namespace='protoc', levelStr=protocol_level)
+        protocol_level  = 'debug' if options['log_messages'] else 'info'
+        setLogLevel(namespace='proto', levelStr=protocol_level)
         self.reference = reference  # Flag, is this instance for the reference photometer
         self.factory   = self.buildFactory()
         self.protocol  = None
@@ -90,6 +90,7 @@ class PhotometerService(ClientService):
         Starts the photometer service listens to a TESS
         '''
         self.log.info("starting Photometer Service")
+        self.statsService = self.getServiceNamed('Statistics Service')
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] == 'serial':
             endpoint = parts[1:]
@@ -98,7 +99,8 @@ class PhotometerService(ClientService):
             self.gotProtocol(self.protocol)
             self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
             if not self.reference:
-                self.info = self.readPhotometerInfo()   # synchronous operation
+                d = self.protocol.readPhotometerInfo(self.options['endpoint'])
+                d.addCallback(self.gotInfo)
         else:
             #if not self.reference:
             #    self.info = self.readPhotometerInfo()   # synchronous operation
@@ -176,14 +178,13 @@ class PhotometerService(ClientService):
             self.log.debug("Choosing a TESS-W factory")
             import zptess.tessw
             factory = zptess.tessw.TESSProtocolFactory()
-            self.infoFunc = zptess.tessw.readPhotometerInfo
         elif self.options['model'] == "TESS-P":
             self.log.debug("Choosing a TESS-P factory")
-            from zptess.tessp import TESSProtocolFactory
+            import zptess.tessp
             factory = zptess.tessp.TESSProtocolFactory()
         else:
             self.log.debug("Choosing a TAS factory")
-            from zptess.tas import TESSProtocolFactory
+            import zptess.tas
             factory = zptess.tas.TESSProtocolFactory()
         return factory
 
@@ -192,6 +193,10 @@ class PhotometerService(ClientService):
         self.log.debug("got protocol")
         self.protocol  = protocol
         self.protocol.setReadingCallback(self.onReading)
+
+    def gotInfo(self, info):
+        self.log.debug("got photometer info {info}",info=info)
+        self.info = info
 
     # ----------------------------
     # Event Handlers from Protocol

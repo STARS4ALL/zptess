@@ -98,27 +98,27 @@ def make_save_url(endpoint):
     return "http://" + ip_address + "/setconst"
 
 
-def readPhotometerInfo(endpoint):
-        '''
-        Reads Info from the device. 
-        Synchronous operation performed before Twisted reactor is run
-        '''
-        result = {}
-        state_url = make_state_url(endpoint)
-        log.debug("requesting URL {url}", url=state_url)
-        resp = requests.get(state_url, timeout=(2,5))
-        resp.raise_for_status()
-        text  = resp.text
-        matchobj = GET_INFO['name'].search(text)
-        result['name'] = matchobj.groups(1)[0]
-        log.info("[TEST] TESS-W name: {name}", name=result['name'])
-        matchobj = GET_INFO['mac'].search(self.text)
-        result['mac'] = matchobj.groups(1)[0]
-        log.info("[TEST] TESS-W MAC : {name}", name=result['mac'])
-        matchobj = GET_INFO['zp'].search(self.text)
-        result['zero_point'] = float(matchobj.groups(1)[0])
-        log.info("[TEST] TESS-W ZP  : {name} (old)", name=result['zero_point'])
-        return result
+def _readPhotometerInfo(endpoint):
+    '''
+    Reads Info from the device. 
+    Synchronous operation performed before Twisted reactor is run
+    '''
+    result = {}
+    state_url = make_state_url(endpoint)
+    log.debug("requesting URL {url}", url=state_url)
+    resp = requests.get(state_url, timeout=(2,5))
+    resp.raise_for_status()
+    text  = resp.text
+    matchobj = GET_INFO['name'].search(text)
+    result['name'] = matchobj.groups(1)[0]
+    log.info("[TEST] TESS-W name: {name}", name=result['name'])
+    matchobj = GET_INFO['mac'].search(self.text)
+    result['mac'] = matchobj.groups(1)[0]
+    log.info("[TEST] TESS-W MAC : {name}", name=result['mac'])
+    matchobj = GET_INFO['zp'].search(self.text)
+    result['zero_point'] = float(matchobj.groups(1)[0])
+    log.info("[TEST] TESS-W ZP  : {name} (old)", name=result['zero_point'])
+    return result
 
 # ----------
 # Exceptions
@@ -185,7 +185,7 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
-        log.debug("<== REF [{l:02d}] {line}", l=len(line), line=line)
+        log.debug("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
         if handled:
@@ -218,32 +218,12 @@ class TESSProtocol(LineOnlyReceiver):
         '''Writes Zero Point to the device. Returns a Deferred'''
         pass
 
-    def readPhotometerInfo(self, endpoint):
+    def readPhotometerInfo(self, context):
         '''
         Reads Info from the device. 
-        Synchronous operation performed before Twisted reactor is run
+        Asynchronous operation
         '''
-        try:
-            state_url = make_state_url(endpoint)
-            log.debug("requesting URL {url}", url=state_url)
-            resp = requests.get(state_url, timeout=(2,5))
-            resp.raise_for_status()
-            self.text  = resp.text
-        except Exception as e:
-            log.error("{e}",e=e)
-            sys.exit(1)
-        else:
-            result = {}
-            matchobj = GET_INFO['name'].search(self.text)
-            result['name'] = matchobj.groups(1)[0]
-            log.info("[TEST] TESS-W name: {name}", name=self.tess_name)
-            matchobj = GET_INFO['mac'].search(self.text)
-            result['mac'] = matchobj.groups(1)[0]
-            log.info("[TEST] TESS-W MAC : {name}", name=self.tess_mac)
-            matchobj = GET_INFO['zp'].search(self.text)
-            result['zero_point'] = float(matchobj.groups(1)[0])
-            log.info("[TEST] TESS-W ZP  : {name} (old)", name=self.old_zp)
-        return result
+        return deferToThread(_readPhotometerInfo, context)
 
 
     # --------------

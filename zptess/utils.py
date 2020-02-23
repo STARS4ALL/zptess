@@ -13,6 +13,7 @@ from __future__ import division, absolute_import
 import sys
 import datetime
 import argparse
+import re
 
 # ---------------
 # Twisted imports

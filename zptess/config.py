@@ -82,9 +82,9 @@ def cmdline():
     parser.add_argument('-a' , '--author',  type=str, required=True, help='person performing the calibration process')
     
     group1 = parser.add_mutually_exclusive_group(required=True)
-    group1.add_argument('--tess-w', type=mkendpoint, default="tcp:192.168.4.1:23",       action='store', metavar='<serial or tcp endpoint>', help='Calibrate a TESS-W')
-    group1.add_argument('--tess-p', type=mkendpoint, default="serial:/dev/ttyUSB1:9600", action='store', metavar='<serial endpoint>', help='Calibrate a TESS-P using specified serial endpoint')
-    group1.add_argument('--tas',    type=mkendpoint, default="serial:/dev/ttyUSB1:9600", action='store', metavar='<serial endpoint>', help='Calibrate a TAS using specified serial endpoint')
+    group1.add_argument('--tess-w', type=mkendpoint, action='store', metavar='<serial or tcp endpoint>', help='Calibrate a TESS-W')
+    group1.add_argument('--tess-p', type=mkendpoint, action='store', metavar='<serial endpoint>', help='Calibrate a TESS-P using specified serial endpoint')
+    group1.add_argument('--tas',    type=mkendpoint, action='store', metavar='<serial endpoint>', help='Calibrate a TAS using specified serial endpoint')
   
     parser.add_argument('-i', '--iterations',  type=int, help='process iterations')
     parser.add_argument('-n', '--number',      type=int, help='# samples in each iteration')
@@ -153,7 +153,7 @@ def loadCmdLine(cmdline_options):
         options['stats']['rounds']    = cmdline_options.iterations
     options['stats']['log_level']     = log_level
     options['stats']['author']        = cmdline_options.author
-   
+    
     return options
 
 def loadCfgFile(path):

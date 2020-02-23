@@ -12,6 +12,7 @@ from __future__ import division, absolute_import
 
 import re
 import datetime
+import json
 
 # ---------------
 # Twisted imports
@@ -27,28 +28,57 @@ from twisted.protocols.basic      import LineOnlyReceiver
 #--------------
 # local imports
 # -------------
+'''
+{"seq":218, "rev":3, "name":"TASD00", "ci":20.20, "freq":1926.78, "mag":11.99, "tamb":17.89, "tsky":23.65, "vbat":0.01, "alt":0.00, "azi":0.00}
+<fH 02083><tA 01792><tO 02379><mZ 00000>
+{"seq":219, "rev":3, "name":"TASD00", "ci":20.20, "freq":2083.33, "mag":11.90, "tamb":17.93, "tsky":23.79, "vbat":0.02, "alt":0.00, "azi":0.00}
+<fH 02040><tA 01792><tO 02351><mZ 00000>
+{"seq":220, "rev":3, "name":"TASD00", "ci":20.20, "freq":2040.82, "mag":11.93, "tamb":17.93, "tsky":23.51, "vbat":0.01, "alt":0.00, "azi":0.00}
+<fH 01956><tA 01795><tO 02362><mZ 00000>
+{"seq":221, "rev":3, "name":"TASD00", "ci":20.20, "freq":1956.95, "mag":11.97, "tamb":17.95, "tsky":23.63, "vbat":0.01, "alt":0.00, "azi":0.00}
+<fH 01792><tA 01792><tO 02357><mZ 00000>
+{"seq":222, "rev":3, "name":"TASD00", "ci":20.20, "freq":1792.11, "mag":12.07, "tamb":17.93, "tsky":23.57, "vbat":0.02, "alt":0.00, "azi":0.00}
+<fH 01219><tA 01795><tO 02362><mZ 00000>
+{"seq":223, "rev":3, "name":"TASD00", "ci":20.20, "freq":1219.51, "mag":12.48, "tamb":17.95, "tsky":23.63, "vbat":0.01, "alt":0.00, "azi":0.00}
+<fH 01189><tA 01792><tO 02364><mZ 00000>
+{"seq":224, "rev":3, "name":"TASD00", "ci":20.20, "freq":1189.06, "mag":12.51, "tamb":17.93, "tsky":23.65, "vbat":0.01, "alt":0.00, "azi":0.00}
 
+
+-----------------------------------------------
+Compiled Feb 11 2020  11:21:38
+MAC: D0019D286F24
+TAS SN: TASD00
+Actual CI: 20.20
+-----------------------------------------------
+
+'''
 
 # ----------------
 # Module constants
 # ----------------
-# <fH 04606><tA +2987><tO +2481><mZ -0000>
 
-# Unsolicited Responses Patterns
-UNSOLICITED_RESPONSES = (
+# SOLICITED Responses Patterns
+SOLICITED_RESPONSES = (
     {
-        'name'    : 'Hz reading',
-        'pattern' : r'^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'name'    : 'compiled',
+        'pattern' : r'^Compiled (.+)',       
     },
     {
-        'name'    : 'mHz reading',
-        'pattern' : r'^<fm (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'name'    : 'mac',
+        'pattern' : r'^MAC: ([0-9A-Za-z]{12})',       
+    },
+    {
+        'name'    : 'name',
+        'pattern' : r'^TAS SN: (TAS\w{3})',       
+    },
+    {
+        'name'    : 'zp',
+        'pattern' : r'^Actual CI: (\d{1,2}.\d{1,2})',       
     },
     
 )
 
-
-UNSOLICITED_PATTERNS = [ re.compile(ur['pattern']) for ur in UNSOLICITED_RESPONSES ]
+SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in SOLICITED_RESPONSES ]
 
 
 # -----------------------
@@ -62,13 +92,13 @@ log = Logger(namespace='proto')
 # ----------------
 
 
-def match_unsolicited(line):
+def match_solicited(line):
     '''Returns matched command descriptor or None'''
-    for regexp in UNSOLICITED_PATTERNS:
+    for regexp in SOLICITED_PATTERNS:
         matchobj = regexp.search(line)
         if matchobj:
-            log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
-            return UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)], matchobj
+            log.debug("matched {pattern}", pattern=SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)]['name'])
+            return SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)], matchobj
     return None, None
 
 
@@ -137,9 +167,14 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
-        log.debug("<== REF [{l:02d}] {line}", l=len(line), line=line)
+        line = line.decode('utf-8')  # from bytearray to string
+        log.info("<== TAS   [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
+        if handled:
+            self.nunsolici += 1
+            return
+        handled = self._handleSolicitedResponse(line, now)
         if handled:
             self.nunsolici += 1
             return
@@ -166,32 +201,70 @@ class TESSProtocol(LineOnlyReceiver):
         self.nunsolici = 0
         self.nunknown  = 0
 
+    def writeZeroPoint(self, sero_point, context):
+        '''Writes Zero Point to the device. Returns a Deferred'''
+        pass
+
+    def readPhotometerInfo(self, context):
+        '''
+        Reads Info from the device. 
+        Synchronous operation performed before Twisted reactor is run
+        '''
+        self.sendLine('?')
+        self.deferred = defer.Deferred()
+        self.cnt = 0
+        self.response = {}
+        return self.deferred
+
     # --------------
     # Helper methods
     # --------------
 
+    def _handleSolicitedResponse(self, line, tstamp):
+        '''
+        Handle Solicted responses from zptess.
+        Returns True if handled, False otherwise
+        '''
+        sr, matchobj = match_solicited(line)
+        if not sr:
+            return False
+
+        self.response['tstamp'] = tstamp
+        if sr['name'] == 'name':
+            self.response['name'] = str(matchobj.group(1))
+            self.cnt += 1
+        elif sr['name'] == 'mac':
+            self.response['mac'] = str(matchobj.group(1))
+            self.cnt += 1
+        elif sr['name'] == 'compiled':
+            self.response['compiled'] = str(matchobj.group(1))
+            self.cnt += 1
+        elif sr['name'] == 'zp':
+            self.response['zp'] = float(matchobj.group(1))
+            self.cnt += 1
+        else:
+            return False
+        log.debug("CONTADOR = {cnt}", cnt=self.cnt)
+        if self.cnt == 4: 
+            self.deferred.callback(self.response)
+            self.deferred = None
+            self.cnt = 0
+        return True
+
 
     def _handleUnsolicitedResponse(self, line, tstamp):
         '''
-        Handle unsolicited responses from zptess.
+        Handle Unsolicted responses from zptess.
         Returns True if handled, False otherwise
         '''
-        ur, matchobj = match_unsolicited(line)
-        if not ur:
+        try:
+            reading = json.loads(line)
+        except Exception as e:
             return False
-        reading = {}
-        reading['tbox']   = float(matchobj.group(2))/100.0
-        reading['tsky']   = float(matchobj.group(3))/100.0
-        reading['zp']     = float(matchobj.group(4))/100.0
-        reading['tstamp'] = tstamp
-        if ur['name'] == 'Hz reading':
-            reading['freq']   = float(matchobj.group(1))/1.0
-        elif ur['name'] == 'mHz reading':
-            reading['freq'] = float(matchobj.group(1))/1000.0
         else:
-            return False  
-        self._onReading(reading)
-        return True
+            reading['tstamp'] = tstamp
+            self._onReading(reading)
+            return True
         
         
 #---------------------------------------------------------------------

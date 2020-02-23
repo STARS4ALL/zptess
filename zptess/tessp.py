@@ -38,11 +38,11 @@ from twisted.protocols.basic      import LineOnlyReceiver
 UNSOLICITED_RESPONSES = (
     {
         'name'    : 'Hz reading',
-        'pattern' : r'^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'pattern' : r'^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><aX ([+-]\d{4})><aY ([+-]\d{4})><aZ ([+-]\d{4})><mX ([+-]\d{4})><mY ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
     {
         'name'    : 'mHz reading',
-        'pattern' : r'^<fm (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'pattern' : r'^<fm (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><aX ([+-]\d{4})><aY ([+-]\d{4})><aZ ([+-]\d{4})><mX ([+-]\d{4})><mY ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
     
 )
@@ -138,7 +138,7 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
-        log.debug("<== REF [{l:02d}] {line}", l=len(line), line=line)
+        log.debug("<== TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
         if handled:
@@ -167,6 +167,19 @@ class TESSProtocol(LineOnlyReceiver):
         self.nunsolici = 0
         self.nunknown  = 0
 
+    def writeZeroPoint(self, sero_point, context):
+        '''Writes Zero Point to the device. Returns a Deferred'''
+        pass
+
+    def readPhotometerInfo(self, context):
+        '''
+        Reads Info from the device. 
+        Synchronous operation performed before Twisted reactor is run
+        '''
+        self.sendLine('?')
+        self.deferred = defer.Deferred()
+        return self.deferred
+
     # --------------
     # Helper methods
     # --------------
@@ -183,7 +196,6 @@ class TESSProtocol(LineOnlyReceiver):
         reading = {}
         reading['tbox']   = float(matchobj.group(2))/100.0
         reading['tsky']   = float(matchobj.group(3))/100.0
-        reading['zp']     = float(matchobj.group(4))/100.0
         reading['tstamp'] = tstamp
         if ur['name'] == 'Hz reading':
             reading['freq']   = float(matchobj.group(1))/1.0

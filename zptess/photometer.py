@@ -100,11 +100,13 @@ class PhotometerService(ClientService):
             if not self.reference:
                 self.info = self.readPhotometerInfo()   # synchronous operation
         else:
-            if not self.reference:
-                self.info = self.readPhotometerInfo()   # synchronous operation
+            #if not self.reference:
+            #    self.info = self.readPhotometerInfo()   # synchronous operation
             ClientService.startService(self)
             d = self.whenConnected()
             d.addCallback(self.gotProtocol)
+            if not self.reference:
+                d.addCallback(self.readPhotometerInfo2)
             self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
             
             
@@ -116,6 +118,23 @@ class PhotometerService(ClientService):
         '''Writes Zero Point to the device. Returns a Deferred'''
         return self.protocol.writeZeroPoint(sero_point, context)
 
+    @inlineCallbacks
+    def readPhotometerInfo2(self):
+        '''
+        Reads Information from the device. 
+        Asynchronous opetarion to be called when starting the service
+        '''
+        self.log.info('Contacting the photometer for info ...')
+        result = {}
+        try:
+            result = yield deferToThread(self.infoFunc, self.options['endpoint'])
+        except Exception as e:
+            self.log.failure('Problems contacting the photometer')
+            reactor.callLater(0, reactor.stop)
+        if self.options['dry_run']:
+            self.log.info('Dry run. Will stop here ...') 
+            reactor.callLater(0, reactor.stop)
+        returnValue(result)
 
     def readPhotometerInfo(self):
         '''

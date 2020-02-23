@@ -198,11 +198,12 @@ def read_options():
     cmdline_opts = loadCmdLine(cmdline_obj)
     if config_file:
        file_opts  = loadCfgFile(config_file)
+       for key in file_opts.keys():
+            options[key] = merge_two_dicts(file_opts[key], cmdline_opts[key])
     else:
        file_opts = {}
+       options = cmdline_opts
 
-    for key in file_opts.keys():
-        options[key] = merge_two_dicts(file_opts[key], cmdline_opts[key])
     return options, cmdline_obj
 
 __all__ = ["VERSION_STRING", "read_options"]

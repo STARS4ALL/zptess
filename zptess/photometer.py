@@ -63,7 +63,7 @@ class PhotometerService(ClientService):
             '''Custom made backoff policy to exit after a number of reconnection attempts'''
             def policy(attempt):
                 delay = min(initialDelay * (factor ** attempt), maxDelay)
-                if attempt > 3:
+                if attempt > 2:
                     self.stopService()
                 return delay
             return policy

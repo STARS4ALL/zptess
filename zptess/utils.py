@@ -44,6 +44,7 @@ def merge_two_dicts(d1, d2):
     return merged
 
 def valid_ip_address(ip):
+    '''Validate an IPv4 address returning True or False'''
     return [ 0 <= int(x) < 256 for x in re.split(r'\.', re.match(r'^\d+\.\d+\.\d+\.\d+$',ip).group(0))].count(True) == 4
     
 

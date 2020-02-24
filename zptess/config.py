@@ -66,9 +66,10 @@ def cmdline():
     parser = argparse.ArgumentParser(prog=name)
     parser.add_argument('--version', action='version', version='{0} {1}'.format(name, VERSION_STRING))
     parser.add_argument('-k' , '--console', action='store_true', help='log to console')
-    parser.add_argument('-d' , '--dry-run', action='store_true', help='connect to TEST photometer, display info and exit')
-    parser.add_argument('-u' , '--update',  action='store_true', help='automatically update photometer with new calibrated ZP')
     parser.add_argument('-a' , '--author',  type=str, required=True, help='person performing the calibration process')
+    group0 = parser.add_mutually_exclusive_group()
+    group0.add_argument('-d' , '--dry-run', action='store_true', help='connect to TEST photometer, display info and exit')
+    group0.add_argument('-u' , '--update',  action='store_true', help='automatically update photometer with new calibrated ZP')
     
     group1 = parser.add_mutually_exclusive_group(required=True)
     group1.add_argument('--tess-w', type=mkendpoint, action='store', metavar='<serial or tcp endpoint>', help='Calibrate a TESS-W')

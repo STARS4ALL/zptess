@@ -100,21 +100,14 @@ SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in SOLICITED_RESPONSES ]
 # Module global variables
 # -----------------------
 
-log = Logger(namespace='proto')
+
 
 # ----------------
 # Module functions
 # ----------------
 
 
-def match_solicited(line):
-    '''Returns matched command descriptor or None'''
-    for regexp in SOLICITED_PATTERNS:
-        matchobj = regexp.search(line)
-        if matchobj:
-            log.debug("matched {pattern}", pattern=SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)]['name'])
-            return SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)], matchobj
-    return None, None
+
 
 
 
@@ -141,18 +134,20 @@ class TESSError(Exception):
 
 class TESSProtocolFactory(ClientFactory):
 
+    log = Logger(namespace='proto')
+
     def startedConnecting(self, connector):
-        log.debug('Factory: Started to connect.')
+        self.log.debug('Factory: Started to connect.')
 
     def buildProtocol(self, addr):
-        log.debug('Factory: Connected.')
+        self.log.debug('Factory: Connected.')
         return TESSProtocol()
 
     def clientConnectionLost(self, connector, reason):
-        log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
+        self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
 
     def clientConnectionFailed(self, connector, reason):
-        log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
+        self.log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -180,16 +175,17 @@ class TESSProtocol(LineOnlyReceiver):
         self.read_deferred  = None
         self.write_response = None
         self.read_response  = None
+        self.log = Logger(namespace='proto')
 
       
     def connectionMade(self):
-        log.debug("connectionMade()")
+        self.log.debug("connectionMade()")
 
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         #line = line.decode('utf-8')  # from bytearray to string
-        log.debug("<== TESS-P [{l:02d}] {line}", l=len(line), line=line)
+        self.log.debug("<== TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
         if handled:
@@ -200,7 +196,7 @@ class TESSProtocol(LineOnlyReceiver):
             self.nunsolici += 1
             return
         self.nunknown += 1
-        #log.warn("Unknown/Unexpected message {line}", line=line)
+        #self.log.warn("Unknown/Unexpected message {line}", line=line)
 
     # ================
     # TESS Protocol API
@@ -227,7 +223,9 @@ class TESSProtocol(LineOnlyReceiver):
 
     def writeZeroPoint(self, zero_point):
         '''Writes Zero Point to the device. Returns a Deferred'''
-        self.sendLine('CI{0:0.2f}'.format(zero_point))
+        line = 'CI{0:04d}'.format(int(round(zero_point*100,2)))
+        self.sendLine(line)
+        self.log.debug("==> TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.write_deferred = defer.Deferred()
         self.write_response = {}
         return self.write_deferred
@@ -237,7 +235,9 @@ class TESSProtocol(LineOnlyReceiver):
         Reads Info from the device. 
         Synchronous operation performed before Twisted reactor is run
         '''
-        self.sendLine('?')
+        line = '?'
+        self.sendLine(line)
+        self.log.debug("==> TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.read_deferred = defer.Deferred()
         self.cnt = 0
         self.read_response = {}
@@ -247,12 +247,21 @@ class TESSProtocol(LineOnlyReceiver):
     # Helper methods
     # --------------
 
+    def match_solicited(self, line):
+        '''Returns matched command descriptor or None'''
+        for regexp in SOLICITED_PATTERNS:
+            matchobj = regexp.search(line)
+            if matchobj:
+                self.log.debug("matched {pattern}", pattern=SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)]['name'])
+                return SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)], matchobj
+        return None, None
+
     def _handleSolicitedResponse(self, line, tstamp):
         '''
         Handle Solicted responses from zptess.
         Returns True if handled, False otherwise
         '''
-        sr, matchobj = match_solicited(line)
+        sr, matchobj = self.match_solicited(line)
         if not sr:
             return False
 

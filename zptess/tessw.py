@@ -26,6 +26,7 @@ from twisted.internet.defer       import inlineCallbacks, returnValue
 from twisted.internet.serialport  import SerialPort
 from twisted.internet.protocol    import ClientFactory
 from twisted.protocols.basic      import LineOnlyReceiver
+from twisted.internet.threads     import deferToThread
 
 #--------------
 # local imports
@@ -42,11 +43,13 @@ from zptess.logger   import setLogLevel as SetLogLevel
 
 GET_INFO = {
     # These apply to the /config page
-    'name'  : re.compile(r".+(stars\d+)"),       
-    'mac'   : re.compile(r".+MAC: ([0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2})"),       
-    'zp'    : re.compile(r".+ZP: (\d{1,2}\.\d{1,2})"),  
+    'name'  : re.compile(r"(stars\d+)"),       
+    'mac'   : re.compile(r"MAC: ([0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2})"),       
+    'zp'    : re.compile(r"ZP: (\d{1,2}\.\d{1,2})"),
+    #'zp'    : re.compile(r"Const\.: (\d{1,2}\.\d{1,2})"),
+    'firmware' : re.compile(r"Compiled: (\w{3} \d{1,2} \d{4})"),
     # This applies to the /setconst?cons=nn.nn page
-    'flash' : re.compile(r"New Zero Point (\d{1,2}\.\d{1,2})")     
+    'flash' : re.compile(r"New Zero Point (\d{1,2}\.\d{1,2})") 
 }
 
 
@@ -221,13 +224,12 @@ class TESSProtocol(LineOnlyReceiver):
         text  = resp.text
         matchobj = GET_INFO['name'].search(text)
         result['name'] = matchobj.groups(1)[0]
-        log.info("[TEST] TESS-W name: {name}", name=result['name'])
-        matchobj = GET_INFO['mac'].search(self.text)
+        matchobj = GET_INFO['mac'].search(text)
         result['mac'] = matchobj.groups(1)[0]
-        log.info("[TEST] TESS-W MAC : {name}", name=result['mac'])
-        matchobj = GET_INFO['zp'].search(self.text)
-        result['zero_point'] = float(matchobj.groups(1)[0])
-        log.info("[TEST] TESS-W ZP  : {name} (old)", name=result['zero_point'])
+        matchobj = GET_INFO['zp'].search(text)
+        result['zp'] = float(matchobj.groups(1)[0])
+        matchobj = GET_INFO['firmware'].search(text)
+        result['firmware'] = matchobj.groups(1)[0]
         return result
 
 

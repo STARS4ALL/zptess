@@ -261,7 +261,6 @@ class StatsService(Service):
             # the Twisted Agent or even deferring to thread
             try:
                 yield self.photomService.writeZeroPoint(stats['zp'])
-                log.info("value {v}", v=v)
             except Exception as e:
                 log.error("Timeout when updating photometer zero point")
                 reactor.callLater(0, reactor.stop)

@@ -212,6 +212,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.nreceived = 0
         self.nresponse = 0
         self.nunsolici = 0
+        self.nsolici   = 0
         self.nunknown  = 0
 
     def setContext(self, context):

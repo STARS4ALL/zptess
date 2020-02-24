@@ -107,10 +107,12 @@ class PhotometerService(ClientService):
                 self.log.info("Requesting photometer info")
                 try:
                     info = yield self.protocol.readPhotometerInfo()
-                    self.gotInfo(info)
+                   
                 except Exception as e:
                     self.log.error("Timeout when reading photometer info")
                     reactor.callLater(0, reactor.stop)
+                else:
+                    self.gotInfo(info)
         else:
             #if not self.reference:
             #    self.info = self.readPhotometerInfo()   # synchronous operation
@@ -118,6 +120,15 @@ class PhotometerService(ClientService):
             protocol = yield self.whenConnected()
             self.gotProtocol(protocol)
             self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
+            try:
+                info = yield self.protocol.readPhotometerInfo()
+            except Exception as e:
+                self.log.error("Timeout when reading photometer info")
+                self.log.failure("{excp}",excp=e)
+                reactor.callLater(0, reactor.stop)
+            else:
+                self.gotInfo(info)
+
             
             
     # --------------

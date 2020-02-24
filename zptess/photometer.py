@@ -28,6 +28,8 @@ from twisted.internet.endpoints   import clientFromString
 # local imports
 # -------------
 
+from . import STATS_SERVICE
+
 from zptess.logger   import setLogLevel
 from zptess.utils    import chop
 
@@ -90,7 +92,7 @@ class PhotometerService(ClientService):
         Starts the photometer service listens to a TESS
         '''
         self.log.info("starting Photometer Service")
-        self.statsService = self.getServiceNamed('Statistics Service')
+        self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] == 'serial':
             endpoint = parts[1:]
@@ -99,7 +101,8 @@ class PhotometerService(ClientService):
             self.gotProtocol(self.protocol)
             self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
             if not self.reference:
-                d = self.protocol.readPhotometerInfo(self.options['endpoint'])
+                self.log.info("Requesting photometer info")
+                d = self.protocol.readPhotometerInfo()
                 d.addCallback(self.gotInfo)
         else:
             #if not self.reference:
@@ -108,7 +111,7 @@ class PhotometerService(ClientService):
             d = self.whenConnected()
             d.addCallback(self.gotProtocol)
             if not self.reference:
-                d.addCallback(self.readPhotometerInfo2)
+                d.addTimeout(3, reactor).addCallback(self.readPhotometerInfo2)
             self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
             
             
@@ -116,44 +119,9 @@ class PhotometerService(ClientService):
     # Photometer API 
     # --------------
 
-    def writeZeroPoint(self, sero_point):
+    def writeZeroPoint(self, zero_point):
         '''Writes Zero Point to the device. Returns a Deferred'''
-        return self.protocol.writeZeroPoint(sero_point, context)
-
-    @inlineCallbacks
-    def readPhotometerInfo2(self):
-        '''
-        Reads Information from the device. 
-        Asynchronous opetarion to be called when starting the service
-        '''
-        self.log.info('Contacting the photometer for info ...')
-        result = {}
-        try:
-            result = yield deferToThread(self.infoFunc, self.options['endpoint'])
-        except Exception as e:
-            self.log.failure('Problems contacting the photometer')
-            reactor.callLater(0, reactor.stop)
-        if self.options['dry_run']:
-            self.log.info('Dry run. Will stop here ...') 
-            reactor.callLater(0, reactor.stop)
-        returnValue(result)
-
-    def readPhotometerInfo(self):
-        '''
-        Reads Information from the device. 
-        Synchronous opetarion to be called when starting the service
-        '''
-        self.log.info('Contacting the photometer for info ...')
-        result = {}
-        try:
-            result = self.infoFunc(self.options['endpoint'])
-        except Exception as e:
-            self.log.failure('Problems contacting the photometer')
-            reactor.callLater(0,reactor.stop)
-        if self.options['dry_run']:
-            self.log.info('Dry run. Will stop here ...') 
-            reactor.callLater(0,reactor.stop)
-        return result
+        return self.protocol.writeZeroPoint(zero_point)
 
 
     def printStats(self):
@@ -193,10 +161,19 @@ class PhotometerService(ClientService):
         self.log.debug("got protocol")
         self.protocol  = protocol
         self.protocol.setReadingCallback(self.onReading)
+        self.protocol.setContext(self.options['endpoint'])
 
     def gotInfo(self, info):
         self.log.debug("got photometer info {info}",info=info)
         self.info = info
+        self.log.info("[TEST] TESS-W name    : {name}", name=info['name'])
+        self.log.info("[TEST] TESS-W MAC     : {name}", name=info['mac'])
+        self.log.info("[TEST] TESS-W ZP      : {name} (old)", name=info['zp'])
+        self.log.info("[TEST] TESS-W Firmware: {name}", name=info['firmware'])
+        if self.options['dry_run']:
+            self.log.info('Dry run. Will stop here ...') 
+            reactor.callLater(0,reactor.stop)
+
 
     # ----------------------------
     # Event Handlers from Protocol

@@ -48,8 +48,6 @@ GET_INFO = {
 }
 
 
-
-
 # <fH 04606><tA +2987><tO +2481><mZ -0000>
 # Unsolicited Responses Patterns
 UNSOLICITED_RESPONSES = (
@@ -93,9 +91,9 @@ def make_state_url(endpoint):
     ip_address = zptess.utils.chop(endpoint,':')[1]
     return "http://" + ip_address + "/config"
 
-def make_save_url(endpoint):
+def make_save_url(endpoint, zp):
     ip_address = zptess.utils.chop(endpoint,':')[1]
-    return "http://" + ip_address + "/setconst"
+    return "http://{0:s}/setconst?cons={1:0.2f}".format(ip_address, zp)
 
 
 def _readPhotometerInfo(endpoint):
@@ -119,6 +117,22 @@ def _readPhotometerInfo(endpoint):
     result['zero_point'] = float(matchobj.groups(1)[0])
     log.info("[TEST] TESS-W ZP  : {name} (old)", name=result['zero_point'])
     return result
+
+
+def _writeZeroPoint(self, zp, endpoint):
+    '''Flash new ZP. Synchronous request to be executed in a separate thread'''
+    try:
+        url = make_save_url(endpoint, zp)
+        log.debug("requesting URL {url}", url=url)
+        resp = requests.get(url, timeout=(2,5))
+        resp.raise_for_status()
+    except Exception as e:
+        log.error("{e}",e=e)
+    else:
+        matchobj = GET_INFO['flash'].search(self.text)
+        if matchobj:
+            flashed_zp = float(matchobj.groups(1)[0])
+            log.info("Flashed ZP of {tess} is {fzp}", tess=self.tess_name, fzp=flashed_zp)
 
 # ----------
 # Exceptions
@@ -214,16 +228,19 @@ class TESSProtocol(LineOnlyReceiver):
         self.nunsolici = 0
         self.nunknown  = 0
 
-    def writeZeroPoint(self, sero_point, context):
-        '''Writes Zero Point to the device. Returns a Deferred'''
-        pass
+    def setContext(self, context):
+        self.httpEndPoint = context
 
-    def readPhotometerInfo(self, context):
+    def writeZeroPoint(self, zero_point):
+        '''Writes Zero Point to the device. Returns a Deferred'''
+        return deferToThread(_writeZeroPoint, self.httpEndPoint. zero_point)
+
+    def readPhotometerInfo(self):
         '''
         Reads Info from the device. 
         Asynchronous operation
         '''
-        return deferToThread(_readPhotometerInfo, context)
+        return deferToThread(_readPhotometerInfo, self.httpEndPoint)
 
 
     # --------------

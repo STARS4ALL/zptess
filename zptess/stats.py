@@ -34,6 +34,8 @@ from twisted.application.service import Service
 # local imports
 # -------------
 
+from . import TEST_PHOTOMETER_SERVICE
+
 from zptess.logger import setLogLevel
 
 
@@ -67,9 +69,6 @@ log = Logger(namespace='stats')
 
 
 class StatsService(Service):
-
-    # Service name
-    NAME = 'Statistics Service'
 
 
     def __init__(self, options):
@@ -106,7 +105,7 @@ class StatsService(Service):
         Service.startService(self)
         self.statTask = task.LoopingCall(self._schedule)
         self.statTask.start(self.period, now=False)  # call every T seconds
-        self.photomService = self.parent.getServiceNamed('test')
+        self.photomService = self.parent.getServiceNamed(TEST_PHOTOMETER_SERVICE)
 
        
     def stopService(self):
@@ -250,8 +249,6 @@ class StatsService(Service):
         log.info("updated CSV file {file}",file=self.options['csv_file'])
 
 
-    
-
     @inlineCallbacks
     def onStatsComplete(self, stats):
         yield self.stopService()
@@ -259,12 +256,11 @@ class StatsService(Service):
             log.info("updating {tess} ZP to {zp}", tess=self.tess_name, zp=stats['zp'])
             # This should not be synchronous, but I could not make it work either with
             # the Twisted Agent or even deferring to thread
-            self._flashZeroPoint(stats['zp'])   
+            yield self.photomService.writeZeroPoint(stats['zp'])
         else:
             log.info("skipping updating of {tess} ZP",tess=self.tess_name)
-
         yield deferToThread(self._exportCSV, stats)
-        yield self.stopService()
+        
 
     
 

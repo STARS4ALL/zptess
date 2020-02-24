@@ -30,6 +30,10 @@ from ._version import get_versions
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
+STATS_SERVICE           = 'Statistics Service'
+TEST_PHOTOMETER_SERVICE = 'Test Photometer'
+REF_PHOTOMETER_SERVICE  = 'Reference Photometer'
+
 # -----------------------
 # Module global variables
 # -----------------------

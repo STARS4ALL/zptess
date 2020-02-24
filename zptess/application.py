@@ -26,6 +26,8 @@ from twisted.application.service import IService, Service, MultiService, Process
 # local imports
 # -------------
 
+from . import STATS_SERVICE, TEST_PHOTOMETER_SERVICE, REF_PHOTOMETER_SERVICE
+
 from zptess.logger     import sysLogInfo,  startLogging
 from zptess.config     import VERSION_STRING, read_options
 from zptess.stats      import StatsService
@@ -61,15 +63,15 @@ startLogging(console=cmdline_opts.console, filepath=cmdline_opts.log_file)
 application = Application("zptess")
 
 statsService = StatsService(options['stats'])
-statsService.setName(StatsService.NAME)
+statsService.setName(STATS_SERVICE)
 statsService.setServiceParent(application)
 
 referenceService = PhotometerService(options['reference'],True)
-referenceService.setName('reference')
+referenceService.setName(REF_PHOTOMETER_SERVICE)
 referenceService.setServiceParent(application)
 
 testService = PhotometerService(options['test'],False)
-testService.setName('test')
+testService.setName(TEST_PHOTOMETER_SERVICE)
 testService.setServiceParent(application)
 
 

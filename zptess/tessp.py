@@ -12,6 +12,7 @@ from __future__ import division, absolute_import
 
 import re
 import datetime
+import json
 
 # ---------------
 # Twisted imports
@@ -34,21 +35,65 @@ from twisted.protocols.basic      import LineOnlyReceiver
 # ----------------
 # <fH 04606><tA +2987><tO +2481><mZ -0000>
 
-# Unsolicited Responses Patterns
-UNSOLICITED_RESPONSES = (
+# <fH 41666><tA 02468><tO 02358><aX -0016><aY -0083><aZ 00956><mX 00099><mY -0015><mZ -0520>
+# {"seq":239, "rev":3, "name":"TSP206", "ci":20.20, "freq":37037.04, "mag":8.78, "tamb":24.69, "tsky":23.41, "alt":0.48, "azi":144.00}
+# <fH 37037><tA 02468><tO 02340><aX -0008><aY -0086><aZ 00957><mX 00097><mY -0020><mZ -0519>
+# {"seq":240, "rev":3, "name":"TSP206", "ci":20.20, "freq":37037.04, "mag":8.78, "tamb":24.71, "tsky":23.21, "alt":0.60, "azi":146.00}
+# <fH 37037><tA 02470><tO 02320><aX -0010><aY -0088><aZ 00956><mX 00100><mY -0014><mZ -0521>
+# {"seq":241, "rev":3, "name":"TSP206", "ci":20.20, "freq":40000.00, "mag":8.69, "tamb":24.71, "tsky":23.39, "alt":0.36, "azi":148.00}
+# <fH 40000><tA 02470><tO 02339><aX -0006><aY -0084><aZ 00959><mX 00099><mY -0014><mZ -0521>
+# {"seq":242, "rev":3, "name":"TSP206", "ci":20.20, "freq":38461.54, "mag":8.74, "tamb":24.67, "tsky":23.51, "alt":0.54, "azi":146.00}
+# <fH 38461><tA 02467><tO 02351><aX -0009><aY -0090><aZ 00951><mX 00100><mY -0015><mZ -0522>
+# {"seq":243, "rev":3, "name":"TSP206", "ci":20.20, "freq":40000.00, "mag":8.69, "tamb":24.67, "tsky":23.35, "alt":0.78, "azi":145.00}
+# <fH 40000><tA 02467><tO 02335><aX -0013><aY -0085><aZ 00956><mX 00097><mY -0015><mZ -0522>
+# {"seq":244, "rev":3, "name":"TSP206", "ci":20.20, "freq":41666.67, "mag":8.65, "tamb":24.67, "tsky":23.51, "alt":0.36, "azi":146.00}
+# <fH 41666><tA 02467><tO 02351><aX -0006><aY -0086><aZ 00955><mX 00101><mY -0017><mZ -0522>
+# {"seq":245, "rev":3, "name":"TSP206", "ci":20.20, "freq":41666.67, "mag":8.65, "tamb":24.69, "tsky":23.45, "alt":0.42, "azi":144.00}
+# <fH 41666><tA 02468><tO 02345><aX -0007><aY -0086><aZ 00954><mX 00096><mY -0018><mZ -0522>
+# {"seq":246, "rev":3, "name":"TSP206", "ci":20.20, "freq":38461.54, "mag":8.74, "tamb":24.75, "tsky":23.41, "alt":0.54, "azi":146.00}
+# <fH 38461><tA 02474><tO 02340><aX -0009><aY -0087><aZ 00959><mX 00098><mY -0015><mZ -0522>
+# {"seq":247, "rev":3, "name":"TSP206", "ci":20.20, "freq":40000.00, "mag":8.69, "tamb":24.69, "tsky":23.47, "alt":0.60, "azi":147.00}
+# <fH 40000><tA 02468><tO 02346><aX -0010><aY -0086><aZ 00955><mX 00100><mY -0014><mZ -0521>
+# {"seq":248, "rev":3, "name":"TSP206", "ci":20.20, "freq":38461.54, "mag":8.74, "tamb":24.69, "tsky":23.47, "alt":0.48, "azi":145.00}
+# <fH 38461><tA 02468><tO 02346><aX -0008><aY -0085><aZ 00958><mX 00098><mY -0018><mZ -0521>
+# {"seq":249, "rev":3, "name":"TSP206", "ci":20.20, "freq":37037.04, "mag":8.78, "tamb":24.75, "tsky":23.39, "alt":0.71, "azi":144.00}
+# <fH 37037><tA 02474><tO 02339><aX -0012><aY -0085><aZ 00963><mX 00097><mY -0018><mZ -0520> 
+# -----------------------------------------------
+# Compiled Dec 16 2019  13:57:17
+# MAC: 206714A4AE30
+# TSP SN: TSP206
+# Actual CI: 20.20
+# -----------------------------------------------
+
+# New CI: 20.45
+# Write EEPROM done!
+
+# SOLICITED Responses Patterns
+SOLICITED_RESPONSES = (
     {
-        'name'    : 'Hz reading',
-        'pattern' : r'^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><aX ([+-]\d{4})><aY ([+-]\d{4})><aZ ([+-]\d{4})><mX ([+-]\d{4})><mY ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'name'    : 'firmware',
+        'pattern' : r'^Compiled (.+)',       
     },
     {
-        'name'    : 'mHz reading',
-        'pattern' : r'^<fm (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><aX ([+-]\d{4})><aY ([+-]\d{4})><aZ ([+-]\d{4})><mX ([+-]\d{4})><mY ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'name'    : 'mac',
+        'pattern' : r'^MAC: ([0-9A-Za-z]{12})',       
+    },
+    {
+        'name'    : 'name',
+        'pattern' : r'^TSP SN: (TSP\w{3})',       
+    },
+    {
+        'name'    : 'zp',
+        'pattern' : r'^Actual CI: (\d{1,2}.\d{1,2})',       
+    },
+    {
+        'name'    : 'written_zp',
+        'pattern' : r'^New CI: (\d{1,2}.\d{1,2})',       
     },
     
 )
 
-
-UNSOLICITED_PATTERNS = [ re.compile(ur['pattern']) for ur in UNSOLICITED_RESPONSES ]
+SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in SOLICITED_RESPONSES ]
 
 
 # -----------------------
@@ -62,13 +107,13 @@ log = Logger(namespace='proto')
 # ----------------
 
 
-def match_unsolicited(line):
+def match_solicited(line):
     '''Returns matched command descriptor or None'''
-    for regexp in UNSOLICITED_PATTERNS:
+    for regexp in SOLICITED_PATTERNS:
         matchobj = regexp.search(line)
         if matchobj:
-            log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
-            return UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)], matchobj
+            log.debug("matched {pattern}", pattern=SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)]['name'])
+            return SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)], matchobj
     return None, None
 
 
@@ -131,6 +176,11 @@ class TESSProtocol(LineOnlyReceiver):
         self.nreceived = 0
         self.nunsolici = 0
         self.nunknown  = 0
+        self.write_deferred = None
+        self.read_deferred  = None
+        self.write_response = None
+        self.read_response  = None
+
       
     def connectionMade(self):
         log.debug("connectionMade()")
@@ -138,9 +188,14 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
+        #line = line.decode('utf-8')  # from bytearray to string
         log.debug("<== TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
+        if handled:
+            self.nunsolici += 1
+            return
+        handled = self._handleSolicitedResponse(line, now)
         if handled:
             self.nunsolici += 1
             return
@@ -167,50 +222,93 @@ class TESSProtocol(LineOnlyReceiver):
         self.nunsolici = 0
         self.nunknown  = 0
 
-    def writeZeroPoint(self, sero_point, context):
-        '''Writes Zero Point to the device. Returns a Deferred'''
+    def setContext(self, context):
         pass
 
-    def readPhotometerInfo(self, context):
+    def writeZeroPoint(self, zero_point):
+        '''Writes Zero Point to the device. Returns a Deferred'''
+        self.sendLine('CI{0:0.2f}'.format(zero_point))
+        self.write_deferred = defer.Deferred()
+        self.write_response = {}
+        return self.write_deferred
+
+    def readPhotometerInfo(self):
         '''
         Reads Info from the device. 
         Synchronous operation performed before Twisted reactor is run
         '''
         self.sendLine('?')
-        self.deferred = defer.Deferred()
-        return self.deferred
+        self.read_deferred = defer.Deferred()
+        self.cnt = 0
+        self.read_response = {}
+        return self.read_deferred
 
     # --------------
     # Helper methods
     # --------------
 
+    def _handleSolicitedResponse(self, line, tstamp):
+        '''
+        Handle Solicted responses from zptess.
+        Returns True if handled, False otherwise
+        '''
+        sr, matchobj = match_solicited(line)
+        if not sr:
+            return False
+
+        if sr['name'] == 'name':
+            self.read_response['tstamp'] = tstamp
+            self.read_response['name'] = str(matchobj.group(1))
+            self.cnt += 1
+        elif sr['name'] == 'mac':
+            self.read_response['tstamp'] = tstamp
+            self.read_response['mac'] = str(matchobj.group(1))
+            self.cnt += 1
+        elif sr['name'] == 'firmware':
+            self.read_response['tstamp'] = tstamp
+            self.read_response['firmware'] = str(matchobj.group(1))
+            self.cnt += 1
+        elif sr['name'] == 'zp':
+            self.read_response['tstamp'] = tstamp
+            self.read_response['zp'] = float(matchobj.group(1))
+            self.cnt += 1
+        elif sr['name'] == 'written_zp':
+            self.write_response['tstamp'] = tstamp
+            self.write_response['zp'] = float(matchobj.group(1))
+        else:
+            return False
+        
+        # trigger pending callbacks
+        if self.read_deferred and self.cnt == 4: 
+            self.read_deferred.callback(self.read_response)
+            self.read_deferred = None
+            self.cnt = 0
+
+        if self.write_deferred: 
+            self.write_deferred.callback(self.write_response)
+            self.write_deferred = None
+
+        return True
+
 
     def _handleUnsolicitedResponse(self, line, tstamp):
         '''
-        Handle unsolicited responses from zptess.
+        Handle Unsolicted responses from zptess.
         Returns True if handled, False otherwise
         '''
-        ur, matchobj = match_unsolicited(line)
-        if not ur:
+        try:
+            reading = json.loads(line)
+        except Exception as e:
             return False
-        reading = {}
-        reading['tbox']   = float(matchobj.group(2))/100.0
-        reading['tsky']   = float(matchobj.group(3))/100.0
-        reading['tstamp'] = tstamp
-        if ur['name'] == 'Hz reading':
-            reading['freq']   = float(matchobj.group(1))/1.0
-        elif ur['name'] == 'mHz reading':
-            reading['freq'] = float(matchobj.group(1))/1000.0
         else:
-            return False  
-        self._onReading(reading)
-        return True
+            reading['tstamp'] = tstamp
+            self._onReading(reading)
+            return True
         
         
 #---------------------------------------------------------------------
 # --------------------------------------------------------------------
 # --------------------------------------------------------------------
-
 
 
 __all__ = [

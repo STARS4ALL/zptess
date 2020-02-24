@@ -60,7 +60,7 @@ Actual CI: 20.20
 # SOLICITED Responses Patterns
 SOLICITED_RESPONSES = (
     {
-        'name'    : 'compiled',
+        'name'    : 'firmware',
         'pattern' : r'^Compiled (.+)',       
     },
     {
@@ -201,11 +201,14 @@ class TESSProtocol(LineOnlyReceiver):
         self.nunsolici = 0
         self.nunknown  = 0
 
+    def setContext(self, context):
+        pass
+
     def writeZeroPoint(self, sero_point, context):
         '''Writes Zero Point to the device. Returns a Deferred'''
         pass
 
-    def readPhotometerInfo(self, context):
+    def readPhotometerInfo(self):
         '''
         Reads Info from the device. 
         Synchronous operation performed before Twisted reactor is run
@@ -236,15 +239,15 @@ class TESSProtocol(LineOnlyReceiver):
         elif sr['name'] == 'mac':
             self.response['mac'] = str(matchobj.group(1))
             self.cnt += 1
-        elif sr['name'] == 'compiled':
-            self.response['compiled'] = str(matchobj.group(1))
+        elif sr['name'] == 'firmware':
+            self.response['firmware'] = str(matchobj.group(1))
             self.cnt += 1
         elif sr['name'] == 'zp':
             self.response['zp'] = float(matchobj.group(1))
             self.cnt += 1
         else:
             return False
-        log.debug("CONTADOR = {cnt}", cnt=self.cnt)
+       
         if self.cnt == 4: 
             self.deferred.callback(self.response)
             self.deferred = None

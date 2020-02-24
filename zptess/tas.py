@@ -79,7 +79,10 @@ SOLICITED_RESPONSES = (
         'name'    : 'zp',
         'pattern' : r'^Actual CI: (\d{1,2}.\d{1,2})',       
     },
-    
+    {
+        'name'    : 'written_zp',
+        'pattern' : r'^New CI: (\d{1,2}.\d{1,2})',       
+    },
 )
 
 SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in SOLICITED_RESPONSES ]
@@ -159,6 +162,7 @@ class TESSProtocol(LineOnlyReceiver):
         # stat counters
         self.nreceived = 0
         self.nunsolici = 0
+        self.nsolici   = 0
         self.nunknown  = 0
         self.write_deferred = None
         self.read_deferred  = None
@@ -173,8 +177,8 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
-        line = line.decode('ascii')  # from bytearray to string
-        self.log.debug("<== TTAS   [{l:02d}] {line}", l=len(line), line=line)
+        line = line.decode('latin_1')  # from bytearray to string
+        self.log.debug("<==  TAS   [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
         if handled:
@@ -182,7 +186,7 @@ class TESSProtocol(LineOnlyReceiver):
             return
         handled = self._handleSolicitedResponse(line, now)
         if handled:
-            self.nunsolici += 1
+            self.nsolici += 1
             return
         self.nunknown += 1
         #self.log.warn("Unknown/Unexpected message {line}", line=line)
@@ -220,6 +224,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.log.debug("==> TAS    [{l:02d}] {line}", l=len(line), line=line)
         self.sendLine(line.encode('ascii'))
         self.write_deferred = defer.Deferred()
+        self.write_deferred.addTimeout(2, reactor)
         self.write_response = {}
         return self.write_deferred
 
@@ -233,6 +238,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.log.debug("==> TAS    [{l:02d}] {line}", l=len(line), line=line)
         self.sendLine(line.encode('ascii'))
         self.read_deferred = defer.Deferred()
+        self.read_deferred.addTimeout(2, reactor)
         self.cnt = 0
         self.read_response = {}
         return self.read_deferred

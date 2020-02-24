@@ -172,6 +172,7 @@ class TESSProtocol(LineOnlyReceiver):
         # stat counters
         self.nreceived = 0
         self.nunsolici = 0
+        self.nsolici   = 0
         self.nunknown  = 0
         self.write_deferred = None
         self.read_deferred  = None
@@ -195,7 +196,7 @@ class TESSProtocol(LineOnlyReceiver):
             return
         handled = self._handleSolicitedResponse(line, now)
         if handled:
-            self.nunsolici += 1
+            self.nsolici += 1
             return
         self.nunknown += 1
         #self.log.warn("Unknown/Unexpected message {line}", line=line)
@@ -214,6 +215,7 @@ class TESSProtocol(LineOnlyReceiver):
         '''
         self._onReading = callback
 
+
     def resetStats(self):
         '''
         Reset statistics counters.
@@ -221,7 +223,9 @@ class TESSProtocol(LineOnlyReceiver):
         self.nreceived = 0
         self.nresponse = 0
         self.nunsolici = 0
+        self.nsolici   = 0
         self.nunknown  = 0
+
 
     def setContext(self, context):
         pass

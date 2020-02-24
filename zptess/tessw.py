@@ -199,6 +199,7 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
+        line = line.decode('ascii')  # from bytearray to string
         log.debug("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)

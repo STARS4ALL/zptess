@@ -85,21 +85,15 @@ SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in SOLICITED_RESPONSES ]
 # Module global variables
 # -----------------------
 
-log = Logger(namespace='proto')
+
 
 # ----------------
 # Module functions
 # ----------------
 
 
-def match_solicited(line):
-    '''Returns matched command descriptor or None'''
-    for regexp in SOLICITED_PATTERNS:
-        matchobj = regexp.search(line)
-        if matchobj:
-            log.debug("matched {pattern}", pattern=SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)]['name'])
-            return SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)], matchobj
-    return None, None
+
+
 
 
 # ----------
@@ -125,18 +119,20 @@ class TESSError(Exception):
 
 class TESSProtocolFactory(ClientFactory):
 
+    log = Logger(namespace='proto')
+
     def startedConnecting(self, connector):
-        log.debug('Factory: Started to connect.')
+        self.log.debug('Factory: Started to connect.')
 
     def buildProtocol(self, addr):
-        log.debug('Factory: Connected.')
+        self.log.debug('Factory: Connected.')
         return TESSProtocol()
 
     def clientConnectionLost(self, connector, reason):
-        log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
+        self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
 
     def clientConnectionFailed(self, connector, reason):
-        log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
+        self.log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -160,15 +156,21 @@ class TESSProtocol(LineOnlyReceiver):
         self.nreceived = 0
         self.nunsolici = 0
         self.nunknown  = 0
+        self.write_deferred = None
+        self.read_deferred  = None
+        self.write_response = None
+        self.read_response  = None
+        self.log = Logger(namespace='proto')
+
       
     def connectionMade(self):
-        log.debug("connectionMade()")
+        self.log.debug("connectionMade()")
 
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
-        line = line.decode('utf-8')  # from bytearray to string
-        log.info("<== TAS   [{l:02d}] {line}", l=len(line), line=line)
+        line = line.decode('ascii')  # from bytearray to string
+        self.log.debug("<== TTAS   [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
         if handled:
@@ -179,7 +181,7 @@ class TESSProtocol(LineOnlyReceiver):
             self.nunsolici += 1
             return
         self.nunknown += 1
-        #log.warn("Unknown/Unexpected message {line}", line=line)
+        #self.log.warn("Unknown/Unexpected message {line}", line=line)
 
     # ================
     # TESS Protocol API
@@ -204,54 +206,84 @@ class TESSProtocol(LineOnlyReceiver):
     def setContext(self, context):
         pass
 
-    def writeZeroPoint(self, sero_point, context):
+    def writeZeroPoint(self, zero_point):
         '''Writes Zero Point to the device. Returns a Deferred'''
-        pass
+
+        line = 'CI{0:04d}'.format(int(round(zero_point*100,2)))
+        self.log.debug("==> TAS    [{l:02d}] {line}", l=len(line), line=line)
+        self.sendLine(line.encode('ascii'))
+        self.write_deferred = defer.Deferred()
+        self.write_response = {}
+        return self.write_deferred
 
     def readPhotometerInfo(self):
         '''
         Reads Info from the device. 
         Synchronous operation performed before Twisted reactor is run
         '''
-        self.sendLine('?')
-        self.deferred = defer.Deferred()
+
+        line = '?'
+        self.log.debug("==> TAS    [{l:02d}] {line}", l=len(line), line=line)
+        self.sendLine(line.encode('ascii'))
+        self.read_deferred = defer.Deferred()
         self.cnt = 0
-        self.response = {}
-        return self.deferred
+        self.read_response = {}
+        return self.read_deferred
 
     # --------------
     # Helper methods
     # --------------
+
+    def match_solicited(self, line):
+        '''Returns matched command descriptor or None'''
+        for regexp in SOLICITED_PATTERNS:
+            matchobj = regexp.search(line)
+            if matchobj:
+                self.log.debug("matched {pattern}", pattern=SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)]['name'])
+                return SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)], matchobj
+        return None, None
 
     def _handleSolicitedResponse(self, line, tstamp):
         '''
         Handle Solicted responses from zptess.
         Returns True if handled, False otherwise
         '''
-        sr, matchobj = match_solicited(line)
+        sr, matchobj = self.match_solicited(line)
         if not sr:
             return False
 
-        self.response['tstamp'] = tstamp
         if sr['name'] == 'name':
-            self.response['name'] = str(matchobj.group(1))
+            self.read_response['tstamp'] = tstamp
+            self.read_response['name'] = str(matchobj.group(1))
             self.cnt += 1
         elif sr['name'] == 'mac':
-            self.response['mac'] = str(matchobj.group(1))
+            self.read_response['tstamp'] = tstamp
+            self.read_response['mac'] = str(matchobj.group(1))
             self.cnt += 1
         elif sr['name'] == 'firmware':
-            self.response['firmware'] = str(matchobj.group(1))
+            self.read_response['tstamp'] = tstamp
+            self.read_response['firmware'] = str(matchobj.group(1))
             self.cnt += 1
         elif sr['name'] == 'zp':
-            self.response['zp'] = float(matchobj.group(1))
+            self.read_response['tstamp'] = tstamp
+            self.read_response['zp'] = float(matchobj.group(1))
             self.cnt += 1
+        elif sr['name'] == 'written_zp':
+            self.write_response['tstamp'] = tstamp
+            self.write_response['zp'] = float(matchobj.group(1))
         else:
             return False
-       
-        if self.cnt == 4: 
-            self.deferred.callback(self.response)
-            self.deferred = None
+        
+        # trigger pending callbacks
+        if self.read_deferred and self.cnt == 4: 
+            self.read_deferred.callback(self.read_response)
+            self.read_deferred = None
             self.cnt = 0
+
+        if self.write_deferred: 
+            self.write_deferred.callback(self.write_response)
+            self.write_deferred = None
+
         return True
 
 
@@ -273,7 +305,6 @@ class TESSProtocol(LineOnlyReceiver):
 #---------------------------------------------------------------------
 # --------------------------------------------------------------------
 # --------------------------------------------------------------------
-
 
 
 __all__ = [

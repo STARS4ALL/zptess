@@ -32,9 +32,9 @@ import sys
 
 
 if os.name == "nt":
-	import zptess.main_win
+    import zptess.main_win
 elif os.name == "posix":
-	import zptess.main_posix
+    import zptess.main_posix
 else:
-	print("ERROR: unsupported OS {name}".format(name = os.name))
-  	sys.exit(1)
+    print("ERROR: unsupported OS {name}".format(name = os.name))
+    sys.exit(1)

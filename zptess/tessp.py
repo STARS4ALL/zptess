@@ -29,6 +29,7 @@ from twisted.protocols.basic      import LineOnlyReceiver
 # local imports
 # -------------
 
+from . import PY2, PY3
 
 # ----------------
 # Module constants
@@ -184,7 +185,7 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
-        #line = line.decode('utf-8')  # from bytearray to string
+        line = line.decode('ascii')  # from bytearray to string
         self.log.debug("<== TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
@@ -224,8 +225,8 @@ class TESSProtocol(LineOnlyReceiver):
     def writeZeroPoint(self, zero_point):
         '''Writes Zero Point to the device. Returns a Deferred'''
         line = 'CI{0:04d}'.format(int(round(zero_point*100,2)))
-        self.sendLine(line)
         self.log.debug("==> TESS-P [{l:02d}] {line}", l=len(line), line=line)
+        self.sendLine(line.encode('ascii'))
         self.write_deferred = defer.Deferred()
         self.write_response = {}
         return self.write_deferred
@@ -236,8 +237,8 @@ class TESSProtocol(LineOnlyReceiver):
         Synchronous operation performed before Twisted reactor is run
         '''
         line = '?'
-        self.sendLine(line)
         self.log.debug("==> TESS-P [{l:02d}] {line}", l=len(line), line=line)
+        self.sendLine(line.encode('ascii'))
         self.read_deferred = defer.Deferred()
         self.cnt = 0
         self.read_response = {}

@@ -17,8 +17,12 @@ import argparse
 import errno
 import copy
 
-# Only Python 2
-import ConfigParser
+try:
+    # Python 2
+    import ConfigParser
+except:
+    import configparser as ConfigParser
+
 
 # ---------------
 # Twisted imports

@@ -80,6 +80,7 @@ class PhotometerService(ClientService):
         self.factory   = self.buildFactory()
         self.protocol  = None
         self.serport   = None
+        self.info      = {} # Photometer info
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] != 'serial':
             endpoint = clientFromString(reactor, self.options['endpoint'])
@@ -103,6 +104,7 @@ class PhotometerService(ClientService):
             if not self.reference:
                 self.log.info("Requesting photometer info")
                 d = self.protocol.readPhotometerInfo()
+                d.addTimeout(2, reactor, onTimeoutCancel=reactor.stop)
                 d.addCallback(self.gotInfo)
         else:
             #if not self.reference:
@@ -122,6 +124,9 @@ class PhotometerService(ClientService):
     def writeZeroPoint(self, zero_point):
         '''Writes Zero Point to the device. Returns a Deferred'''
         return self.protocol.writeZeroPoint(zero_point)
+
+    def getPhotometerInfo(self):
+        return self.info
 
 
     def printStats(self):
@@ -166,10 +171,12 @@ class PhotometerService(ClientService):
     def gotInfo(self, info):
         self.log.debug("got photometer info {info}",info=info)
         self.info = info
-        self.log.info("[TEST] TESS-W name    : {name}", name=info['name'])
-        self.log.info("[TEST] TESS-W MAC     : {name}", name=info['mac'])
-        self.log.info("[TEST] TESS-W ZP      : {name} (old)", name=info['zp'])
-        self.log.info("[TEST] TESS-W Firmware: {name}", name=info['firmware'])
+        self.info['model'] = self.options['model']
+        self.log.info("[TEST] Model     : {name}", name=self.info['model'])
+        self.log.info("[TEST] Name      : {name}", name=info['name'])
+        self.log.info("[TEST] MAC       : {name}", name=info['mac'])
+        self.log.info("[TEST] Zero Point: {name:.02f} (old)", name=info['zp'])
+        self.log.info("[TEST] Firmware  : {name}", name=info['firmware'])
         if self.options['dry_run']:
             self.log.info('Dry run. Will stop here ...') 
             reactor.callLater(0,reactor.stop)

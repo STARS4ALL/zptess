@@ -33,6 +33,7 @@ PY3 = sys.version_info[0] == 3
 STATS_SERVICE           = 'Statistics Service'
 TEST_PHOTOMETER_SERVICE = 'Test Photometer'
 REF_PHOTOMETER_SERVICE  = 'Reference Photometer'
+TSTAMP_FORMAT           = "%Y-%m-%dT%H:%M:%SZ"
 
 # -----------------------
 # Module global variables

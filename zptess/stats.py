@@ -34,7 +34,7 @@ from twisted.application.service import Service
 # local imports
 # -------------
 
-from . import TEST_PHOTOMETER_SERVICE
+from . import TEST_PHOTOMETER_SERVICE, TSTAMP_FORMAT
 
 from zptess.logger import setLogLevel
 
@@ -81,7 +81,6 @@ class StatsService(Service):
         self.central = self.options['central']
         self.nrounds = self.options['rounds']
         self.curRound = 1
-        self.testname = None
         if self.central not in ['mean','median']:
             throw 
         self.queue       = { 
@@ -134,11 +133,12 @@ class StatsService(Service):
     # ----------------------------
 
     def accumulateRounds(self):
+        self.info = self.photomService.getPhotometerInfo()
         zpc = self.options['zp_calib']
         zpf = self.options['zp_fict']
         log.info("-"*72)
         refFreq,  refStddev  = self.statsFor(self.queue['reference'], "REF.", self.refname)
-        testFreq, testStddev = self.statsFor(self.queue['test'], "TEST", self.testname)
+        testFreq, testStddev = self.statsFor(self.queue['test'], "TEST", self.info['name'])
         if refFreq is not None and testFreq is not None:
             diff = 2.5*math.log10(testFreq/refFreq)
             refMag  = zpf - 2.5*math.log10(refFreq)
@@ -161,12 +161,13 @@ class StatsService(Service):
 
     def choose(self):
         '''Choose the best statistics at the end of the round'''
+
         log.info("#"*72) 
         log.info("Best ZP        list is {bzp}",bzp=self.best['zp'])
         log.info("Best Ref  Freq list is {brf}",brf=self.best['refFreq'])
         log.info("Best Test Freq list is {btf}",btf=self.best['testFreq'])
         final = dict()
-        old_zp = float(self.parent.old_zp)
+        old_zp = float(self.photomService.info['zp'])
         try:
             final['zp']       = statistics.mode(self.best['zp'])
         except statistics.StatisticsError as e:
@@ -228,15 +229,16 @@ class StatsService(Service):
         '''Exports summary statistics to a common CSV file'''
         log.debug("Appending to CSV file {file}",file=self.options['csv_file'])
         # Adding metadata to the estimation
-        stats['mac']     = self.tess_mac    # Is it station or AP MAC ?????
+        stats['mac']     = self.info['mac']  # Is it station or AP MAC ?????
+        stats['model']   = self.info['model']  # Is it station or AP MAC ?????
         stats['tstamp']  = (datetime.datetime.utcnow() + datetime.timedelta(seconds=0.5)).strftime(TSTAMP_FORMAT)
-        stats['author']  = self.author
-        stats['tess']    = self.tess_name
-        stats['updated'] = self.update
-        stats['old_zp']  = self.old_zp
+        stats['author']  = self.options['author']
+        stats['tess']    = self.info['name']
+        stats['updated'] = self.options['update']
+        stats['old_zp']  = self.info['zp'] 
         # transform dictionary into readable header columns for CSV export
-        oldkeys = ['tess', 'tstamp', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'mac', 'old_zp', 'author', 'updated']
-        newkeys = ['Name', 'Timestamp', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'Station MAC', 'OLD ZP', 'Author', 'Updated']
+        oldkeys = ['model','tess', 'tstamp', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'mac', 'old_zp', 'author', 'updated']
+        newkeys = ['Model','Name', 'Timestamp', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'Station MAC', 'OLD ZP', 'Author', 'Updated']
         for old,new in zip(oldkeys,newkeys):
             stats[new] = stats.pop(old)
         # CSV file generation
@@ -252,13 +254,13 @@ class StatsService(Service):
     @inlineCallbacks
     def onStatsComplete(self, stats):
         yield self.stopService()
-        if self.update:
-            log.info("updating {tess} ZP to {zp}", tess=self.tess_name, zp=stats['zp'])
+        if self.options['update']:
+            log.info("updating {tess} ZP to {zp}", tess=self.info['name'], zp=stats['zp'])
             # This should not be synchronous, but I could not make it work either with
             # the Twisted Agent or even deferring to thread
             yield self.photomService.writeZeroPoint(stats['zp'])
         else:
-            log.info("skipping updating of {tess} ZP",tess=self.tess_name)
+            log.info("skipping updating of {tess} ZP",tess=self.info['name'])
         yield deferToThread(self._exportCSV, stats)
         
 

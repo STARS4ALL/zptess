@@ -142,7 +142,6 @@ def loadCmdLine(cmdline_options):
     options['test']['model']          = model
     options['test']['endpoint']       = endpoint
     options['test']['dry_run']        = cmdline_options.dry_run
-    options['test']['update']         = cmdline_options.update
     options['test']['log_level']      = log_level
     options['test']['log_messages']   = log_messages
 
@@ -153,6 +152,7 @@ def loadCmdLine(cmdline_options):
         options['stats']['rounds']    = cmdline_options.iterations
     options['stats']['log_level']     = log_level
     options['stats']['author']        = cmdline_options.author
+    options['stats']['update']        = cmdline_options.update
     
     return options
 

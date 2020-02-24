@@ -28,6 +28,10 @@ from twisted.protocols.basic      import LineOnlyReceiver
 #--------------
 # local imports
 # -------------
+
+from zptess.logger   import setLogLevel as SetLogLevel
+
+
 '''
 {"seq":218, "rev":3, "name":"TASD00", "ci":20.20, "freq":1926.78, "mag":11.99, "tamb":17.89, "tsky":23.65, "vbat":0.01, "alt":0.00, "azi":0.00}
 <fH 02083><tA 01792><tO 02379><mZ 00000>
@@ -186,6 +190,9 @@ class TESSProtocol(LineOnlyReceiver):
     # ================
     # TESS Protocol API
     # ================
+
+    def setLogLevel(self, level):
+        SetLogLevel(namespace='proto', levelStr=level)
 
 
     def setReadingCallback(self, callback):

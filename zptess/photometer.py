@@ -87,10 +87,12 @@ class PhotometerService(ClientService):
             ClientService.__init__(self, endpoint, self.factory, retryPolicy=backoffPolicy())
 
     
-
+    @inlineCallbacks
     def startService(self):
         '''
         Starts the photometer service listens to a TESS
+        Although it is technically a synchronous operation, it works well
+        with inline callbacks
         '''
         self.log.info("starting Photometer Service")
         self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
@@ -103,17 +105,18 @@ class PhotometerService(ClientService):
             self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
             if not self.reference:
                 self.log.info("Requesting photometer info")
-                d = self.protocol.readPhotometerInfo()
-                d.addTimeout(2, reactor, onTimeoutCancel=reactor.stop)
-                d.addCallback(self.gotInfo)
+                try:
+                    info = yield self.protocol.readPhotometerInfo()
+                    self.gotInfo(info)
+                except Exception as e:
+                    self.log.error("Timeout when reading photometer info")
+                    reactor.callLater(0, reactor.stop)
         else:
             #if not self.reference:
             #    self.info = self.readPhotometerInfo()   # synchronous operation
             ClientService.startService(self)
-            d = self.whenConnected()
-            d.addCallback(self.gotProtocol)
-            if not self.reference:
-                d.addTimeout(3, reactor).addCallback(self.readPhotometerInfo2)
+            protocol = yield self.whenConnected()
+            self.gotProtocol(protocol)
             self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
             
             

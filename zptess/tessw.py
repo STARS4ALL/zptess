@@ -33,6 +33,8 @@ from twisted.protocols.basic      import LineOnlyReceiver
 
 import zptess.utils
 
+from zptess.logger   import setLogLevel as SetLogLevel
+
 # ----------------
 # Module constants
 # ----------------
@@ -77,14 +79,7 @@ log = Logger(namespace='proto')
 # ----------------
 
 
-def match_unsolicited(line):
-    '''Returns matched command descriptor or None'''
-    for regexp in UNSOLICITED_PATTERNS:
-        matchobj = regexp.search(line)
-        if matchobj:
-            log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
-            return UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)], matchobj
-    return None, None
+
 
 
 def make_state_url(endpoint):
@@ -95,44 +90,6 @@ def make_save_url(endpoint, zp):
     ip_address = zptess.utils.chop(endpoint,':')[1]
     return "http://{0:s}/setconst?cons={1:0.2f}".format(ip_address, zp)
 
-
-def _readPhotometerInfo(endpoint):
-    '''
-    Reads Info from the device. 
-    Synchronous operation performed before Twisted reactor is run
-    '''
-    result = {}
-    state_url = make_state_url(endpoint)
-    log.debug("requesting URL {url}", url=state_url)
-    resp = requests.get(state_url, timeout=(2,5))
-    resp.raise_for_status()
-    text  = resp.text
-    matchobj = GET_INFO['name'].search(text)
-    result['name'] = matchobj.groups(1)[0]
-    log.info("[TEST] TESS-W name: {name}", name=result['name'])
-    matchobj = GET_INFO['mac'].search(self.text)
-    result['mac'] = matchobj.groups(1)[0]
-    log.info("[TEST] TESS-W MAC : {name}", name=result['mac'])
-    matchobj = GET_INFO['zp'].search(self.text)
-    result['zero_point'] = float(matchobj.groups(1)[0])
-    log.info("[TEST] TESS-W ZP  : {name} (old)", name=result['zero_point'])
-    return result
-
-
-def _writeZeroPoint(self, zp, endpoint):
-    '''Flash new ZP. Synchronous request to be executed in a separate thread'''
-    try:
-        url = make_save_url(endpoint, zp)
-        log.debug("requesting URL {url}", url=url)
-        resp = requests.get(url, timeout=(2,5))
-        resp.raise_for_status()
-    except Exception as e:
-        log.error("{e}",e=e)
-    else:
-        matchobj = GET_INFO['flash'].search(self.text)
-        if matchobj:
-            flashed_zp = float(matchobj.groups(1)[0])
-            log.info("Flashed ZP of {tess} is {fzp}", tess=self.tess_name, fzp=flashed_zp)
 
 # ----------
 # Exceptions
@@ -213,6 +170,8 @@ class TESSProtocol(LineOnlyReceiver):
     # TESS Protocol API
     # =================
 
+    def setLogLevel(self, level):
+        SetLogLevel(namespace='proto', levelStr=level)
 
     def setReadingCallback(self, callback):
         '''
@@ -234,19 +193,68 @@ class TESSProtocol(LineOnlyReceiver):
 
     def writeZeroPoint(self, zero_point):
         '''Writes Zero Point to the device. Returns a Deferred'''
-        return deferToThread(_writeZeroPoint, self.httpEndPoint. zero_point)
+        return deferToThread(_self.writeZeroPoint,  zero_point, self.httpEndPoint)
 
     def readPhotometerInfo(self):
         '''
         Reads Info from the device. 
         Asynchronous operation
         '''
-        return deferToThread(_readPhotometerInfo, self.httpEndPoint)
-
+        return deferToThread(self._readPhotometerInfo, self.httpEndPoint)
+       
 
     # --------------
     # Helper methods
     # --------------
+
+    
+    def _readPhotometerInfo(self, endpoint):
+        '''
+        Reads Info from the device. 
+        Synchronous operation performed before Twisted reactor is run
+        '''
+        result = {}
+        state_url = make_state_url(endpoint)
+        log.debug("requesting URL {url}", url=state_url)
+        resp = requests.get(state_url, timeout=(2,5))
+        resp.raise_for_status()
+        text  = resp.text
+        matchobj = GET_INFO['name'].search(text)
+        result['name'] = matchobj.groups(1)[0]
+        log.info("[TEST] TESS-W name: {name}", name=result['name'])
+        matchobj = GET_INFO['mac'].search(self.text)
+        result['mac'] = matchobj.groups(1)[0]
+        log.info("[TEST] TESS-W MAC : {name}", name=result['mac'])
+        matchobj = GET_INFO['zp'].search(self.text)
+        result['zero_point'] = float(matchobj.groups(1)[0])
+        log.info("[TEST] TESS-W ZP  : {name} (old)", name=result['zero_point'])
+        return result
+
+
+    def _writeZeroPoint(self, zp, endpoint):
+        '''Flash new ZP. Synchronous request to be executed in a separate thread'''
+        try:
+            url = make_save_url(endpoint, zp)
+            log.debug("requesting URL {url}", url=url)
+            resp = requests.get(url, timeout=(2,5))
+            resp.raise_for_status()
+        except Exception as e:
+            log.error("{e}",e=e)
+        else:
+            matchobj = GET_INFO['flash'].search(self.text)
+            if matchobj:
+                flashed_zp = float(matchobj.groups(1)[0])
+                log.info("Flashed ZP of {tess} is {fzp}", tess=self.tess_name, fzp=flashed_zp)
+
+
+    def match_unsolicited(self, line):
+        '''Returns matched command descriptor or None'''
+        for regexp in UNSOLICITED_PATTERNS:
+            matchobj = regexp.search(line)
+            if matchobj:
+                log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
+                return UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)], matchobj
+        return None, None
 
 
     def _handleUnsolicitedResponse(self, line, tstamp):
@@ -254,7 +262,7 @@ class TESSProtocol(LineOnlyReceiver):
         Handle unsolicited responses from zptess.
         Returns True if handled, False otherwise
         '''
-        ur, matchobj = match_unsolicited(line)
+        ur, matchobj = self.match_unsolicited(line)
         if not ur:
             return False
         reading = {}

@@ -29,7 +29,8 @@ from twisted.protocols.basic      import LineOnlyReceiver
 # local imports
 # -------------
 
-from . import PY2, PY3
+from zptess.logger   import setLogLevel as SetLogLevel
+
 
 # ----------------
 # Module constants
@@ -203,6 +204,9 @@ class TESSProtocol(LineOnlyReceiver):
     # TESS Protocol API
     # ================
 
+    def setLogLevel(self, level):
+        SetLogLevel(namespace='proto', levelStr=level)
+
 
     def setReadingCallback(self, callback):
         '''
@@ -228,6 +232,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.log.debug("==> TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.sendLine(line.encode('ascii'))
         self.write_deferred = defer.Deferred()
+        self.write_deferred.addTimeout(2, reactor)
         self.write_response = {}
         return self.write_deferred
 
@@ -240,6 +245,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.log.debug("==> TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.sendLine(line.encode('ascii'))
         self.read_deferred = defer.Deferred()
+        self.read_deferred.addTimeout(2, reactor)
         self.cnt = 0
         self.read_response = {}
         return self.read_deferred

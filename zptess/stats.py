@@ -259,7 +259,11 @@ class StatsService(Service):
             log.info("updating {tess} ZP to {zp}", tess=self.info['name'], zp=stats['zp'])
             # This should not be synchronous, but I could not make it work either with
             # the Twisted Agent or even deferring to thread
-            yield self.photomService.writeZeroPoint(stats['zp'])
+            try:
+                yield self.photomService.writeZeroPoint(stats['zp'])
+            except Exception as e:
+                self.log.error("Timeout when updating photometer zero point")
+                reactor.callLater(0, reactor.stop)
         else:
             log.info("skipping updating of {tess} ZP",tess=self.info['name'])
         yield deferToThread(self._exportCSV, stats)

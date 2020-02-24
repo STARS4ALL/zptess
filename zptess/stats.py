@@ -17,6 +17,7 @@ import random
 import os
 import math
 import statistics
+import csv
 
 from collections import deque
 
@@ -262,6 +263,7 @@ class StatsService(Service):
         else:
             log.info("skipping updating of {tess} ZP",tess=self.info['name'])
         yield deferToThread(self._exportCSV, stats)
+        reactor.callLater(0,reactor.stop)
         
 
     

@@ -16,7 +16,6 @@ import os.path
 import argparse
 import errno
 import copy
-import string
 
 # Only Python 2
 import ConfigParser
@@ -31,23 +30,16 @@ from twisted.logger import LogLevel
 # local imports
 # -------------
 
+from zptess import LOG_FILE, CSV_FILE, CONFIG_FILE, VERSION_STRING
+
 import zptess.utils
-from zptess import __version__
 
 # ----------------
 # Module constants
 # ----------------
 
 
-VERSION_STRING = "{0} on Python {1}.{2}".format(__version__, sys.version_info.major, sys.version_info.minor)
 
-# Default config file path
-if os.name == "nt":
-    CONFIG_FILE=os.path.join("C:\\", "zptess",  "config.ini")
-    LOG_FILE=os.path.join("C:\\", "zptess", "zptess.log")
-else:
-    CONFIG_FILE=os.path.join("/", "etc", "zptess", "config.ini")
-    LOG_FILE=os.path.join("/", "var", "log", "zptess.log")
 
 
 # -----------------------
@@ -60,11 +52,8 @@ else:
 # ------------------------
 
 
-
 def mkendpoint(value):
     return zptess.utils.mkendpoint(value,"192.168.4.1", 23, "/dev/ttyUSB0", 9600)
-
-
 
 
 def cmdline():
@@ -98,6 +87,7 @@ def cmdline():
     #parser.add_argument('--ref-port', type=mkendpoint, action='store', metavar='<serial port device>', help='Reference photometer serial port')
     parser.add_argument('--config',   type=str, default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')
     parser.add_argument('--log-file', type=str, default=LOG_FILE,    action='store', metavar='<log file>', help='log file path')
+    parser.add_argument('--csv-file', type=str, default=CSV_FILE,    action='store', metavar='<csv file>', help='calibration file path')
 
     return parser.parse_args()
 
@@ -153,6 +143,7 @@ def loadCmdLine(cmdline_options):
     options['stats']['log_level']     = log_level
     options['stats']['author']        = cmdline_options.author
     options['stats']['update']        = cmdline_options.update
+    options['stats']['csv_file']      = cmdline_options.csv_file
     
     return options
 

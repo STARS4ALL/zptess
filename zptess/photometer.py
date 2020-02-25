@@ -168,7 +168,7 @@ class PhotometerService(ClientService):
 
     
     def buildFactory(self):
-        namespace = 'msgRef' if self.reference else 'msgTst'
+        namespace = 'REF' if self.reference else 'TEST'
         if self.options['model'] == "TESS-W":
             self.log.debug("Choosing a TESS-W factory")
             import zptess.tessw

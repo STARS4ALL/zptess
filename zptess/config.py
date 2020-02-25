@@ -74,6 +74,7 @@ def cmdline():
     group0 = parser.add_mutually_exclusive_group()
     group0.add_argument('-d' , '--dry-run', action='store_true', help='connect to TEST photometer, display info and exit')
     group0.add_argument('-u' , '--update',  action='store_true', help='automatically update photometer with new calibrated ZP')
+    group0.add_argument('-z' , '--zero-point', action='store', default=None, type=float, help='simply write given zero point')
     
     group1 = parser.add_mutually_exclusive_group(required=True)
     group1.add_argument('--tess-w', type=mkendpoint, action='store', metavar='<serial or tcp endpoint>', help='Calibrate a TESS-W')
@@ -93,6 +94,8 @@ def cmdline():
     parser.add_argument('--config',   type=str, default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')
     parser.add_argument('--log-file', type=str, default=LOG_FILE,    action='store', metavar='<log file>', help='log file path')
     parser.add_argument('--csv-file', type=str, default=CSV_FILE,    action='store', metavar='<csv file>', help='calibration file path')
+    parser.add_argument('--zp-fict', type=float, action='store', metavar='<Zero Point>', help='override ficticious zero point in the config value with given value')
+    parser.add_argument('--zp-abs',  type=float, action='store', metavar='<Zero Point>', help='override absolute zero point in the config value with given value')
 
     return parser.parse_args()
 
@@ -137,6 +140,7 @@ def loadCmdLine(cmdline_options):
     options['test']['model']          = model
     options['test']['endpoint']       = endpoint
     options['test']['dry_run']        = cmdline_options.dry_run
+    options['test']['zero_point']     = cmdline_options.zero_point
     options['test']['log_level']      = log_level
     options['test']['log_messages']   = log_messages
 
@@ -145,10 +149,15 @@ def loadCmdLine(cmdline_options):
         options['stats']['size']      = cmdline_options.number
     if cmdline_options.iterations is not None:
         options['stats']['rounds']    = cmdline_options.iterations
+    if cmdline_options.zp_fict is not None:
+        options['stats']['zp_fict']   = cmdline_options.zp_fict
+    if cmdline_options.zp_abs is not None:
+        options['stats']['zp_abs']    = cmdline_options.zp_abs
     options['stats']['log_level']     = log_level
     options['stats']['author']        = cmdline_options.author
     options['stats']['update']        = cmdline_options.update
     options['stats']['csv_file']      = cmdline_options.csv_file
+    
     
     return options
 
@@ -178,7 +187,7 @@ def loadCfgFile(path):
     options['stats'] = {}
     options['stats']['refname']       = parser.get("stats","refname")
     options['stats']['zp_fict']       = parser.getfloat("stats","zp_fict")
-    options['stats']['zp_calib']      = parser.getfloat("stats","zp_calib")
+    options['stats']['zp_abs']        = parser.getfloat("stats","zp_abs")
     options['stats']['central']       = parser.get("stats","central")
     options['stats']['size']          = parser.getint("stats","size")
     options['stats']['rounds']        = parser.getint("stats","rounds")

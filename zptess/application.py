@@ -62,17 +62,21 @@ startLogging(console=cmdline_opts.console, filepath=cmdline_opts.log_file)
 
 application = Application("zptess")
 
-statsService = StatsService(options['stats'])
-statsService.setName(STATS_SERVICE)
-statsService.setServiceParent(application)
-
-referenceService = PhotometerService(options['reference'],True)
-referenceService.setName(REF_PHOTOMETER_SERVICE)
-referenceService.setServiceParent(application)
-
-testService = PhotometerService(options['test'],False)
-testService.setName(TEST_PHOTOMETER_SERVICE)
-testService.setServiceParent(application)
+if cmdline_opts.dry_run or cmdline_opts.zero_point is not None:
+    testService = PhotometerService(options['test'],False)
+    testService.setName(TEST_PHOTOMETER_SERVICE)
+    testService.setServiceParent(application)
+    print(options['test'])
+else:
+    referenceService = PhotometerService(options['reference'],True)
+    referenceService.setName(REF_PHOTOMETER_SERVICE)
+    referenceService.setServiceParent(application)
+    testService = PhotometerService(options['test'],False)
+    testService.setName(TEST_PHOTOMETER_SERVICE)
+    testService.setServiceParent(application)
+    statsService = StatsService(options['stats'])
+    statsService.setName(STATS_SERVICE)
+    statsService.setServiceParent(application)
 
 
 __all__ = [ "application" ]

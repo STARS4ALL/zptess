@@ -135,7 +135,7 @@ class StatsService(Service):
 
     def accumulateRounds(self):
         self.info = self.photomService.getPhotometerInfo()
-        zpc = self.options['zp_calib']
+        zpabs = self.options['zp_abs']
         zpf = self.options['zp_fict']
         log.info("-"*72)
         refFreq,  refStddev  = self.statsFor(self.queue['reference'], "REF.", self.refname)
@@ -144,7 +144,7 @@ class StatsService(Service):
             diff = 2.5*math.log10(testFreq/refFreq)
             refMag  = zpf - 2.5*math.log10(refFreq)
             testMag = zpf - 2.5*math.log10(testFreq)
-            testZP = round(zpc + diff,2)     
+            testZP = round(zpabs + diff,2)     
             if refStddev != 0.0 and testStddev != 0.0:
                 log.info('ROUND {i:02d}: REF. Mag = {rM:0.2f}. TEST Mag = {tM:0.2f}, Diff = {d:0.3f} => TEST ZP = {zp:0.2f}',
                 i=self.curRound, rM=refMag, tM=testMag, d=diff, zp=testZP)

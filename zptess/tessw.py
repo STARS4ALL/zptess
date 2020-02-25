@@ -47,7 +47,7 @@ GET_INFO = {
     'mac'   : re.compile(r"MAC: ([0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2})"),       
     'zp'    : re.compile(r"ZP: (\d{1,2}\.\d{1,2})"),
     #'zp'    : re.compile(r"Const\.: (\d{1,2}\.\d{1,2})"),
-    'firmware' : re.compile(r"Compiled: (\w{3} \d{1,2} \d{4})"),
+    'firmware' : re.compile(r"Compiled: (.+?)<br>"),  # Non-greedy matching until <br>
     # This applies to the /setconst?cons=nn.nn page
     'flash' : re.compile(r"New Zero Point (\d{1,2}\.\d{1,2})") 
 }

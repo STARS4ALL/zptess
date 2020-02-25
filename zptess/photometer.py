@@ -95,7 +95,8 @@ class PhotometerService(ClientService):
         with inline callbacks
         '''
         self.log.info("starting Photometer Service")
-        self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
+        if not self.limitedStart():
+            self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] == 'serial':
             endpoint = parts[1:]
@@ -159,7 +160,11 @@ class PhotometerService(ClientService):
     # Helper methods
     # ---------------
 
+    def limitedStart(self):
+        '''Detects the case where oly the Test photometer service is started'''
+        return (self.options['dry_run'] or self.options['zero_point'] is not None) and not self.reference
 
+    
     def buildFactory(self):
         if self.options['model'] == "TESS-W":
             self.log.debug("Choosing a TESS-W factory")
@@ -177,9 +182,16 @@ class PhotometerService(ClientService):
 
 
     def gotProtocol(self, protocol):
+        
+        def noop(msg): pass
+
         self.log.debug("got protocol")
         self.protocol  = protocol
-        self.protocol.setReadingCallback(self.onReading)
+        if self.limitedStart():
+            f = noop
+        else:
+            f = self.onReading
+        self.protocol.setReadingCallback(f)
         self.protocol.setContext(self.options['endpoint'])
 
     def gotInfo(self, info):

@@ -92,7 +92,7 @@ class PhotometerService(ClientService):
         Although it is technically a synchronous operation, it works well
         with inline callbacks
         '''
-        self.log.info("starting {name}", name=self.name)
+        self.log.info("starting {name} service", name=self.name)
         if not self.limitedStart():
             self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
         yield self.connect()

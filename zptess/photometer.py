@@ -95,11 +95,15 @@ class PhotometerService(ClientService):
         self.log.info("starting {name} service", name=self.name)
         if not self.limitedStart():
             self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
-        yield self.connect()
-        if not (self.reference and self.options['model'] == TESSW):
-            yield self.getInfo()
-        if not self.reference:
-            yield self.initialActions()
+        try:
+            yield self.connect()
+        except Exception as e:
+            reactor.callLater(3, reactor.stop)
+        else:
+            if not (self.reference and self.options['model'] == TESSW):
+                yield self.getInfo()
+            if not self.reference:
+                yield self.initialActions()
 
             
     # --------------
@@ -139,6 +143,7 @@ class PhotometerService(ClientService):
                 self.serport  = SerialPort(self.protocol, endpoint[0], reactor, baudrate=endpoint[1])
             except Exception as e:
                 self.log.error("{excp}",excp=e)
+                raise
             else:
                 self.gotProtocol(self.protocol)
                 self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])

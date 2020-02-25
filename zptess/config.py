@@ -73,22 +73,23 @@ def cmdline():
     parser.add_argument('-a' , '--author',  type=str, required=True, help='person performing the calibration process')
     group0 = parser.add_mutually_exclusive_group()
     group0.add_argument('-d' , '--dry-run', action='store_true', default=False, help='connect to TEST photometer, display info and exit')
-    group0.add_argument('-u' , '--update',  action='store_true', default=False, help='automatically update photometer with new calibrated ZP')
-    group0.add_argument('-z' , '--zero-point', action='store',  default=None, type=float, help='write given zero point and exit')
+    group0.add_argument('-u' , '--update',  action='store_true', default=False, help='calibrate and update TEST photometer ZP')
+    group0.add_argument('-z' , '--zero-point', action='store',  default=None, type=float, help='connect to TEST photometer, write ZP  and exit')
     
-    parser.add_argument('--port',  type=mkendpoint, default="tcp",  action='store', metavar='<test endpoint>', help='Test photometer endpoint')
-    parser.add_argument('--model', type=str, required=True, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], action='store', help='Test photometer model')
-    parser.add_argument('--ref-port',  type=mkendpoint, default="serial:0",  action='store', metavar='<serial port device>', help='Reference photometer port')
-    parser.add_argument('--ref-model', type=str, default=TESSW.lower(), choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], action='store', help='Reference photometer port')
+    parser.add_argument('--port',      type=mkendpoint, default="tcp",     metavar='<test endpoint>', help='Test photometer endpoint')
+    parser.add_argument('--model',     type=str, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], required=True, help='Test photometer model')
+    parser.add_argument('--ref-port',  type=mkendpoint, default="serial:0", metavar='<ref endpoint>', help='Reference photometer port')
+    parser.add_argument('--ref-model', type=str, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], default=TESSW.lower(), help='Reference photometer port')
  
     parser.add_argument('-i', '--iterations',  type=int, help='process iterations')
     parser.add_argument('-n', '--number',      type=int, help='# samples in each iteration')
 
+    parser.add_argument('-m', '--messages', type=str, choices=["none","ref","test","both"], default="none", help='display protocol messages.')
     group2 = parser.add_mutually_exclusive_group()
     group2.add_argument('-v', '--verbose',  action='store_true', help='verbose output')
-    group2.add_argument('-m', '--messages', type=str, choices=["none","ref","test","both"], default="none", help='also protocol messages shown for ...')
     group2.add_argument('-q', '--quiet',    action='store_true', help='quiet output')
     
+
     parser.add_argument('--config',   type=str, default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')
     parser.add_argument('--log-file', type=str, default=LOG_FILE,    action='store', metavar='<log file>', help='log file path')
     parser.add_argument('--csv-file', type=str, default=CSV_FILE,    action='store', metavar='<csv file>', help='calibration file path')

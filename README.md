@@ -33,6 +33,7 @@ Offset   = 2.5*log10(Freq[tst]/Freq[ref])
 ZP[calibrated] = ZP[ref] + Offset
 
 where 
-	ZP[fict] is a ficticios zero point of 20.50 to compare readings with the TESS Windows utility by Cristobal
-	ZP[ref] is the absolute Zero Point of the calibrated TESS-W (20.44) determined by LICA
+	ZP[fict] is a ficticios zero point of 20.50 to compare readings with the TESS Windows utility 
+	         by Cristobal García.
+	ZP[ref] is the absolute Zero Point of the calibrated TESS-W (20.44) determined by LICA.
 ```

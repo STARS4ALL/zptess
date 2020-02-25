@@ -208,8 +208,7 @@ class PhotometerService(ClientService):
             self.log.info('Dry run. Will stop here ...') 
             reactor.callLater(0,reactor.stop)
         elif self.options['zero_point'] is not None:
-            self.protocol.writeZeroPoint(self.options['zero_point'])
-            reactor.callLater(2,reactor.stop)   # Give time to write before exiting
+            self.protocol.writeZeroPoint(self.options['zero_point']).addCallback(reactor.stop)
 
 
     # ----------------------------

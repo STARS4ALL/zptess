@@ -115,8 +115,6 @@ class PhotometerService(ClientService):
                 else:
                     self.gotInfo(info)
         else:
-            #if not self.reference:
-            #    self.info = self.readPhotometerInfo()   # synchronous operation
             ClientService.startService(self)
             protocol = yield self.whenConnected()
             self.gotProtocol(protocol)

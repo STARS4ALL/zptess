@@ -57,10 +57,6 @@ from zptess.utils    import chop
 
 class PhotometerService(ClientService):
 
-    # Service name
-    NAME = 'Photometer Service'
-
-
     def __init__(self, options, reference):
 
         def backoffPolicy(initialDelay=4.0, maxDelay=60.0, factor=2):
@@ -96,7 +92,7 @@ class PhotometerService(ClientService):
         Although it is technically a synchronous operation, it works well
         with inline callbacks
         '''
-        self.log.info("starting Photometer Service")
+        self.log.info("starting {name}", name=self.name)
         if not self.limitedStart():
             self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
         yield self.connect()

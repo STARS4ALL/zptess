@@ -109,9 +109,10 @@ SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in SOLICITED_RESPONSES ]
 # ----------------
 
 
-
-
-
+def format_mac(mac):
+    '''Formats MAC strings as returned from the device into well-known MAC format'''
+    return ':'.join(map(''.join, zip(*[iter(mac)]*2)))
+    
 
 # ----------
 # Exceptions
@@ -187,7 +188,7 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
-        line = line.decode('ascii')  # from bytearray to string
+        line = line.decode('latin_1')  # from bytearray to string
         self.log.debug("<== TESS-P [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
@@ -282,7 +283,7 @@ class TESSProtocol(LineOnlyReceiver):
             self.cnt += 1
         elif sr['name'] == 'mac':
             self.read_response['tstamp'] = tstamp
-            self.read_response['mac'] = str(matchobj.group(1))
+            self.read_response['mac'] = format_mac(matchobj.group(1))
             self.cnt += 1
         elif sr['name'] == 'firmware':
             self.read_response['tstamp'] = tstamp

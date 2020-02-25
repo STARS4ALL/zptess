@@ -33,6 +33,8 @@ from zptess.logger   import setLogLevel as SetLogLevel
 
 
 '''
+Sample strings from serial port
+
 {"seq":218, "rev":3, "name":"TASD00", "ci":20.20, "freq":1926.78, "mag":11.99, "tamb":17.89, "tsky":23.65, "vbat":0.01, "alt":0.00, "azi":0.00}
 <fH 02083><tA 01792><tO 02379><mZ 00000>
 {"seq":219, "rev":3, "name":"TASD00", "ci":20.20, "freq":2083.33, "mag":11.90, "tamb":17.93, "tsky":23.79, "vbat":0.02, "alt":0.00, "azi":0.00}
@@ -98,7 +100,10 @@ SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in SOLICITED_RESPONSES ]
 # Module functions
 # ----------------
 
-
+def format_mac(mac):
+    '''Formats MAC strings as returned from the device into well-known MAC format'''
+    return ':'.join(map(''.join, zip(*[iter(mac)]*2)))
+    
 
 
 
@@ -272,7 +277,7 @@ class TESSProtocol(LineOnlyReceiver):
             self.cnt += 1
         elif sr['name'] == 'mac':
             self.read_response['tstamp'] = tstamp
-            self.read_response['mac'] = str(matchobj.group(1))
+            self.read_response['mac'] = format_mac(matchobj.group(1))
             self.cnt += 1
         elif sr['name'] == 'firmware':
             self.read_response['tstamp'] = tstamp

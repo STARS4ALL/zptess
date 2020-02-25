@@ -299,7 +299,7 @@ class TESSProtocol(LineOnlyReceiver):
             self.read_deferred = None
             self.cnt = 0
 
-        if self.write_deferred: 
+        if self.write_deferred and 'zp' in self.write_response: 
             self.write_deferred.callback(self.write_response)
             self.write_deferred = None
 

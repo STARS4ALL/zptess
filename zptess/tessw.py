@@ -217,6 +217,7 @@ class TESSProtocol(LineOnlyReceiver):
         Synchronous operation performed before Twisted reactor is run
         '''
         result = {}
+        result['tstamp'] = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         state_url = make_state_url(endpoint)
         log.debug("requesting URL {url}", url=state_url)
         resp = requests.get(state_url, timeout=(2,5))
@@ -230,12 +231,15 @@ class TESSProtocol(LineOnlyReceiver):
         result['zp'] = float(matchobj.groups(1)[0])
         matchobj = GET_INFO['firmware'].search(text)
         result['firmware'] = matchobj.groups(1)[0]
+        result['tstamp'] = now
         return result
 
 
     def _writeZeroPoint(self, zp, endpoint):
         '''Flash new ZP. Synchronous request to be executed in a separate thread'''
         try:
+            result = {}
+            result['tstamp'] = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
             url = make_save_url(endpoint, zp)
             log.debug("requesting URL {url}", url=url)
             resp = requests.get(url, timeout=(2,5))
@@ -246,8 +250,8 @@ class TESSProtocol(LineOnlyReceiver):
         else:
             matchobj = GET_INFO['flash'].search(text)
             if matchobj:
-                flashed_zp = float(matchobj.groups(1)[0])
-                log.debug("Flashed ZP is {fzp}", fzp=flashed_zp)
+                result['zp'] = float(matchobj.groups(1)[0])
+                return result
 
 
     def match_unsolicited(self, line):

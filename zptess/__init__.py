@@ -52,12 +52,14 @@ if os.name == "nt":
     LOG_FILE    = os.path.join("C:\\", "zptess", "zptess.log")
     CSV_FILE    = os.path.join("C:\\", "zptess", "zptess.csv")
     PORT_PREFIX = "COM"
-else:
+elif os.name == "posix":
     CONFIG_FILE = os.path.join("/", "etc", "zptess", "config.ini")
     LOG_FILE    = os.path.join("/", "var", "log", "zptess.log")
     CSV_FILE    = os.path.join("/", "var", "zptess", "zptess.csv")
     PORT_PREFIX = "/dev/ttyUSB"
-
+else:
+    print("ERROR: unsupported OS {name}".format(name = os.name))
+    sys.exit(1)
 # -----------------------
 # Module global variables
 # -----------------------

@@ -14,7 +14,7 @@ from __future__ import division, absolute_import
 # Twisted imports
 # ---------------
 
-from twisted.application.service import Application
+from twisted.application.service import Application, IServiceCollection
 
 #--------------
 # local imports
@@ -38,21 +38,22 @@ startLogging(console=cmdline_opts.console, filepath=cmdline_opts.log_file)
 # ------------------------------------------------
 
 application = Application("zptess")
+serviceCollection = IServiceCollection(application)
 
 if cmdline_opts.dry_run or cmdline_opts.zero_point is not None:
     testService = PhotometerService(options['test'],False)
     testService.setName(TEST_PHOTOMETER_SERVICE)
-    testService.setServiceParent(application)
+    testService.setServiceParent(serviceCollection)
 else:
     referenceService = PhotometerService(options['reference'],True)
     referenceService.setName(REF_PHOTOMETER_SERVICE)
-    referenceService.setServiceParent(application)
+    referenceService.setServiceParent(serviceCollection)
     testService = PhotometerService(options['test'],False)
     testService.setName(TEST_PHOTOMETER_SERVICE)
-    testService.setServiceParent(application)
+    testService.setServiceParent(serviceCollection)
     statsService = StatsService(options['stats'])
     statsService.setName(STATS_SERVICE)
-    statsService.setServiceParent(application)
+    statsService.setServiceParent(serviceCollection)
 
 
 __all__ = [ "application" ]

@@ -10,6 +10,8 @@
 
 from __future__ import division, absolute_import
 
+import sys
+
 # ---------------
 # Twisted imports
 # ---------------
@@ -97,38 +99,10 @@ class PhotometerService(ClientService):
         self.log.info("starting Photometer Service")
         if not self.limitedStart():
             self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
-        parts = chop(self.options['endpoint'], sep=':')
-        if parts[0] == 'serial':
-            endpoint = parts[1:]
-            self.protocol = self.factory.buildProtocol(0)
-            self.serport  = SerialPort(self.protocol, endpoint[0], reactor, baudrate=endpoint[1])
-            self.gotProtocol(self.protocol)
-            self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
-            if not self.reference:
-                self.log.info("Requesting photometer info")
-                try:
-                    info = yield self.protocol.readPhotometerInfo()
-                   
-                except Exception as e:
-                    self.log.error("Timeout when reading photometer info")
-                    reactor.callLater(0, reactor.stop)
-                else:
-                    self.gotInfo(info)
-        else:
-            ClientService.startService(self)
-            protocol = yield self.whenConnected()
-            self.gotProtocol(protocol)
-            self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
-            try:
-                info = yield self.protocol.readPhotometerInfo()
-            except Exception as e:
-                self.log.error("Timeout when reading photometer info")
-                self.log.failure("{excp}",excp=e)
-                reactor.callLater(0, reactor.stop)
-            else:
-                self.gotInfo(info)
+        yield self.connect()
+        if not self.reference:
+            yield self.initialOperations()
 
-            
             
     # --------------
     # Photometer API 
@@ -140,7 +114,6 @@ class PhotometerService(ClientService):
 
     def getPhotometerInfo(self):
         return self.info
-
 
     def printStats(self):
         total  = self.protocol.nreceived
@@ -157,6 +130,45 @@ class PhotometerService(ClientService):
     # --------------
     # Helper methods
     # ---------------
+
+    @inlineCallbacks
+    def connect(self):
+        parts = chop(self.options['endpoint'], sep=':')
+        if parts[0] == 'serial':
+            endpoint = parts[1:]
+            self.protocol = self.factory.buildProtocol(0)
+            try:
+                self.serport  = SerialPort(self.protocol, endpoint[0], reactor, baudrate=endpoint[1])
+            except Exception as e:
+                self.log.error("{excp}",excp=e)
+                sys.exit()
+            else:
+                self.gotProtocol(self.protocol)
+                self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
+        else:
+            ClientService.startService(self)
+            protocol = yield self.whenConnected()
+            self.gotProtocol(protocol)
+            self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
+
+
+    @inlineCallbacks
+    def initialOperations(self):
+        try:
+            info = yield self.protocol.readPhotometerInfo()
+            self.gotInfo(info)
+            if self.options['dry_run']:
+                self.log.info('Dry run. Will stop here ...') 
+                reactor.callLater(0,reactor.stop)
+            elif self.options['zero_point'] is not None:
+                result = yield self.protocol.writeZeroPoint(self.options['zero_point'])
+                self.log.info("[TEST] Writen ZP : {zp:0.2f}",zp = result['zp'])
+                reactor.callLater(0,reactor.stop)
+        except Exception as e:
+            self.log.error("Timeout when reading photometer info")
+            self.log.failure("{excp}",excp=e)
+            reactor.callLater(0, reactor.stop)
+       
 
     def limitedStart(self):
         '''Detects the case where only the Test photometer service is started'''
@@ -191,7 +203,7 @@ class PhotometerService(ClientService):
         self.protocol.setReadingCallback(func)
         self.protocol.setContext(self.options['endpoint'])
 
-    @inlineCallbacks
+
     def gotInfo(self, info):
         self.log.debug("got photometer info {info}",info=info)
         self.info = info
@@ -201,14 +213,7 @@ class PhotometerService(ClientService):
         self.log.info("[TEST] MAC       : {name}", name=info['mac'])
         self.log.info("[TEST] Zero Point: {name:.02f} (old)", name=info['zp'])
         self.log.info("[TEST] Firmware  : {name}", name=info['firmware'])
-        if self.options['dry_run']:
-            self.log.info('Dry run. Will stop here ...') 
-            reactor.callLater(0,reactor.stop)
-        elif self.options['zero_point'] is not None:
-            result = yield self.protocol.writeZeroPoint(self.options['zero_point'])
-            self.log.info("[TEST] Writen ZP : {zp:0.2f}",zp = result['zp'])
-            reactor.callLater(0,reactor.stop)
-
+        
 
     # ----------------------------
     # Event Handlers from Protocol

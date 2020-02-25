@@ -172,11 +172,6 @@ class TESSProtocol(LineOnlyReceiver):
         '''Sets the delimiter to the closihg parenthesis'''
         # LineOnlyReceiver.delimiter = b'\n'
         self._onReading = set()                # callback sets
-        # stat counters
-        self.nreceived = 0
-        self.nunsolici = 0
-        self.nsolici   = 0
-        self.nunknown  = 0
         self.write_deferred = None
         self.read_deferred  = None
         self.write_response = None
@@ -192,17 +187,11 @@ class TESSProtocol(LineOnlyReceiver):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         line = line.decode('latin_1')  # from bytearray to string
         self.log.info("<== TESS-P [{l:02d}] {line}", l=len(line), line=line)
-        self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
         if handled:
-            self.nunsolici += 1
             return
         handled = self._handleSolicitedResponse(line, now)
-        if handled:
-            self.nsolici += 1
-            return
-        self.nunknown += 1
-        #self.log.warn("Unknown/Unexpected message {line}", line=line)
+        
 
     # ================
     # TESS Protocol API
@@ -219,19 +208,9 @@ class TESSProtocol(LineOnlyReceiver):
         self._onReading = callback
 
 
-    def resetStats(self):
-        '''
-        Reset statistics counters.
-        '''
-        self.nreceived = 0
-        self.nresponse = 0
-        self.nunsolici = 0
-        self.nsolici   = 0
-        self.nunknown  = 0
-
-
     def setContext(self, context):
         pass
+
 
     def writeZeroPoint(self, zero_point):
         '''
@@ -245,6 +224,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.write_deferred.addTimeout(2, reactor)
         self.write_response = {}
         return self.write_deferred
+
 
     def readPhotometerInfo(self):
         '''
@@ -272,6 +252,7 @@ class TESSProtocol(LineOnlyReceiver):
                 self.log.debug("matched {pattern}", pattern=SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)]['name'])
                 return SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)], matchobj
         return None, None
+
 
     def _handleSolicitedResponse(self, line, tstamp):
         '''

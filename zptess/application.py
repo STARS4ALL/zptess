@@ -66,7 +66,6 @@ if cmdline_opts.dry_run or cmdline_opts.zero_point is not None:
     testService = PhotometerService(options['test'],False)
     testService.setName(TEST_PHOTOMETER_SERVICE)
     testService.setServiceParent(application)
-    print(options['test'])
 else:
     referenceService = PhotometerService(options['reference'],True)
     referenceService.setName(REF_PHOTOMETER_SERVICE)

@@ -151,10 +151,6 @@ class TESSProtocol(LineOnlyReceiver):
         '''Sets the delimiter to the closihg parenthesis'''
         # LineOnlyReceiver.delimiter = b'\n'
         self._onReading = set()                # callback sets
-        # stat counters
-        self.nreceived = 0
-        self.nunsolici = 0
-        self.nunknown  = 0
         self.log = Logger(namespace=namespace)
         
       
@@ -166,14 +162,8 @@ class TESSProtocol(LineOnlyReceiver):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         line = line.decode('ascii')  # from bytearray to string
         self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
-        self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
-        if handled:
-            self.nunsolici += 1
-            return
-        self.nunknown += 1
-        #self.log.warn("Unknown/Unexpected message {line}", line=line)
-
+    
     # =================
     # TESS Protocol API
     # =================
@@ -181,27 +171,22 @@ class TESSProtocol(LineOnlyReceiver):
     def setLogLevel(self, level):
         SetLogLevel(namespace='proto', levelStr=level)
 
+
     def setReadingCallback(self, callback):
         '''
         API Entry Point
         '''
         self._onReading = callback
 
-    def resetStats(self):
-        '''
-        Reset statistics counters.
-        '''
-        self.nreceived = 0
-        self.nresponse = 0
-        self.nunsolici = 0
-        self.nunknown  = 0
 
     def setContext(self, context):
         self.httpEndPoint = context
 
+
     def writeZeroPoint(self, zero_point):
         '''Writes Zero Point to the device. Returns a Deferred'''
         return deferToThread(self._writeZeroPoint,  zero_point, self.httpEndPoint)
+
 
     def readPhotometerInfo(self):
         '''

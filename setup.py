@@ -84,7 +84,9 @@ if os.name == "posix":
     
   DATA_FILES  = [ 
     ('/etc/zptess',      ['files/etc/zptess/config.example.ini',]),
-    ('/usr/local/bin',   ['files/usr/local/bin/zptess']),
+    ('/usr/local/bin',   ['files/usr/local/bin/zptessw',
+                          'files/usr/local/bin/zptessp',
+                          'files/usr/local/bin/zptas',]),
   ]
   
   # Some fixes before setup

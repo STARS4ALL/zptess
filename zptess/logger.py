@@ -60,6 +60,8 @@ def setLogLevel(namespace=None, levelStr='info'):
     Set a new log level for a given namespace
     LevelStr is: 'critical', 'error', 'warn', 'info', 'debug'
     '''
+    global logLevelFilterPredicate
+
     level = LogLevel.levelWithName(levelStr)
     logLevelFilterPredicate.setLogLevelForNamespace(namespace=namespace, level=level)
 
@@ -79,14 +81,7 @@ if os.name == "nt":
 else:
     import syslog
 
-    def sysLogError(*args):
-        syslog.syslog(syslog.LOG_ERR, *args)
-
-    def sysLogWarn(*args):
-        syslog.syslog(syslog.LOG_WARNING, *args)    
-
-    def sysLogInfo(*args):
-        syslog.syslog(syslog.LOG_INFO, *args)
+    
 
 
     sysLogInfo  = syslog.syslog

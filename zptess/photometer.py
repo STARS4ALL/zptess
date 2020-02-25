@@ -194,6 +194,7 @@ class PhotometerService(ClientService):
         self.protocol.setReadingCallback(f)
         self.protocol.setContext(self.options['endpoint'])
 
+
     def gotInfo(self, info):
         self.log.debug("got photometer info {info}",info=info)
         self.info = info
@@ -206,6 +207,9 @@ class PhotometerService(ClientService):
         if self.options['dry_run']:
             self.log.info('Dry run. Will stop here ...') 
             reactor.callLater(0,reactor.stop)
+        elif self.options['zero_point'] is not None:
+            self.protocol.writeZeroPoint(self.options['zero_point'])
+            reactor.callLater(2,reactor.stop)   # Give time to write before exiting
 
 
     # ----------------------------

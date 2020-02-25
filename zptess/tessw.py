@@ -196,7 +196,7 @@ class TESSProtocol(LineOnlyReceiver):
 
     def writeZeroPoint(self, zero_point):
         '''Writes Zero Point to the device. Returns a Deferred'''
-        return deferToThread(_self.writeZeroPoint,  zero_point, self.httpEndPoint)
+        return deferToThread(self._writeZeroPoint,  zero_point, self.httpEndPoint)
 
     def readPhotometerInfo(self):
         '''
@@ -240,13 +240,14 @@ class TESSProtocol(LineOnlyReceiver):
             log.debug("requesting URL {url}", url=url)
             resp = requests.get(url, timeout=(2,5))
             resp.raise_for_status()
+            text  = resp.text
         except Exception as e:
             log.error("{e}",e=e)
         else:
-            matchobj = GET_INFO['flash'].search(self.text)
+            matchobj = GET_INFO['flash'].search(text)
             if matchobj:
                 flashed_zp = float(matchobj.groups(1)[0])
-                log.info("Flashed ZP of {tess} is {fzp}", tess=self.tess_name, fzp=flashed_zp)
+                log.debug("Flashed ZP is {fzp}", fzp=flashed_zp)
 
 
     def match_unsolicited(self, line):

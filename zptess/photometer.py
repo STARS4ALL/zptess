@@ -71,11 +71,11 @@ class PhotometerService(ClientService):
             return policy
 
         self.options   = options
-        self.namespace = 'refe' if reference else 'test'
+        self.namespace      = 'refe' if reference else 'test'
+        self.protoNamespace = 'REFE' if reference else 'TEST'
+        setLogLevel(namespace=self.protoNamespace, levelStr=options['log_messages'])
+        setLogLevel(namespace=self.namespace,      levelStr=options['log_level'])
         self.log = Logger(namespace=self.namespace)
-        setLogLevel(namespace=self.namespace, levelStr=options['log_level'])
-        protocol_level  = 'debug' if options['log_messages'] else 'info'
-        setLogLevel(namespace='proto', levelStr=protocol_level)
         self.reference = reference  # Flag, is this instance for the reference photometer
         self.factory   = self.buildFactory()
         self.protocol  = None
@@ -168,19 +168,18 @@ class PhotometerService(ClientService):
 
     
     def buildFactory(self):
-        namespace = 'REF' if self.reference else 'TEST'
         if self.options['model'] == "TESS-W":
             self.log.debug("Choosing a TESS-W factory")
             import zptess.tessw
-            factory = zptess.tessw.TESSProtocolFactory(namespace)
+            factory = zptess.tessw.TESSProtocolFactory(self.protoNamespace)
         elif self.options['model'] == "TESS-P":
             self.log.debug("Choosing a TESS-P factory")
             import zptess.tessp
-            factory = zptess.tessp.TESSProtocolFactory(namespace)
+            factory = zptess.tessp.TESSProtocolFactory(self.protoNamespace)
         else:
             self.log.debug("Choosing a TAS factory")
             import zptess.tas
-            factory = zptess.tas.TESSProtocolFactory(namespace)
+            factory = zptess.tas.TESSProtocolFactory(self.protoNamespace)
         return factory
 
 

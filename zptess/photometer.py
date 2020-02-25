@@ -100,8 +100,10 @@ class PhotometerService(ClientService):
         if not self.limitedStart():
             self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
         yield self.connect()
-        if not self.reference:
+        if not (self.reference and self.options['model'] == TESSW):
             yield self.getInfo()
+        if not self.reference:
+            yield self.initialActions()
 
             
     # --------------
@@ -155,6 +157,11 @@ class PhotometerService(ClientService):
     def getInfo(self):
         try:
             info = yield self.protocol.readPhotometerInfo()
+        except Exception as e:
+            self.log.error("Timeout when reading photometer info")
+            self.log.failure("{excp}",excp=e)
+            reactor.callLater(0, reactor.stop)
+        else:
             self.log.debug("got photometer info {info}",info=info)
             self.info = info
             self.info['model'] = self.options['model']
@@ -163,17 +170,23 @@ class PhotometerService(ClientService):
             self.log.info("[{label}] MAC       : {value}", label=self.label, value=info['mac'])
             self.log.info("[{label}] Zero Point: {value:.02f} (old)", label=self.label, value=info['zp'])
             self.log.info("[{label}] Firmware  : {value}", label=self.label, value=info['firmware'])
-            if self.options['dry_run']:
-                self.log.info('Dry run. Will stop here ...') 
-                reactor.callLater(0,reactor.stop)
-            elif self.options['zero_point'] is not None:
+       
+
+    @inlineCallbacks
+    def initialActions(self):
+        if self.options['dry_run']:
+            self.log.info('Dry run. Will stop here ...') 
+            reactor.callLater(0,reactor.stop)
+        elif self.options['zero_point'] is not None:
+            try:
                 result = yield self.protocol.writeZeroPoint(self.options['zero_point'])
+            except Exception as e:
+                self.log.error("Timeout when updating Zero Point")
+                self.log.failure("{excp}",excp=e)
+            else:
                 self.log.info("[{label}] Writen ZP : {zp:0.2f}", label=self.label, zp = result['zp'])
+            finally:
                 reactor.callLater(0,reactor.stop)
-        except Exception as e:
-            self.log.error("Timeout when reading photometer info")
-            self.log.failure("{excp}",excp=e)
-            reactor.callLater(0, reactor.stop)
        
 
     def limitedStart(self):

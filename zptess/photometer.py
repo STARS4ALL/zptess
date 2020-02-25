@@ -73,10 +73,10 @@ class PhotometerService(ClientService):
             return policy
 
         self.options   = options
-        self.namespace      = 'refe' if reference else 'test'
-        self.protoNamespace = 'REFE' if reference else 'TEST'
-        setLogLevel(namespace=self.protoNamespace, levelStr=options['log_messages'])
-        setLogLevel(namespace=self.namespace,      levelStr=options['log_level'])
+        self.namespace = 'refe' if reference else 'test'
+        self.label     = self.namespace.upper()
+        setLogLevel(namespace=self.label,     levelStr=options['log_messages'])
+        setLogLevel(namespace=self.namespace, levelStr=options['log_level'])
         self.log = Logger(namespace=self.namespace)
         self.reference = reference  # Flag, is this instance for the reference photometer
         self.factory   = self.buildFactory()
@@ -101,7 +101,7 @@ class PhotometerService(ClientService):
             self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
         yield self.connect()
         if not self.reference:
-            yield self.initialOperations()
+            yield self.getInfo()
 
             
     # --------------
@@ -141,7 +141,6 @@ class PhotometerService(ClientService):
                 self.serport  = SerialPort(self.protocol, endpoint[0], reactor, baudrate=endpoint[1])
             except Exception as e:
                 self.log.error("{excp}",excp=e)
-                sys.exit()
             else:
                 self.gotProtocol(self.protocol)
                 self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
@@ -153,16 +152,23 @@ class PhotometerService(ClientService):
 
 
     @inlineCallbacks
-    def initialOperations(self):
+    def getInfo(self):
         try:
             info = yield self.protocol.readPhotometerInfo()
-            self.gotInfo(info)
+            self.log.debug("got photometer info {info}",info=info)
+            self.info = info
+            self.info['model'] = self.options['model']
+            self.log.info("[{label}] Model     : {value}", label=self.label, value=self.info['model'])
+            self.log.info("[{label}] Name      : {value}", label=self.label, value=info['name'])
+            self.log.info("[{label}] MAC       : {value}", label=self.label, value=info['mac'])
+            self.log.info("[{label}] Zero Point: {value:.02f} (old)", label=self.label, value=info['zp'])
+            self.log.info("[{label}] Firmware  : {value}", label=self.label, value=info['firmware'])
             if self.options['dry_run']:
                 self.log.info('Dry run. Will stop here ...') 
                 reactor.callLater(0,reactor.stop)
             elif self.options['zero_point'] is not None:
                 result = yield self.protocol.writeZeroPoint(self.options['zero_point'])
-                self.log.info("[TEST] Writen ZP : {zp:0.2f}",zp = result['zp'])
+                self.log.info("[{label}] Writen ZP : {zp:0.2f}", label=self.label, zp = result['zp'])
                 reactor.callLater(0,reactor.stop)
         except Exception as e:
             self.log.error("Timeout when reading photometer info")
@@ -181,15 +187,15 @@ class PhotometerService(ClientService):
         if self.options['model'] == TESSW:
             self.log.debug("Choosing a {model} factory", model=TESSW)
             import zptess.tessw
-            factory = zptess.tessw.TESSProtocolFactory(self.protoNamespace)
+            factory = zptess.tessw.TESSProtocolFactory(self.label)
         elif self.options['model'] == TESSP:
             self.log.debug("Choosing a {model} factory", model=TESSP)
             import zptess.tessp
-            factory = zptess.tessp.TESSProtocolFactory(self.protoNamespace)
+            factory = zptess.tessp.TESSProtocolFactory(self.label)
         else:
             self.log.debug("Choosing a {model} factory", model=TAS)
             import zptess.tas
-            factory = zptess.tas.TESSProtocolFactory(self.protoNamespace)
+            factory = zptess.tas.TESSProtocolFactory(self.label)
         return factory
 
 
@@ -204,16 +210,6 @@ class PhotometerService(ClientService):
         self.protocol.setContext(self.options['endpoint'])
 
 
-    def gotInfo(self, info):
-        self.log.debug("got photometer info {info}",info=info)
-        self.info = info
-        self.info['model'] = self.options['model']
-        self.log.info("[TEST] Model     : {name}", name=self.info['model'])
-        self.log.info("[TEST] Name      : {name}", name=info['name'])
-        self.log.info("[TEST] MAC       : {name}", name=info['mac'])
-        self.log.info("[TEST] Zero Point: {name:.02f} (old)", name=info['zp'])
-        self.log.info("[TEST] Firmware  : {name}", name=info['firmware'])
-        
 
     # ----------------------------
     # Event Handlers from Protocol

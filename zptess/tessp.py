@@ -137,25 +137,22 @@ class TESSError(Exception):
 
 class TESSProtocolFactory(ClientFactory):
 
-    log = Logger(namespace='proto')
-
     def __init__(self, namespace):
-        self.protoNamespace = namespace
+        self.namespace = namespace
+        self.log = Logger(namespace=namespace)
 
     def startedConnecting(self, connector):
         self.log.debug('Factory: Started to connect.')
 
     def buildProtocol(self, addr):
         self.log.debug('Factory: Connected.')
-        p = TESSProtocol()
-        p.log = Logger(namespace=self.protoNamespace)
-        return p
+        return TESSProtocol(self.namespace)
 
     def clientConnectionLost(self, connector, reason):
-        self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
+        self.self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
 
     def clientConnectionFailed(self, connector, reason):
-        self.log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
+        self.self.log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -171,7 +168,7 @@ class TESSProtocol(LineOnlyReceiver):
     # Twisted Line Receiver API
     # -------------------------
 
-    def __init__(self):
+    def __init__(self, namespace):
         '''Sets the delimiter to the closihg parenthesis'''
         # LineOnlyReceiver.delimiter = b'\n'
         self._onReading = set()                # callback sets
@@ -184,7 +181,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.read_deferred  = None
         self.write_response = None
         self.read_response  = None
-        self.log = None # We don't know yet the namespace this instance will be
+        self.log = Logger(namespace=namespace)
 
       
     def connectionMade(self):

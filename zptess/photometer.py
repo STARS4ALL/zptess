@@ -162,7 +162,9 @@ class PhotometerService(ClientService):
 
     def limitedStart(self):
         '''Detects the case where oly the Test photometer service is started'''
-        return (self.options['dry_run'] or self.options['zero_point'] is not None) and not self.reference
+        if self.reference:
+            return False
+        return (self.options['dry_run'] or self.options['zero_point'] is not None) 
 
     
     def buildFactory(self):

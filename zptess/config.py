@@ -72,7 +72,7 @@ def cmdline():
     parser.add_argument('-k' , '--console', action='store_true', help='log to console')
     parser.add_argument('-a' , '--author',  type=str, required=True, help='person performing the calibration process')
     group0 = parser.add_mutually_exclusive_group()
-    group0.add_argument('-d' , '--dry-run', action='store_true', help='connect to TEST photometer, display info and exit')
+    group0.add_argument('-d' , '--dry-run', action='store_true', default=False, help='connect to TEST photometer, display info and exit')
     group0.add_argument('-u' , '--update',  action='store_true', help='automatically update photometer with new calibrated ZP')
     group0.add_argument('-z' , '--zero-point', action='store', default=None, type=float, help='simply write given zero point')
     
@@ -132,9 +132,9 @@ def loadCmdLine(cmdline_options):
     options = {}
 
     if cmdline_options.verbose:
-        gen_level = "normal"
+        gen_level = "verbose"
     elif cmdline_options.quiet:
-        gen_level = "normal"
+        gen_level = "quiet"
     else:
         gen_level = "normal"
     

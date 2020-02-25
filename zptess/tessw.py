@@ -75,7 +75,6 @@ UNSOLICITED_PATTERNS = [ re.compile(ur['pattern']) for ur in UNSOLICITED_RESPONS
 # Module global variables
 # -----------------------
 
-log = Logger(namespace='proto')
 
 # ----------------
 # Module functions
@@ -117,18 +116,25 @@ class TESSError(Exception):
 
 class TESSProtocolFactory(ClientFactory):
 
+    log = Logger(namespace='proto')
+
+    def __init__(self, namespace):
+        self.protoNamespace = namespace
+
     def startedConnecting(self, connector):
-        log.debug('Factory: Started to connect.')
+        self.self.log.debug('Factory: Started to connect.')
 
     def buildProtocol(self, addr):
-        log.debug('Factory: Connected.')
-        return TESSProtocol()
+        self.self.log.debug('Factory: Connected.')
+        p = TESSProtocol()
+        p.log = Logger(namespace=self.protoNamespace)
+        return p
 
     def clientConnectionLost(self, connector, reason):
-        log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
+        self.self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
 
     def clientConnectionFailed(self, connector, reason):
-        log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
+        self.self.log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -152,22 +158,24 @@ class TESSProtocol(LineOnlyReceiver):
         self.nreceived = 0
         self.nunsolici = 0
         self.nunknown  = 0
+        self.log = None # We don't know yet the namespace this instance will be
+        
       
     def connectionMade(self):
-        log.debug("connectionMade()")
+        self.log.debug("connectionMade()")
 
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         line = line.decode('ascii')  # from bytearray to string
-        log.debug("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
+        self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
         if handled:
             self.nunsolici += 1
             return
         self.nunknown += 1
-        #log.warn("Unknown/Unexpected message {line}", line=line)
+        #self.log.warn("Unknown/Unexpected message {line}", line=line)
 
     # =================
     # TESS Protocol API
@@ -219,9 +227,10 @@ class TESSProtocol(LineOnlyReceiver):
         result = {}
         result['tstamp'] = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         state_url = make_state_url(endpoint)
-        log.debug("requesting URL {url}", url=state_url)
+        self.log.info("==> TESS-W [HTTP GET] {url}", url=state_url)
         resp = requests.get(state_url, timeout=(2,5))
         resp.raise_for_status()
+        self.log.info("<== TESS-W [HTTP GET] {url}", url=state_url)
         text  = resp.text
         matchobj = GET_INFO['name'].search(text)
         result['name'] = matchobj.groups(1)[0]
@@ -241,12 +250,13 @@ class TESSProtocol(LineOnlyReceiver):
             result = {}
             result['tstamp'] = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
             url = make_save_url(endpoint, zp)
-            log.debug("requesting URL {url}", url=url)
+            self.log.info("==> TESS-W [HTTP GET] {url}", url=url)
             resp = requests.get(url, timeout=(2,5))
             resp.raise_for_status()
+            self.log.info("<== TESS-W [HTTP GET] {url}", url=url)
             text  = resp.text
         except Exception as e:
-            log.error("{e}",e=e)
+            self.log.error("{e}",e=e)
         else:
             matchobj = GET_INFO['flash'].search(text)
             if matchobj:
@@ -259,7 +269,7 @@ class TESSProtocol(LineOnlyReceiver):
         for regexp in UNSOLICITED_PATTERNS:
             matchobj = regexp.search(line)
             if matchobj:
-                log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
+                self.log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
                 return UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)], matchobj
         return None, None
 

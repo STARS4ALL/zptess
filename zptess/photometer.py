@@ -166,18 +166,19 @@ class PhotometerService(ClientService):
 
     
     def buildFactory(self):
+        namespace = 'msgRef' if self.reference else 'msgTst'
         if self.options['model'] == "TESS-W":
             self.log.debug("Choosing a TESS-W factory")
             import zptess.tessw
-            factory = zptess.tessw.TESSProtocolFactory()
+            factory = zptess.tessw.TESSProtocolFactory(namespace)
         elif self.options['model'] == "TESS-P":
             self.log.debug("Choosing a TESS-P factory")
             import zptess.tessp
-            factory = zptess.tessp.TESSProtocolFactory()
+            factory = zptess.tessp.TESSProtocolFactory(namespace)
         else:
             self.log.debug("Choosing a TAS factory")
             import zptess.tas
-            factory = zptess.tas.TESSProtocolFactory()
+            factory = zptess.tas.TESSProtocolFactory(namespace)
         return factory
 
 
@@ -187,11 +188,8 @@ class PhotometerService(ClientService):
 
         self.log.debug("got protocol")
         self.protocol  = protocol
-        if self.limitedStart():
-            f = noop
-        else:
-            f = self.onReading
-        self.protocol.setReadingCallback(f)
+        func = noop if self.limitedStart() else self.onReading
+        self.protocol.setReadingCallback(func)
         self.protocol.setContext(self.options['endpoint'])
 
     @inlineCallbacks

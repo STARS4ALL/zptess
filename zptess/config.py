@@ -86,7 +86,7 @@ def cmdline():
 
     group2 = parser.add_mutually_exclusive_group()
     group2.add_argument('-v', '--verbose',  action='store_true', help='verbose output')
-    group2.add_argument('-m', '--messages', action='store_true', help='verbose output with serial port messages shown')
+    group2.add_argument('-m', '--messages', type=str, choices=["none","ref","test","both"], default="none", help='also protocol messages shown for ...')
     group2.add_argument('-q', '--quiet',    action='store_true', help='quiet output')
  
     parser.add_argument('--ref-port', type=mkendpoint, default="serial:/dev/ttyUSB0:9600", action='store', metavar='<serial port device>', help='Reference photometer serial port')
@@ -99,6 +99,30 @@ def cmdline():
 
     return parser.parse_args()
 
+def select_log_level_for(who,gen_level,msg_level):
+
+   
+    ref = {
+        'verbose': {'none': 'warn', 'ref': 'debug', 'test': 'warn', 'both': 'debug'},
+        'normal' : {'none': 'warn', 'ref': 'info',  'test': 'warn', 'both': 'info'},
+        'quiet'  : {'none': 'warn', 'ref': 'warn',  'test': 'warn', 'both': 'warn'},
+    }
+    test = {
+        'verbose': {'none': 'warn', 'ref': 'warn',  'test': 'debug', 'both': 'debug'},    
+        'normal' : {'none': 'warn', 'ref': 'warn',  'test': 'info',  'both': 'info'},
+        'quiet'  : {'none': 'warn', 'ref': 'warn',  'test': 'warn',  'both': 'warn'},
+    }
+    general = {
+        'verbose': {'none': 'debug', 'ref': 'debug', 'test': 'debug', 'both': 'debug'},    
+        'normal' : {'none': 'info',  'ref': 'info',  'test': 'info',  'both': 'info'},
+        'quiet'  : {'none': 'warn',  'ref': 'warn',  'test': 'warn',  'both': 'warn'},
+    }
+
+    table = {'general': general, 'ref': ref, 'test': test}
+
+    return table[who][gen_level][msg_level]
+
+
 def loadCmdLine(cmdline_options):
     '''
     Load options from the command line object formed
@@ -106,19 +130,15 @@ def loadCmdLine(cmdline_options):
     '''
 
     options = {}
-    
+
     if cmdline_options.verbose:
-        log_level     = "debug"
-        log_messages = False
-    elif cmdline_options.messages:
-        log_level    = "debug"
-        log_messages = True
+        gen_level = "normal"
     elif cmdline_options.quiet:
-        log_level    = "warn"
-        log_messages = False
+        gen_level = "normal"
     else:
-        log_level    = "info"
-        log_messages = False
+        gen_level = "normal"
+    
+    msg_level = cmdline_options.messages
 
     if cmdline_options.tess_w:
         endpoint = cmdline_options.tess_w
@@ -133,16 +153,16 @@ def loadCmdLine(cmdline_options):
     options['reference'] = {}
     options['reference']['model']        = "TESS-W"
     options['reference']['endpoint']     = cmdline_options.ref_port
-    options['reference']['log_level']    = log_level
-    options['reference']['log_messages'] = log_messages
+    options['reference']['log_level']    = select_log_level_for("general",gen_level, msg_level)
+    options['reference']['log_messages'] = select_log_level_for("ref",gen_level, msg_level)
   
     options['test'] = {}
     options['test']['model']          = model
     options['test']['endpoint']       = endpoint
     options['test']['dry_run']        = cmdline_options.dry_run
     options['test']['zero_point']     = cmdline_options.zero_point
-    options['test']['log_level']      = log_level
-    options['test']['log_messages']   = log_messages
+    options['test']['log_level']      = select_log_level_for("general",gen_level, msg_level)
+    options['test']['log_messages']   = select_log_level_for("test",gen_level, msg_level)
 
     options['stats'] = {}
     if cmdline_options.number is not None:
@@ -153,11 +173,10 @@ def loadCmdLine(cmdline_options):
         options['stats']['zp_fict']   = cmdline_options.zp_fict
     if cmdline_options.zp_abs is not None:
         options['stats']['zp_abs']    = cmdline_options.zp_abs
-    options['stats']['log_level']     = log_level
+    options['stats']['log_level']     = select_log_level_for("general",gen_level, msg_level)
     options['stats']['author']        = cmdline_options.author
     options['stats']['update']        = cmdline_options.update
     options['stats']['csv_file']      = cmdline_options.csv_file
-    
     
     return options
 

@@ -133,12 +133,17 @@ class TESSProtocolFactory(ClientFactory):
 
     log = Logger(namespace='proto')
 
+    def __init__(self, namespace):
+        self.protoNamespace = namespace
+
     def startedConnecting(self, connector):
         self.log.debug('Factory: Started to connect.')
 
     def buildProtocol(self, addr):
         self.log.debug('Factory: Connected.')
-        return TESSProtocol()
+        p = TESSProtocol()
+        p.log = Logger(namespace=self.protoNamespace)
+        return p
 
     def clientConnectionLost(self, connector, reason):
         self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
@@ -173,7 +178,7 @@ class TESSProtocol(LineOnlyReceiver):
         self.read_deferred  = None
         self.write_response = None
         self.read_response  = None
-        self.log = Logger(namespace='proto')
+        self.log = None # We don't know yet the namespace this instance will be
 
       
     def connectionMade(self):
@@ -183,7 +188,7 @@ class TESSProtocol(LineOnlyReceiver):
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         line = line.decode('latin_1')  # from bytearray to string
-        self.log.debug("<==  TAS   [{l:02d}] {line}", l=len(line), line=line)
+        self.log.info("<==  TAS   [{l:02d}] {line}", l=len(line), line=line)
         self.nreceived += 1
         handled = self._handleUnsolicitedResponse(line, now)
         if handled:
@@ -224,10 +229,12 @@ class TESSProtocol(LineOnlyReceiver):
         pass
 
     def writeZeroPoint(self, zero_point):
-        '''Writes Zero Point to the device. Returns a Deferred'''
-
+        '''
+        Writes Zero Point to the device. 
+        Returns a Deferred
+        '''
         line = 'CI{0:04d}'.format(int(round(zero_point*100,2)))
-        self.log.debug("==> TAS    [{l:02d}] {line}", l=len(line), line=line)
+        self.log.info(" ==> TAS   [{l:02d}] {line}", l=len(line), line=line)
         self.sendLine(line.encode('ascii'))
         self.write_deferred = defer.Deferred()
         self.write_deferred.addTimeout(2, reactor)
@@ -237,11 +244,10 @@ class TESSProtocol(LineOnlyReceiver):
     def readPhotometerInfo(self):
         '''
         Reads Info from the device. 
-        Synchronous operation performed before Twisted reactor is run
+        Returns a Deferred
         '''
-
         line = '?'
-        self.log.debug("==> TAS    [{l:02d}] {line}", l=len(line), line=line)
+        self.log.info(" ==> TAS   [{l:02d}] {line}", l=len(line), line=line)
         self.sendLine(line.encode('ascii'))
         self.read_deferred = defer.Deferred()
         self.read_deferred.addTimeout(2, reactor)

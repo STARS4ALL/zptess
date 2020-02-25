@@ -73,8 +73,8 @@ def cmdline():
     parser.add_argument('-a' , '--author',  type=str, required=True, help='person performing the calibration process')
     group0 = parser.add_mutually_exclusive_group()
     group0.add_argument('-d' , '--dry-run', action='store_true', default=False, help='connect to TEST photometer, display info and exit')
-    group0.add_argument('-u' , '--update',  action='store_true', help='automatically update photometer with new calibrated ZP')
-    group0.add_argument('-z' , '--zero-point', action='store', default=None, type=float, help='simply write given zero point')
+    group0.add_argument('-u' , '--update',  action='store_true', default=False, help='automatically update photometer with new calibrated ZP')
+    group0.add_argument('-z' , '--zero-point', action='store',  default=None, type=float, help='write given zero point and exit')
     
     parser.add_argument('--port',  type=mkendpoint, default="tcp",  action='store', metavar='<test endpoint>', help='Test photometer endpoint')
     parser.add_argument('--model', type=str, required=True, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], action='store', help='Test photometer model')

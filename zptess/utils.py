@@ -23,6 +23,8 @@ import re
 # local imports
 # -------------
 
+from zptess import PORT_PREFIX
+
 # ----------------
 # Module constants
 # ----------------
@@ -49,7 +51,7 @@ def valid_ip_address(ip):
     return [ 0 <= int(x) < 256 for x in re.split(r'\.', re.match(r'^\d+\.\d+\.\d+\.\d+$',ip).group(0))].count(True) == 4
     
 
-def mkendpoint(value,default_ip,default_port,default_serial,default_baud):
+def mkendpoint(value, default_ip, default_port , default_serial, default_baud):
     '''
     Utility to convert command line values to serial or tcp endpoints
     tcp
@@ -83,16 +85,16 @@ def mkendpoint(value,default_ip,default_port,default_serial,default_baud):
         result = proto + ':' + ip + ':' + port
     elif proto == "serial":
         if length == 1:
-            serial = str(default_serial)
+            serial = PORT_PREFIX + str(default_serial)
             baud   = str(default_baud)
         elif length == 2:
-            serial = parts[1]
+            serial = PORT_PREFIX + str(parts[1])
             baud   = str(default_baud)
         elif parts[1] != '':
-            serial = parts[1]
+            serial = PORT_PREFIX + str(parts[1])
             baud   = parts[2]
         else:
-            serial = str(default_serial)
+            serial = PORT_PREFIX + str(default_serial)
             baud   = parts[2]
         result = proto + ':' + serial + ':' + baud
     else:

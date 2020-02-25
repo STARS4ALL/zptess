@@ -28,7 +28,7 @@ from twisted.internet.endpoints   import clientFromString
 # local imports
 # -------------
 
-from . import STATS_SERVICE
+from zptess import STATS_SERVICE, TESSW, TESSP, TAS
 
 from zptess.logger   import setLogLevel
 from zptess.utils    import chop
@@ -161,23 +161,23 @@ class PhotometerService(ClientService):
     # ---------------
 
     def limitedStart(self):
-        '''Detects the case where oly the Test photometer service is started'''
+        '''Detects the case where only the Test photometer service is started'''
         if self.reference:
             return False
         return (self.options['dry_run'] or self.options['zero_point'] is not None) 
 
     
     def buildFactory(self):
-        if self.options['model'] == "TESS-W":
-            self.log.debug("Choosing a TESS-W factory")
+        if self.options['model'] == TESSW:
+            self.log.debug("Choosing a {model} factory", model=TESSW)
             import zptess.tessw
             factory = zptess.tessw.TESSProtocolFactory(self.protoNamespace)
-        elif self.options['model'] == "TESS-P":
-            self.log.debug("Choosing a TESS-P factory")
+        elif self.options['model'] == TESSP:
+            self.log.debug("Choosing a {model} factory", model=TESSP)
             import zptess.tessp
             factory = zptess.tessp.TESSProtocolFactory(self.protoNamespace)
         else:
-            self.log.debug("Choosing a TAS factory")
+            self.log.debug("Choosing a {model} factory", model=TAS)
             import zptess.tas
             factory = zptess.tas.TESSProtocolFactory(self.protoNamespace)
         return factory

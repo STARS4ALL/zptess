@@ -34,7 +34,7 @@ from twisted.logger import LogLevel
 # local imports
 # -------------
 
-from zptess import LOG_FILE, CSV_FILE, CONFIG_FILE, VERSION_STRING
+from zptess import LOG_FILE, CSV_FILE, CONFIG_FILE, VERSION_STRING, TESSW, TESSP, TAS
 
 import zptess.utils
 
@@ -57,7 +57,7 @@ import zptess.utils
 
 
 def mkendpoint(value):
-    return zptess.utils.mkendpoint(value,"192.168.4.1", 23, "/dev/ttyUSB0", 9600)
+    return zptess.utils.mkendpoint(value,"192.168.4.1", 23, 0, 9600)
 
 
 def cmdline():
@@ -76,11 +76,11 @@ def cmdline():
     group0.add_argument('-u' , '--update',  action='store_true', help='automatically update photometer with new calibrated ZP')
     group0.add_argument('-z' , '--zero-point', action='store', default=None, type=float, help='simply write given zero point')
     
-    group1 = parser.add_mutually_exclusive_group(required=True)
-    group1.add_argument('--tess-w', type=mkendpoint, action='store', metavar='<serial or tcp endpoint>', help='Calibrate a TESS-W')
-    group1.add_argument('--tess-p', type=mkendpoint, action='store', metavar='<serial endpoint>', help='Calibrate a TESS-P using specified serial endpoint')
-    group1.add_argument('--tas',    type=mkendpoint, action='store', metavar='<serial endpoint>', help='Calibrate a TAS using specified serial endpoint')
-  
+    parser.add_argument('--port',  type=mkendpoint, default="tcp",  action='store', metavar='<test endpoint>', help='Test photometer endpoint')
+    parser.add_argument('--model', type=str, required=True, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], action='store', help='Test photometer model')
+    parser.add_argument('--ref-port',  type=mkendpoint, default="serial:0",  action='store', metavar='<serial port device>', help='Reference photometer port')
+    parser.add_argument('--ref-model', type=str, default=TESSW.lower(), choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], action='store', help='Reference photometer port')
+ 
     parser.add_argument('-i', '--iterations',  type=int, help='process iterations')
     parser.add_argument('-n', '--number',      type=int, help='# samples in each iteration')
 
@@ -88,9 +88,7 @@ def cmdline():
     group2.add_argument('-v', '--verbose',  action='store_true', help='verbose output')
     group2.add_argument('-m', '--messages', type=str, choices=["none","ref","test","both"], default="none", help='also protocol messages shown for ...')
     group2.add_argument('-q', '--quiet',    action='store_true', help='quiet output')
- 
-    parser.add_argument('--ref-port', type=mkendpoint, default="serial:/dev/ttyUSB0:9600", action='store', metavar='<serial port device>', help='Reference photometer serial port')
-    #parser.add_argument('--ref-port', type=mkendpoint, action='store', metavar='<serial port device>', help='Reference photometer serial port')
+    
     parser.add_argument('--config',   type=str, default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')
     parser.add_argument('--log-file', type=str, default=LOG_FILE,    action='store', metavar='<log file>', help='log file path')
     parser.add_argument('--csv-file', type=str, default=CSV_FILE,    action='store', metavar='<csv file>', help='calibration file path')
@@ -140,25 +138,16 @@ def loadCmdLine(cmdline_options):
     
     msg_level = cmdline_options.messages
 
-    if cmdline_options.tess_w:
-        endpoint = cmdline_options.tess_w
-        model = "TESS-W"
-    elif cmdline_options.tess_p:
-        endpoint = cmdline_options.tess_p
-        model = "TESS-P"
-    else:
-        endpoint = cmdline_options.tas
-        model = "TAS"
 
     options['reference'] = {}
-    options['reference']['model']        = "TESS-W"
+    options['reference']['model']        = cmdline_options.ref_model.upper()
     options['reference']['endpoint']     = cmdline_options.ref_port
     options['reference']['log_level']    = select_log_level_for("general",gen_level, msg_level)
     options['reference']['log_messages'] = select_log_level_for("ref",gen_level, msg_level)
   
     options['test'] = {}
-    options['test']['model']          = model
-    options['test']['endpoint']       = endpoint
+    options['test']['model']          = cmdline_options.model.upper()
+    options['test']['endpoint']       = cmdline_options.port
     options['test']['dry_run']        = cmdline_options.dry_run
     options['test']['zero_point']     = cmdline_options.zero_point
     options['test']['log_level']      = select_log_level_for("general",gen_level, msg_level)

@@ -41,16 +41,22 @@ TEST_PHOTOMETER_SERVICE = 'Test Photometer'
 REF_PHOTOMETER_SERVICE  = 'Reference Photometer'
 TSTAMP_FORMAT           = "%Y-%m-%dT%H:%M:%SZ"
 
+# Photoemter models
+TESSW = "TESS-W"
+TESSP = "TESS-P"
+TAS   = "TAS"
 
 # Default config file path
 if os.name == "nt":
     CONFIG_FILE = os.path.join("C:\\", "zptess",  "config.ini")
     LOG_FILE    = os.path.join("C:\\", "zptess", "zptess.log")
     CSV_FILE    = os.path.join("C:\\", "zptess", "zptess.csv")
+    PORT_PREFIX = "COM"
 else:
     CONFIG_FILE = os.path.join("/", "etc", "zptess", "config.ini")
     LOG_FILE    = os.path.join("/", "var", "log", "zptess.log")
     CSV_FILE    = os.path.join("/", "var", "zptess", "zptess.csv")
+    PORT_PREFIX = "/dev/ttyUSB"
 
 # -----------------------
 # Module global variables

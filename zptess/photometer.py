@@ -24,7 +24,7 @@ from twisted.internet.serialport  import SerialPort
 from twisted.internet.protocol    import ClientFactory
 from twisted.protocols.basic      import LineOnlyReceiver
 from twisted.application.service  import Service
-from twisted.application.internet import ClientService
+from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet.endpoints   import clientFromString
 
 #--------------
@@ -60,15 +60,6 @@ class PhotometerService(ClientService):
 
     def __init__(self, options, reference):
 
-        def backoffPolicy(initialDelay=4.0, maxDelay=60.0, factor=2):
-            '''Custom made backoff policy to exit after a number of reconnection attempts'''
-            def policy(attempt):
-                delay = min(initialDelay * (factor ** attempt), maxDelay)
-                if attempt > 2:
-                    self.stopService()
-                return delay
-            return policy
-
         self.options   = options
         self.namespace = 'ref.' if reference else 'test'
         self.label     = self.namespace.upper()
@@ -81,9 +72,10 @@ class PhotometerService(ClientService):
         self.serport   = None
         self.info      = None # Photometer info
         parts = chop(self.options['endpoint'], sep=':')
-        if parts[0] != 'serial':
+        if parts[0] == 'tcp':
             endpoint = clientFromString(reactor, self.options['endpoint'])
-            ClientService.__init__(self, endpoint, self.factory)
+            ClientService.__init__(self, endpoint, self.factory,
+                 retryPolicy=backoffPolicy(initialDelay=0.5, factor=3.0))
         if not self.reference:
             self.log.info('starting {name} {version} using Twisted {tw_version}', 
                 name="zptess",
@@ -108,9 +100,12 @@ class PhotometerService(ClientService):
             self.log.failure("{excp}",excp=e)
             reactor.callLater(0, reactor.stop)
         else:
+            self.log.debug("CUCU1")
             if not (self.reference and self.options['model'] == TESSW):
+                self.log.debug("CUCU2")
                 self.info = yield self.getInfo()
             if not self.reference:
+                self.log.debug("CUCU3")
                 yield self.initialActions()
 
             

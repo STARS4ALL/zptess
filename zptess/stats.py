@@ -134,10 +134,7 @@ class StatsService(Service):
     # ---------------------------
     # Statistics Helper functions
     # ----------------------------
-
-    @inlineCallbacks
-    def accumulateRounds(self):
-        self.info = yield self.testPhotometer.getPhotometerInfo()
+    def _accumulateRounds(self):
         zpabs = self.options['zp_abs']
         zpf = self.options['zp_fict']
         log.info("-"*72)
@@ -162,6 +159,15 @@ class StatsService(Service):
             else:
                 log.warn('FROZEN {rLab} Mag = {rM:0.2f}, FROZEN {tLab} Mag = {tM:0.2f}', rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
 
+
+    @inlineCallbacks
+    def accumulateRounds(self):
+        try:
+            self.info = yield self.testPhotometer.getPhotometerInfo()
+        except:
+            reactor.callLater(0, reactor.stop)
+        else:
+            self._accumulateRounds()
 
     def choose(self):
         '''Choose the best statistics at the end of the round'''

@@ -193,6 +193,7 @@ class TESSProtocol(LineOnlyReceiver):
         Reads Info from the device. 
         Asynchronous operation
         '''
+        self.log.info("CUCU6")
         return deferToThread(self._readPhotometerInfo, self.httpEndPoint)
        
 
@@ -206,22 +207,29 @@ class TESSProtocol(LineOnlyReceiver):
         Reads Info from the device. 
         Synchronous operation performed before Twisted reactor is run
         '''
+        self.log.warn("CUCU7")
         result = {}
         result['tstamp'] = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         state_url = make_state_url(endpoint)
         self.log.info("==> TESS-W [HTTP GET] {url}", url=state_url)
-        resp = requests.get(state_url, timeout=(2,5))
-        resp.raise_for_status()
-        self.log.info("<== TESS-W [HTTP GET] {url}", url=state_url)
-        text  = resp.text
-        matchobj = GET_INFO['name'].search(text)
-        result['name'] = matchobj.groups(1)[0]
-        matchobj = GET_INFO['mac'].search(text)
-        result['mac'] = matchobj.groups(1)[0]
-        matchobj = GET_INFO['zp'].search(text)
-        result['zp'] = float(matchobj.groups(1)[0])
-        matchobj = GET_INFO['firmware'].search(text)
-        result['firmware'] = matchobj.groups(1)[0]
+        try:
+            resp = requests.get(state_url, timeout=(4,8))
+            self.log.warn("CUCU8")
+            resp.raise_for_status()
+        except Exception as e:
+            self.log.failure("{excp}",excp=e)
+        else:
+            self.log.warn("CUCU9")
+            self.log.info("<== TESS-W [HTTP GET] {url}", url=state_url)
+            text  = resp.text
+            matchobj = GET_INFO['name'].search(text)
+            result['name'] = matchobj.groups(1)[0]
+            matchobj = GET_INFO['mac'].search(text)
+            result['mac'] = matchobj.groups(1)[0]
+            matchobj = GET_INFO['zp'].search(text)
+            result['zp'] = float(matchobj.groups(1)[0])
+            matchobj = GET_INFO['firmware'].search(text)
+            result['firmware'] = matchobj.groups(1)[0]
         return result
 
 

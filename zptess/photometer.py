@@ -175,6 +175,7 @@ class PhotometerService(ClientService):
     @inlineCallbacks
     def getInfo(self):
         try:
+            self.log.debug("CUCU5")
             info = yield self.protocol.readPhotometerInfo()
         except Exception as e:
             self.log.error("Timeout when reading photometer info")

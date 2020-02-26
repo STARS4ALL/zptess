@@ -69,7 +69,7 @@ class PhotometerService(ClientService):
             return policy
 
         self.options   = options
-        self.namespace = 'refe' if reference else 'test'
+        self.namespace = 'ref.' if reference else 'test'
         self.label     = self.namespace.upper()
         setLogLevel(namespace=self.label,     levelStr=options['log_messages'])
         setLogLevel(namespace=self.namespace, levelStr=options['log_level'])
@@ -78,7 +78,7 @@ class PhotometerService(ClientService):
         self.factory   = self.buildFactory()
         self.protocol  = None
         self.serport   = None
-        self.info      = {} # Photometer info
+        self.info      = None # Photometer info
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] != 'serial':
             endpoint = clientFromString(reactor, self.options['endpoint'])
@@ -98,10 +98,10 @@ class PhotometerService(ClientService):
         try:
             yield self.connect()
         except Exception as e:
-            reactor.callLater(3, reactor.stop)
+            reactor.callLater(0, reactor.stop)
         else:
             if not (self.reference and self.options['model'] == TESSW):
-                yield self.getInfo()
+                self.info = yield self.getInfo()
             if not self.reference:
                 yield self.initialActions()
 
@@ -114,8 +114,15 @@ class PhotometerService(ClientService):
         '''Writes Zero Point to the device. Returns a Deferred'''
         return self.protocol.writeZeroPoint(zero_point)
 
+
     def getPhotometerInfo(self):
-        return self.info
+        if self.info is None:
+            return self.getInfo()
+        else:
+            return defer.succeed(self.info)
+
+    def getLabel(self):
+        return self.label
 
     def printStats(self):
         total  = self.protocol.nreceived
@@ -164,13 +171,13 @@ class PhotometerService(ClientService):
             reactor.callLater(0, reactor.stop)
         else:
             self.log.debug("got photometer info {info}",info=info)
-            self.info = info
-            self.info['model'] = self.options['model']
-            self.log.info("[{label}] Model     : {value}", label=self.label, value=self.info['model'])
+            info['model'] = self.options['model']
+            self.log.info("[{label}] Model     : {value}", label=self.label, value=info['model'])
             self.log.info("[{label}] Name      : {value}", label=self.label, value=info['name'])
             self.log.info("[{label}] MAC       : {value}", label=self.label, value=info['mac'])
             self.log.info("[{label}] Zero Point: {value:.02f} (old)", label=self.label, value=info['zp'])
             self.log.info("[{label}] Firmware  : {value}", label=self.label, value=info['firmware'])
+            returnValue(info)
        
 
     @inlineCallbacks

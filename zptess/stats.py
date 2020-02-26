@@ -35,7 +35,7 @@ from twisted.application.service import Service
 # local imports
 # -------------
 
-from . import TEST_PHOTOMETER_SERVICE, TSTAMP_FORMAT
+from . import TEST_PHOTOMETER_SERVICE, REF_PHOTOMETER_SERVICE, TSTAMP_FORMAT
 
 from zptess.logger import setLogLevel
 
@@ -104,7 +104,10 @@ class StatsService(Service):
         Service.startService(self)
         self.statTask = task.LoopingCall(self._schedule)
         self.statTask.start(self.period, now=False)  # call every T seconds
-        self.photomService = self.parent.getServiceNamed(TEST_PHOTOMETER_SERVICE)
+        self.testPhotometer = self.parent.getServiceNamed(TEST_PHOTOMETER_SERVICE)
+        self.testLabel = self.testPhotometer.getLabel()
+        self.refPhotometer = self.parent.getServiceNamed(REF_PHOTOMETER_SERVICE)
+        self.refLabel = self.refPhotometer.getLabel()
 
        
     def stopService(self):
@@ -117,14 +120,14 @@ class StatsService(Service):
     # Scheduler Activities
     # --------------------
 
-    
+    @inlineCallbacks
     def _schedule(self):  
         if self.curRound > self.nrounds:
             log.info("Not computing statistics anymore")
         elif self.curRound < self.nrounds:
-            self.accumulateRounds()
+            yield self.accumulateRounds()
         else:
-            self.accumulateRounds()
+            yield self.accumulateRounds()
             self.onStatsComplete(self.choose())
 
     
@@ -132,31 +135,32 @@ class StatsService(Service):
     # Statistics Helper functions
     # ----------------------------
 
+    @inlineCallbacks
     def accumulateRounds(self):
-        self.info = self.photomService.getPhotometerInfo()
+        self.info = yield self.testPhotometer.getPhotometerInfo()
         zpabs = self.options['zp_abs']
         zpf = self.options['zp_fict']
         log.info("-"*72)
-        refFreq,  refStddev  = self.statsFor(self.queue['reference'], "REF.", self.refname)
-        testFreq, testStddev = self.statsFor(self.queue['test'], "TEST", self.info['name'])
+        refFreq,  refStddev  = self.statsFor(self.queue['reference'], self.refLabel, self.refname)
+        testFreq, testStddev = self.statsFor(self.queue['test'], self.testLabel, self.info['name'])
         if refFreq is not None and testFreq is not None:
             diff = 2.5*math.log10(testFreq/refFreq)
             refMag  = zpf - 2.5*math.log10(refFreq)
             testMag = zpf - 2.5*math.log10(testFreq)
             testZP = round(zpabs + diff,2)     
             if refStddev != 0.0 and testStddev != 0.0:
-                log.info('ROUND {i:02d}: REF. Mag = {rM:0.2f}. TEST Mag = {tM:0.2f}, Diff = {d:0.3f} => TEST ZP = {zp:0.2f}',
-                i=self.curRound, rM=refMag, tM=testMag, d=diff, zp=testZP)
+                log.info('ROUND {i:02d}: {rlab} Mag = {rM:0.2f}. {tLab} Mag = {tM:0.2f}, Diff = {d:0.3f} => {tLab} ZP = {zp:0.2f}',
+                rLab=self.refLabel,tLab=self.testLabel,i=self.curRound, rM=refMag, tM=testMag, d=diff, zp=testZP)
                 self.best['zp'].append(testZP)
                 self.best['refFreq'].append(refFreq)
                 self.best['testFreq'].append(testFreq)
                 self.curRound += 1
             elif refStddev == 0.0 and testStddev != 0.0:
-                log.warn('FROZEN REF. Mag = {rM:0.2f}, TEST Mag = {tM:0.2f}', rM=refMag, tM=testMag)
+                log.warn('FROZEN {rLab} Mag = {rM:0.2f}, {tLab} Mag = {tM:0.2f}', rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
             elif testStddev == 0.0 and refStddev != 0.0: 
-                log.warn('REF. Mag = {rM:0.2f}, FROZEN TEST Mag = {tM:0.2f}',rM=refMag, tM=testMag)
+                log.warn('{rLab} Mag = {rM:0.2f}, FROZEN {tLab} Mag = {tM:0.2f}', rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
             else:
-                log.warn('FROZEN REF. Mag = {rM:0.2f}, FROZEN TEST Mag = {tM:0.2f}',rM=refMag, tM=testMag)
+                log.warn('FROZEN {rLab} Mag = {rM:0.2f}, FROZEN {tLab} Mag = {tM:0.2f}', rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
 
 
     def choose(self):
@@ -164,10 +168,10 @@ class StatsService(Service):
 
         log.info("#"*72) 
         log.info("Best ZP        list is {bzp}",bzp=self.best['zp'])
-        log.info("Best Ref  Freq list is {brf}",brf=self.best['refFreq'])
-        log.info("Best Test Freq list is {btf}",btf=self.best['testFreq'])
+        log.info("Best {rLab} Freq list is {brf}",brf=self.best['refFreq'], rLab=self.refLabel)
+        log.info("Best {tLab} Freq list is {btf}",btf=self.best['testFreq'], tLab=self.testLabel)
         final = dict()
-        old_zp = float(self.photomService.info['zp'])
+        old_zp = float(self.testPhotometer.info['zp'])
         try:
             final['zp']       = statistics.mode(self.best['zp'])
         except statistics.StatisticsError as e:
@@ -189,7 +193,7 @@ class StatsService(Service):
         final['magDiff']  = round(2.5*math.log10(final['testFreq']/final['refFreq']),2)
         log.info("Ref. Freq. = {rF:0.3f} Hz ,Test Freq. = {tF:0.3f}, Ref. Mag. = {rM:0.2f}, Test Mag. = {tM:0.2f}, Diff {d:0.2f}", 
                 rF= final['refFreq'], tF=final['testFreq'], rM=final['refMag'], tM=final['testMag'], d=final['magDiff'])
-        log.info("OLD TEST ZP = {old_zp:0.2f}, NEW TEST ZP = {new_zp:0.2f}", old_zp=old_zp, new_zp= final['zp'])
+        log.info("OLD {tLab} ZP = {old_zp:0.2f}, NEW {tLab} ZP = {new_zp:0.2f}", old_zp=old_zp, new_zp= final['zp'], tLab=self.testLabel)
         log.info("#"*72)
         return final
 
@@ -259,7 +263,7 @@ class StatsService(Service):
             # This should not be synchronous, but I could not make it work either with
             # the Twisted Agent or even deferring to thread
             try:
-                yield self.photomService.writeZeroPoint(stats['zp'])
+                yield self.testPhotometer.writeZeroPoint(stats['zp'])
             except Exception as e:
                 log.error("Timeout when updating photometer zero point")
                 reactor.callLater(0, reactor.stop)

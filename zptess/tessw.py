@@ -14,11 +14,12 @@ import re
 import datetime
 import sys
 
-import requests
 
 # ---------------
 # Twisted imports
 # ---------------
+
+import treq
 
 from twisted.logger               import Logger, LogLevel
 from twisted.internet             import reactor, task, defer
@@ -195,6 +196,38 @@ class TESSProtocol(LineOnlyReceiver):
         '''
         self.log.info("CUCU6")
         return deferToThread(self._readPhotometerInfo, self.httpEndPoint)
+
+    @inlineCallbacks
+    def readPhotometerInfo(self):
+        '''
+        Reads Info from the device. 
+        Asynchronous operation
+        '''
+        self.log.info("CUCU6")
+        result = {'name': 'Unknown', 'mac': 'Unknown', 'zp': 0.0, 'firmware': 'Unknown'}
+        result['tstamp'] = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
+        state_url = make_state_url(self.httpEndPoint)
+        self.log.info("==> TESS-W [HTTP GET] {url}", url=state_url)
+        try:
+            resp = yield treq.get(state_url, timeout=4)
+            text = yield treq.text_content(resp)
+        except Exception as e:
+            self.log.failure("{excp}",excp=e)
+            returnValue(result)
+        else:
+            self.log.warn("CUCU9")
+            self.log.info("<== TESS-W [HTTP GET] {url}", url=state_url)
+            matchobj = GET_INFO['name'].search(text)
+            result['name'] = matchobj.groups(1)[0]
+            matchobj = GET_INFO['mac'].search(text)
+            result['mac'] = matchobj.groups(1)[0]
+            matchobj = GET_INFO['zp'].search(text)
+            result['zp'] = float(matchobj.groups(1)[0])
+            matchobj = GET_INFO['firmware'].search(text)
+            result['firmware'] = matchobj.groups(1)[0]
+            returnValue(result)
+
+       
        
 
     # --------------

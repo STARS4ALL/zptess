@@ -16,6 +16,7 @@ import sys
 # Twisted imports
 # ---------------
 
+from twisted                      import __version__ as __twisted_version__
 from twisted.logger               import Logger, LogLevel
 from twisted.internet             import reactor, task, defer
 from twisted.internet.defer       import inlineCallbacks, returnValue
@@ -30,7 +31,7 @@ from twisted.internet.endpoints   import clientFromString
 # local imports
 # -------------
 
-from zptess import STATS_SERVICE, TESSW, TESSP, TAS
+from zptess import STATS_SERVICE, TESSW, TESSP, TAS, __version__
 
 from zptess.logger   import setLogLevel
 from zptess.utils    import chop
@@ -83,6 +84,11 @@ class PhotometerService(ClientService):
         if parts[0] != 'serial':
             endpoint = clientFromString(reactor, self.options['endpoint'])
             ClientService.__init__(self, endpoint, self.factory)
+        if not self.reference:
+            self.log.info('starting {name} {version} using Twisted {tw_version}', 
+                name="zptess",
+                version=__version__, 
+                tw_version=__twisted_version__)
 
     
     @inlineCallbacks
@@ -92,6 +98,7 @@ class PhotometerService(ClientService):
         Although it is technically a synchronous operation, it works well
         with inline callbacks
         '''
+        
         self.log.info("starting {name} service", name=self.name)
         if not self.limitedStart():
             self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
@@ -158,6 +165,7 @@ class PhotometerService(ClientService):
                 self.gotProtocol(self.protocol)
                 self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
         else:
+            ClientService.startService()
             protocol = yield self.whenConnected(failAfterFailures=1)
             self.log.debug("GOT PROTOCOL !!!! {protocol}", protocol=protocol)
             self.gotProtocol(protocol)

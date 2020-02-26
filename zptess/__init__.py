@@ -49,12 +49,10 @@ TAS   = "TAS"
 # Default config file path
 if os.name == "nt":
     CONFIG_FILE = os.path.join("C:\\", "zptess",  "config.ini")
-    LOG_FILE    = os.path.join("C:\\", "zptess", "zptess.log")
     CSV_FILE    = os.path.join("C:\\", "zptess", "zptess.csv")
     PORT_PREFIX = "COM"
 elif os.name == "posix":
     CONFIG_FILE = os.path.join("/", "etc", "zptess", "config.ini")
-    LOG_FILE    = os.path.join("/", "var", "log", "zptess.log")
     CSV_FILE    = os.path.join("/", "var", "zptess", "zptess.csv")
     PORT_PREFIX = "/dev/ttyUSB"
 else:

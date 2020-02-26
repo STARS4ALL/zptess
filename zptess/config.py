@@ -91,8 +91,8 @@ def cmdline():
     
 
     parser.add_argument('--config',   type=str, default=CONFIG_FILE, action='store', metavar='<config file>', help='detailed configuration file')
-    parser.add_argument('--log-file', type=str, default=LOG_FILE,    action='store', metavar='<log file>', help='log file path')
-    parser.add_argument('--csv-file', type=str, default=CSV_FILE,    action='store', metavar='<csv file>', help='calibration file path')
+    parser.add_argument('--log-file', type=str, default=None,    action='store', metavar='<log file>', help='log file path')
+    parser.add_argument('--csv-file', type=str, default=CSV_FILE,action='store', metavar='<csv file>', help='calibration file path')
     parser.add_argument('--zp-fict', type=float, action='store', metavar='<Zero Point>', help='override ficticious zero point in the config value with given value')
     parser.add_argument('--zp-abs',  type=float, action='store', metavar='<Zero Point>', help='override absolute zero point in the config value with given value')
 

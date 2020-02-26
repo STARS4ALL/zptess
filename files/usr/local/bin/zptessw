@@ -1,2 +1,2 @@
 #!/bin/sh
-python -m zptess --console --model tess-w --iterations 5 --number 125 --port tcp $*
+python -m zptess --console --log-file /var/log/zptess.log --model tess-w --iterations 5 --number 125 --port tcp $*

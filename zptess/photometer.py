@@ -105,6 +105,7 @@ class PhotometerService(ClientService):
         try:
             yield self.connect()
         except Exception as e:
+            self.log.failure("{excp}",excp=e)
             reactor.callLater(0, reactor.stop)
         else:
             if not (self.reference and self.options['model'] == TESSW):
@@ -165,11 +166,15 @@ class PhotometerService(ClientService):
                 self.gotProtocol(self.protocol)
                 self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
         else:
-            ClientService.startService()
-            protocol = yield self.whenConnected(failAfterFailures=1)
-            self.log.debug("GOT PROTOCOL !!!! {protocol}", protocol=protocol)
-            self.gotProtocol(protocol)
-            self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
+            ClientService.startService(self)
+            try:
+                protocol = yield self.whenConnected(failAfterFailures=0)
+            except Exception as e:
+                self.log.error("{excp}",excp=e)
+                raise
+            else:
+                self.gotProtocol(protocol)
+                self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
 
 
     @inlineCallbacks

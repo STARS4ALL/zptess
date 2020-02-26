@@ -94,7 +94,7 @@ class PhotometerService(ClientService):
             yield self.connect()
         except Exception as e:
             self.log.failure("{excp}",excp=e)
-            reactor.callLater(0, reactor.stop)
+            #reactor.callLater(0, reactor.stop)
         else:
             if not (self.reference and self.options['model'] == TESSW):
                 self.info = yield self.getInfo()
@@ -150,7 +150,7 @@ class PhotometerService(ClientService):
                 raise
             else:
                 self.gotProtocol(protocol)
-                self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
+                self.log.info("Using TCP endpoint {endpoint}", endpoint=self.options['endpoint'])
 
 
     @inlineCallbacks
@@ -160,9 +160,8 @@ class PhotometerService(ClientService):
         except Exception as e:
             self.log.error("Timeout when reading photometer info")
             self.log.failure("{excp}",excp=e)
-            reactor.callLater(0, reactor.stop)
+            #reactor.callLater(0, reactor.stop)
         else:
-            self.log.debug("got photometer info {info}",info=info)
             info['model'] = self.options['model']
             self.log.info("[{label}] Model     : {value}", label=self.label, value=info['model'])
             self.log.info("[{label}] Name      : {value}", label=self.label, value=info['name'])

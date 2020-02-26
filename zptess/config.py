@@ -34,7 +34,7 @@ from twisted.logger import LogLevel
 # local imports
 # -------------
 
-from zptess import LOG_FILE, CSV_FILE, CONFIG_FILE, VERSION_STRING, TESSW, TESSP, TAS
+from zptess import CSV_FILE, CONFIG_FILE, VERSION_STRING, TESSW, TESSP, TAS
 
 import zptess.utils
 

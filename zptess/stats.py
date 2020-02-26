@@ -149,8 +149,8 @@ class StatsService(Service):
             testMag = zpf - 2.5*math.log10(testFreq)
             testZP = round(zpabs + diff,2)     
             if refStddev != 0.0 and testStddev != 0.0:
-                log.info('ROUND {i:02d}: {rlab} Mag = {rM:0.2f}. {tLab} Mag = {tM:0.2f}, Diff = {d:0.3f} => {tLab} ZP = {zp:0.2f}',
-                rLab=self.refLabel,tLab=self.testLabel,i=self.curRound, rM=refMag, tM=testMag, d=diff, zp=testZP)
+                log.info('ROUND {i:02d}: {rLab} Mag = {rM:0.2f}. {tLab} Mag = {tM:0.2f}, Diff = {d:0.3f} => {tLab} ZP = {zp:0.2f}',
+                rLab=self.refLabel, tLab=self.testLabel, i=self.curRound, rM=refMag, tM=testMag, d=diff, zp=testZP)
                 self.best['zp'].append(testZP)
                 self.best['refFreq'].append(refFreq)
                 self.best['testFreq'].append(testFreq)
@@ -191,8 +191,9 @@ class StatsService(Service):
         final['refMag']   = round(self.options['zp_fict'] - 2.5*math.log10(final['refFreq']),2)
         final['testMag']  = round(self.options['zp_fict'] - 2.5*math.log10(final['testFreq']),2)
         final['magDiff']  = round(2.5*math.log10(final['testFreq']/final['refFreq']),2)
-        log.info("Ref. Freq. = {rF:0.3f} Hz ,Test Freq. = {tF:0.3f}, Ref. Mag. = {rM:0.2f}, Test Mag. = {tM:0.2f}, Diff {d:0.2f}", 
-                rF= final['refFreq'], tF=final['testFreq'], rM=final['refMag'], tM=final['testMag'], d=final['magDiff'])
+        log.info("{rLab}} Freq. = {rF:0.3f} Hz ,{tLab} Freq. = {tF:0.3f}, {rLab} Mag. = {rM:0.2f}, {tLab} Mag. = {tM:0.2f}, Diff {d:0.2f}", 
+                rF= final['refFreq'], tF=final['testFreq'], rM=final['refMag'], tM=final['testMag'], d=final['magDiff'],
+                rLab=self.refLabel, tLab=self.testLabel)
         log.info("OLD {tLab} ZP = {old_zp:0.2f}, NEW {tLab} ZP = {new_zp:0.2f}", old_zp=old_zp, new_zp= final['zp'], tLab=self.testLabel)
         log.info("#"*72)
         return final

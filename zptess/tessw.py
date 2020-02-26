@@ -222,7 +222,6 @@ class TESSProtocol(LineOnlyReceiver):
         result['zp'] = float(matchobj.groups(1)[0])
         matchobj = GET_INFO['firmware'].search(text)
         result['firmware'] = matchobj.groups(1)[0]
-        result['tstamp'] = now
         return result
 
 

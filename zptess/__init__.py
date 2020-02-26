@@ -19,6 +19,8 @@ import sys
 # Twisted imports
 # ---------------
 
+from twisted  import __version__ as __twisted_version__
+
 #--------------
 # local imports
 # -------------
@@ -34,7 +36,7 @@ __version__ = get_versions()['version']
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
-VERSION_STRING = "{0} on Python {1}.{2}".format(__version__, sys.version_info.major, sys.version_info.minor)
+VERSION_STRING = "{0} on Twisted {1}, Python {2}.{3}".format(__version__, __twisted_version__, sys.version_info.major, sys.version_info.minor)
 
 STATS_SERVICE           = 'Statistics Service'
 TEST_PHOTOMETER_SERVICE = 'Test Photometer'

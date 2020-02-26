@@ -16,7 +16,6 @@ import sys
 # Twisted imports
 # ---------------
 
-from twisted                      import __version__ as __twisted_version__
 from twisted.logger               import Logger, LogLevel
 from twisted.internet             import reactor, task, defer
 from twisted.internet.defer       import inlineCallbacks, returnValue
@@ -31,7 +30,7 @@ from twisted.internet.endpoints   import clientFromString
 # local imports
 # -------------
 
-from zptess import STATS_SERVICE, TESSW, TESSP, TAS, __version__
+from zptess import STATS_SERVICE, TESSW, TESSP, TAS, VERSION_STRING
 
 from zptess.logger   import setLogLevel
 from zptess.utils    import chop
@@ -77,10 +76,7 @@ class PhotometerService(ClientService):
             ClientService.__init__(self, endpoint, self.factory,
                  retryPolicy=backoffPolicy(initialDelay=0.5, factor=3.0))
         if not self.reference:
-            self.log.info('starting {name} {version} using Twisted {tw_version}', 
-                name="zptess",
-                version=__version__, 
-                tw_version=__twisted_version__)
+            self.log.info('{program} {version}', program="zptess", version=VERSION_STRING) 
 
     
     @inlineCallbacks
@@ -100,12 +96,9 @@ class PhotometerService(ClientService):
             self.log.failure("{excp}",excp=e)
             reactor.callLater(0, reactor.stop)
         else:
-            self.log.debug("CUCU1")
             if not (self.reference and self.options['model'] == TESSW):
-                self.log.debug("CUCU2")
                 self.info = yield self.getInfo()
             if not self.reference:
-                self.log.debug("CUCU3")
                 yield self.initialActions()
 
             
@@ -130,18 +123,6 @@ class PhotometerService(ClientService):
     def getLabel(self):
         return self.label
 
-    def printStats(self):
-        total  = self.protocol.nreceived
-        nresponse = self.protocol.nresponse
-        nunsolici = self.protocol.nunsolici
-        nunknown = self.protocol.nunknown 
-        quality = (nresponse + nunsolici)*100 / total if total != 0 else None 
-        self.log.info("Serial port statistics: Total = {tot:03d}, Unknown = {nunk:03d}", 
-            tot=total, nunk=nunknown)
-        self.log.info("Serial link quality = {q:0.4f}%", q=quality)
-        self.protocol.resetStats()
-
-
     # --------------
     # Helper methods
     # ---------------
@@ -163,7 +144,7 @@ class PhotometerService(ClientService):
         else:
             ClientService.startService(self)
             try:
-                protocol = yield self.whenConnected(failAfterFailures=0)
+                protocol = yield self.whenConnected(failAfterFailures=1)
             except Exception as e:
                 self.log.error("{excp}",excp=e)
                 raise
@@ -175,7 +156,6 @@ class PhotometerService(ClientService):
     @inlineCallbacks
     def getInfo(self):
         try:
-            self.log.debug("CUCU5")
             info = yield self.protocol.readPhotometerInfo()
         except Exception as e:
             self.log.error("Timeout when reading photometer info")

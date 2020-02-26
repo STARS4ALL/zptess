@@ -82,7 +82,7 @@ class PhotometerService(ClientService):
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] != 'serial':
             endpoint = clientFromString(reactor, self.options['endpoint'])
-            ClientService.__init__(self, endpoint, self.factory, retryPolicy=backoffPolicy())
+            ClientService.__init__(self, endpoint, self.factory)
 
     
     @inlineCallbacks
@@ -158,8 +158,8 @@ class PhotometerService(ClientService):
                 self.gotProtocol(self.protocol)
                 self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
         else:
-            ClientService.startService(self)
-            protocol = yield self.whenConnected()
+            protocol = yield self.whenConnected(failAfterFailures=1)
+            self.log.debug("GOT PROTOCOL !!!! {protocol}", protocol=protocol)
             self.gotProtocol(protocol)
             self.log.info("Using TCP endpopint {endpoint}", endpoint=self.options['endpoint'])
 

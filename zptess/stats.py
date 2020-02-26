@@ -13,8 +13,7 @@ from __future__ import division, absolute_import
 
 import sys
 import datetime
-import random
-import os
+import os.path
 import math
 import statistics
 import csv
@@ -125,21 +124,22 @@ class StatsService(Service):
         if self.curRound > self.nrounds:
             log.info("Not computing statistics anymore")
         elif self.curRound < self.nrounds:
-            yield self.accumulateRounds()
+            yield self._accumulateRounds()
         else:
-            yield self.accumulateRounds()
-            self.onStatsComplete(self.choose())
+            yield self._accumulateRounds()
+            self._onStatsComplete(self._choose())
 
     
     # ---------------------------
     # Statistics Helper functions
     # ----------------------------
-    def _accumulateRounds(self):
+
+    def _doAccumulateRounds(self):
         zpabs = self.options['zp_abs']
         zpf = self.options['zp_fict']
         log.info("-"*72)
-        refFreq,  refStddev  = self.statsFor(self.queue['reference'], self.refLabel, self.refname)
-        testFreq, testStddev = self.statsFor(self.queue['test'], self.testLabel, self.info['name'])
+        refFreq,  refStddev  = self._statsFor(self.queue['reference'], self.refLabel, self.refname)
+        testFreq, testStddev = self._statsFor(self.queue['test'], self.testLabel, self.info['name'])
         if refFreq is not None and testFreq is not None:
             diff = 2.5*math.log10(testFreq/refFreq)
             refMag  = zpf - 2.5*math.log10(refFreq)
@@ -161,17 +161,16 @@ class StatsService(Service):
 
 
     @inlineCallbacks
-    def accumulateRounds(self):
+    def _accumulateRounds(self):
         try:
             self.info = yield self.testPhotometer.getPhotometerInfo()
         except:
             reactor.callLater(0, reactor.stop)
         else:
-            self._accumulateRounds()
+            self._doAccumulateRounds()
 
-    def choose(self):
+    def _choose(self):
         '''Choose the best statistics at the end of the round'''
-
         log.info("#"*72) 
         log.info("Best ZP        list is {bzp}",bzp=self.best['zp'])
         log.info("Best {rLab} Freq list is {brf}",brf=self.best['refFreq'], rLab=self.refLabel)
@@ -205,8 +204,7 @@ class StatsService(Service):
         return final
 
 
-
-    def statsFor(self, queue, label, name):
+    def _statsFor(self, queue, label, name):
         '''compute statistics for a given queue'''
         s = len(queue)
         l =  [ item['freq'] for item in queue]
@@ -229,8 +227,6 @@ class StatsService(Service):
             log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s] => {clabel} = {central:0.3f} Hz, StDev = {stddev:0.2e} Hz",
                 name=name, label=label, start=start, end=end, clabel=clabel, central=central, stddev=stddev, w=window)
             return central, stddev
-
-
 
     # ----------------------
     # Other Helper functions

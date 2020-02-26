@@ -59,13 +59,12 @@ GET_INFO = {
 UNSOLICITED_RESPONSES = (
     {
         'name'    : 'Hz reading',
-        'pattern' : r'^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'pattern' : r'^<fH([ -]\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
     {
         'name'    : 'mHz reading',
         'pattern' : r'^<fm (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
-    
 )
 
 

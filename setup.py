@@ -56,7 +56,7 @@ URL          = 'http://github.com/astrorafael/tessdb/'
 PACKAGES     = ["zptess","zptess.service"]
 DEPENDENCIES = [
                   'pyserial',
-                  'requests',
+                  'treq',
                   'twisted >= 16.3.0',
                 ]
 

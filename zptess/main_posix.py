@@ -15,6 +15,7 @@ from __future__ import division, absolute_import
 # Twisted imports
 # ---------------
 
+from twisted.logger              import Logger
 from twisted.internet            import reactor
 from twisted.application.service import IService
 
@@ -22,7 +23,7 @@ from twisted.application.service import IService
 # local imports
 # -------------
 
-from zptess             import __version__
+from zptess             import VERSION_STRING
 from zptess.application import application
 from zptess.logger      import sysLogInfo
 
@@ -34,12 +35,20 @@ from zptess.logger      import sysLogInfo
 # Module global variables
 # -----------------------
 
+log = Logger(namespace='global')
 
 # ------------------------
 # Module Utility Functions
 # ------------------------
 
-sysLogInfo("Starting {0} {1} Linux service".format(IService(application).name, __version__ ))
-IService(application).startService()
+# ====
+# Main
+# ====
+
+serv = IService(application)
+
+log.info('{program} {version}', program=serv.name, version=VERSION_STRING) 
+sysLogInfo("Starting {0} {1} Linux service".format(serv.name, VERSION_STRING ))
+serv.startService()
 reactor.run()
-sysLogInfo("{0} {1} Linux service stopped".format(IService(application).name, __version__ ))
+sysLogInfo("{0} {1} Linux service stopped".format(serv.name, VERSION_STRING))

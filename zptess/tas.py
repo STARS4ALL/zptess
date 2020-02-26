@@ -18,7 +18,7 @@ import json
 # Twisted imports
 # ---------------
 
-from twisted.logger               import Logger, LogLevel
+from twisted.logger               import Logger
 from twisted.internet             import reactor, task, defer
 from twisted.internet.defer       import inlineCallbacks, returnValue
 from twisted.internet.serialport  import SerialPort

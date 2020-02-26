@@ -16,7 +16,7 @@ import sys
 # Twisted imports
 # ---------------
 
-from twisted.logger               import Logger, LogLevel
+from twisted.logger               import Logger
 from twisted.internet             import reactor, task, defer
 from twisted.internet.defer       import inlineCallbacks, returnValue
 from twisted.internet.serialport  import SerialPort
@@ -75,9 +75,7 @@ class PhotometerService(ClientService):
             endpoint = clientFromString(reactor, self.options['endpoint'])
             ClientService.__init__(self, endpoint, self.factory,
                  retryPolicy=backoffPolicy(initialDelay=0.5, factor=3.0))
-        if not self.reference:
-            self.log.info('{program} {version}', program="zptess", version=VERSION_STRING) 
-
+    
     
     @inlineCallbacks
     def startService(self):

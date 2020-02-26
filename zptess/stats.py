@@ -24,7 +24,7 @@ from collections import deque
 # Twisted imports
 # ---------------
 
-from twisted.logger   import Logger, LogLevel
+from twisted.logger   import Logger
 from twisted.internet import task, reactor, defer
 from twisted.internet.defer  import inlineCallbacks, returnValue, DeferredList
 from twisted.internet.threads import deferToThread

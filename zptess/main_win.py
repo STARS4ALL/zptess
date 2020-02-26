@@ -21,24 +21,27 @@ from twisted.application.service import IService
 # local imports
 # -------------
 
-from zptess  import __version__
+from zptess             import VERSION_STRING
 from zptess.application import application
-
-# ----------------
-# Module constants
-# ----------------
 
 # -----------------------
 # Module global variables
 # -----------------------
 
+log = Logger(namespace='global')
 
 # ------------------------
 # Module Utility Functions
 # ------------------------
 
-print("Starting {0} {1} Windows program".format(IService(application).name, __version__ ))
-IService(application).startService()
-reactor.run()
-print("{0} {1} Windows program stopped".format( IService(application).name, __version__ ))
+# ====
+# Main
+# ====
 
+serv = IService(application)
+
+log.info('{program} {version}', program=serv.name, version=VERSION_STRING) 
+print("Starting {0} {1} Windows program".format(serv.name, VERSION_STRING ))
+serv.startService()
+reactor.run()
+print("{0} {1} Windows program stopped".format(serv.name, VERSION_STRING ))

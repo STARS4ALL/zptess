@@ -28,7 +28,7 @@ from twisted.internet.serialport  import SerialPort
 from twisted.internet.protocol    import ClientFactory
 from twisted.protocols.basic      import LineOnlyReceiver
 from twisted.internet.threads     import deferToThread
-from twisted.internet.interfaces  import IPushProducer, IPullProducer, IConsumer
+from twisted.internet.interfaces  import IPushProducer, IConsumer
 from zope.interface               import implementer
 
 #--------------
@@ -161,12 +161,14 @@ class TESSProtocol(LineOnlyReceiver):
 
     def lineReceived(self, line):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
-        line = line.decode('ascii')  # from bytearray to string
+        line = line.decode('latin_1')  # from bytearray to string
         self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
         if self._paused or self._stopped:
-            self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
+            #self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
             return
-        handled = self._handleUnsolicitedResponse(line, now)
+        handled, reading = self._handleUnsolicitedResponse(line, now)
+        if handled:
+            self._consumer.write(reading)
     
     # -----------------------
     # IPushProducer interface
@@ -203,10 +205,6 @@ class TESSProtocol(LineOnlyReceiver):
     # =================
     # TESS Protocol API
     # =================
-
-    def setLogLevel(self, level):
-        SetLogLevel(namespace='proto', levelStr=level)
-
 
     def setContext(self, context):
         self.httpEndPoint = context
@@ -276,7 +274,7 @@ class TESSProtocol(LineOnlyReceiver):
         '''
         ur, matchobj = self._match_unsolicited(line)
         if not ur:
-            return False
+            return False, None
         reading = {}
         reading['tbox']   = float(matchobj.group(2))/100.0
         reading['tsky']   = float(matchobj.group(3))/100.0
@@ -287,9 +285,8 @@ class TESSProtocol(LineOnlyReceiver):
         elif ur['name'] == 'mHz reading':
             reading['freq'] = float(matchobj.group(1))/1000.0
         else:
-            return False
-        self._consumer.write(reading)
-        return True
+            return False, None
+        return True, reading
         
         
 #---------------------------------------------------------------------

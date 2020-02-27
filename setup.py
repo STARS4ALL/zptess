@@ -1,13 +1,12 @@
 import os
 import os.path
 import sys
-import subprocess
 
 from setuptools import setup, Extension
 import versioneer
 
 # Default description in markdown
-long_description = open('README.md').read()
+#long_description = open('README.md').read()
  
 # Converts from makrdown to rst using pandoc
 # and its python binding.
@@ -15,34 +14,15 @@ long_description = open('README.md').read()
 # by issuing `python setup.py register`
 
 try:
-    import subprocess
-    import pandoc
- 
+    import pypandoc
 except:
-    print("ERROR: pandoc is necessary to package this utility")
+    print("ERROR: pypandoc is necessary to package this utility")
     sys.exit(1)
-
 try:
- 
-    process = subprocess.Popen(
-        ['which pandoc'],
-        shell=True,
-        stdout=subprocess.PIPE,
-        universal_newlines=True
-    )
- 
-    pandoc_path = process.communicate()[0]
-    pandoc_path = pandoc_path.strip('\n')
- 
-    pandoc.core.PANDOC_PATH = pandoc_path
- 
-    doc = pandoc.Document()
-    doc.markdown = long_description
- 
-    long_description = doc.rst
+    long_description = pypandoc.convert('README.md', 'rst')
  
 except:
-    print("ERROR generating documentation with pandoc")
+    print("ERROR generating documentation with pypandoc")
     sys.exit(1)
    
 

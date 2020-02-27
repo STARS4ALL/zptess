@@ -259,7 +259,7 @@ class StatsService(Service):
 
 
     @inlineCallbacks
-    def onStatsComplete(self, stats):
+    def _onStatsComplete(self, stats):
         yield self.stopService()
         if self.options['update']:
             log.info("updating {tess} ZP to {zp}", tess=self.info['name'], zp=stats['zp'])

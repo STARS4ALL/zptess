@@ -80,6 +80,7 @@ def cmdline():
     parser.add_argument('--model',     type=str, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], required=True, help='Test photometer model')
     parser.add_argument('--ref-port',  type=mkendpoint, default="serial:0", metavar='<ref endpoint>', help='Reference photometer port')
     parser.add_argument('--ref-model', type=str, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], default=TESSW.lower(), help='Reference photometer port')
+    parser.add_argument('--ref-name',  type=str, help='Alternative reference photometer name')
  
     parser.add_argument('-i', '--iterations',  type=int, help='process iterations')
     parser.add_argument('-n', '--number',      type=int, help='# samples in each iteration')
@@ -145,6 +146,8 @@ def loadCmdLine(cmdline_options):
     options['reference']['endpoint']     = cmdline_options.ref_port
     options['reference']['log_level']    = select_log_level_for("general",gen_level, msg_level)
     options['reference']['log_messages'] = select_log_level_for("ref",gen_level, msg_level)
+    if cmdline_options.ref_name is not None:
+        options['reference']['refname']      = cmdline_options.ref_name
     if cmdline_options.number is not None:
         options['reference']['size']      = cmdline_options.number # yes, this is not a mistake
   
@@ -193,6 +196,7 @@ def loadCfgFile(path):
     options['reference'] = {}
     options['reference']['endpoint']      = parser.get("reference","endpoint")
     options['reference']['log_messages']  = parser.getboolean("reference","log_messages")
+    options['reference']['refname']       = parser.get("reference","refname")
     options['reference']['size']          = parser.getint("stats","size") # yes, this is not a mistake
   
     options['test'] = {}
@@ -201,7 +205,7 @@ def loadCfgFile(path):
     options['test']['size']           = parser.getint("stats","size")   # yes, this is not a mistake
 
     options['stats'] = {}
-    options['stats']['refname']       = parser.get("stats","refname")
+   
     options['stats']['zp_fict']       = parser.getfloat("stats","zp_fict")
     options['stats']['zp_abs']        = parser.getfloat("stats","zp_abs")
     options['stats']['central']       = parser.get("stats","central")

@@ -72,7 +72,6 @@ class StatsService(Service):
         Service.__init__(self)
         setLogLevel(namespace='stats', levelStr=options['log_level'])
         self.options = options
-        self.refname = self.options['refname']
         self.period  = self.options['period']
         self.central = self.options['central']
         self.nrounds = self.options['rounds']
@@ -87,7 +86,7 @@ class StatsService(Service):
         }
 
    
-
+    @inlineCallbacks
     def startService(self):
         '''
         Starts Stats service
@@ -103,6 +102,8 @@ class StatsService(Service):
         self.refLabel = self.refPhotometer.getLabel()
         self.queue['test']      = self.testPhotometer.buffer.getBuffer()
         self.queue['reference'] = self.refPhotometer.buffer.getBuffer()
+        info = yield self.refPhotometer.getPhotometerInfo()
+        self.refname = info['name']
 
        
     def stopService(self):

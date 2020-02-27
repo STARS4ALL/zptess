@@ -61,11 +61,11 @@ GET_INFO = {
 UNSOLICITED_RESPONSES = (
     {
         'name'    : 'Hz reading',
-        'pattern' : r'^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'pattern' : r'^<fH([ +]\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
     {
         'name'    : 'mHz reading',
-        'pattern' : r'^<fm (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'pattern' : r'^<fm([ +]\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
 )
 
@@ -176,7 +176,6 @@ class TESSProtocol(LineOnlyReceiver):
         """
         Stop producing data.
         """
-        self.log.warn("stop producing data")
         self._stopped     = False
 
 
@@ -184,7 +183,6 @@ class TESSProtocol(LineOnlyReceiver):
         """
         Pause producing data.
         """
-        self.log.warn("pause producing data")
         self._paused    = True
 
 
@@ -192,7 +190,6 @@ class TESSProtocol(LineOnlyReceiver):
         """
         Resume producing data.
         """
-        self.log.warn("resume prodicing data")
         self._paused    = False
 
 
@@ -267,7 +264,7 @@ class TESSProtocol(LineOnlyReceiver):
         for regexp in UNSOLICITED_PATTERNS:
             matchobj = regexp.search(line)
             if matchobj:
-                self.log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
+                #self.log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
                 return UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)], matchobj
         return None, None
 

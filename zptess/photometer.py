@@ -124,10 +124,7 @@ class PhotometerService(ClientService):
         '''
         self.log.info("starting {name} service", name=self.name)
         yield self.connect()
-        if not (self.reference and self.options['model'] == TESSW):
-                # We do not ask info to the reference photometer if it is a TESS-W
-                # since 'stars3' is connected by serial port and does not identify itself
-            self.info = yield self.getInfo()
+        self.info = yield self.getInfo()
         if not self.reference:
             yield self.initialActions()
 
@@ -198,8 +195,11 @@ class PhotometerService(ClientService):
             info = yield self.protocol.readPhotometerInfo()
         except Exception as e:
             self.log.error("Timeout when reading photometer info")
-            self.log.failure("{excp}",excp=e)
-            yield self.stopService()
+            info = self.fixIt()
+            if info is None:
+                yield self.stopService()
+            else:
+                returnValue(info)
         else:
             info['model'] = self.options['model']
             self.log.info("[{label}] Model     : {value}", label=self.label, value=info['model'])
@@ -209,6 +209,20 @@ class PhotometerService(ClientService):
             self.log.info("[{label}] Firmware  : {value}", label=self.label, value=info['firmware'])
             returnValue(info)
        
+    def fixIt(self):
+        parts = chop(self.options['endpoint'], sep=':')
+        if self.reference and (self.options['model'] == TESSW) and parts[0] == 'serial':
+            info = {
+                'model'    : TESSW,
+                'name'     : self.options['refname'],
+                'mac'      : "TT:UU:WW:XX:YY:ZZ",
+                'zp'       : 0,
+                'firmware' : "",
+            }
+            self.log.error("Fixed photometer info with defaults {info}", info=info)
+            return info
+        else:
+            return None
 
     @inlineCallbacks
     def initialActions(self):

@@ -18,8 +18,6 @@ import math
 import statistics
 import csv
 
-from collections import deque
-
 # ---------------
 # Twisted imports
 # ---------------
@@ -76,16 +74,12 @@ class StatsService(Service):
         self.options = options
         self.refname = self.options['refname']
         self.period  = self.options['period']
-        self.qsize   = self.options['size']
         self.central = self.options['central']
         self.nrounds = self.options['rounds']
         self.curRound = 1
         if self.central not in ['mean','median']:
             throw 
-        self.queue       = { 
-            'test'      : deque([], self.qsize), 
-            'reference' : deque([], self.qsize), 
-        } 
+        self.queue   = {}
         self.best = {
             'zp'       : list(),
             'refFreq'  : list(),
@@ -107,6 +101,8 @@ class StatsService(Service):
         self.testLabel = self.testPhotometer.getLabel()
         self.refPhotometer = self.parent.getServiceNamed(REF_PHOTOMETER_SERVICE)
         self.refLabel = self.refPhotometer.getLabel()
+        self.queue['test']      = self.testPhotometer.buffer.getBuffer()
+        self.queue['reference'] = self.refPhotometer.buffer.getBuffer()
 
        
     def stopService(self):

@@ -145,6 +145,8 @@ def loadCmdLine(cmdline_options):
     options['reference']['endpoint']     = cmdline_options.ref_port
     options['reference']['log_level']    = select_log_level_for("general",gen_level, msg_level)
     options['reference']['log_messages'] = select_log_level_for("ref",gen_level, msg_level)
+    if cmdline_options.number is not None:
+        options['reference']['size']      = cmdline_options.number # yes, this is not a mistake
   
     options['test'] = {}
     options['test']['model']          = cmdline_options.model.upper()
@@ -153,10 +155,13 @@ def loadCmdLine(cmdline_options):
     options['test']['zero_point']     = cmdline_options.zero_point
     options['test']['log_level']      = select_log_level_for("general",gen_level, msg_level)
     options['test']['log_messages']   = select_log_level_for("test",gen_level, msg_level)
+    if cmdline_options.number is not None:
+        options['reference']['size']      = cmdline_options.number # yes, this is not a mistake
+  
 
     options['stats'] = {}
     if cmdline_options.number is not None:
-        options['stats']['size']      = cmdline_options.number
+        options['stats']['size']      = cmdline_options.number # yes, this is not a mistake
     if cmdline_options.iterations is not None:
         options['stats']['rounds']    = cmdline_options.iterations
     if cmdline_options.zp_fict is not None:
@@ -188,17 +193,19 @@ def loadCfgFile(path):
     options['reference'] = {}
     options['reference']['endpoint']      = parser.get("reference","endpoint")
     options['reference']['log_messages']  = parser.getboolean("reference","log_messages")
+    options['reference']['size']          = parser.getint("stats","size") # yes, this is not a mistake
   
     options['test'] = {}
     options['test']['endpoint']       = parser.get("test","endpoint")
     options['test']['log_messages']   = parser.getboolean("test","log_messages")
+    options['test']['size']           = parser.getint("stats","size")   # yes, this is not a mistake
 
     options['stats'] = {}
     options['stats']['refname']       = parser.get("stats","refname")
     options['stats']['zp_fict']       = parser.getfloat("stats","zp_fict")
     options['stats']['zp_abs']        = parser.getfloat("stats","zp_abs")
     options['stats']['central']       = parser.get("stats","central")
-    options['stats']['size']          = parser.getint("stats","size")
+    options['stats']['size']           = parser.getint("stats","size") 
     options['stats']['rounds']        = parser.getint("stats","rounds")
     options['stats']['period']        = parser.getint("stats","period")
     options['stats']['state_url']     = parser.get("stats","state_url")

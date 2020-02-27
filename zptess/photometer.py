@@ -12,6 +12,8 @@ from __future__ import division, absolute_import
 
 import sys
 
+from collections import deque
+
 # ---------------
 # Twisted imports
 # ---------------
@@ -25,13 +27,14 @@ from twisted.protocols.basic      import LineOnlyReceiver
 from twisted.application.service  import Service
 from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet.endpoints   import clientFromString
+from twisted.internet.interfaces  import IPushProducer, IPullProducer, IConsumer
+from zope.interface               import implementer
 
 #--------------
 # local imports
 # -------------
 
-from zptess import STATS_SERVICE, TESSW, TESSP, TAS, VERSION_STRING
-
+from zptess          import STATS_SERVICE, TESSW, TESSP, TAS, VERSION_STRING
 from zptess.logger   import setLogLevel
 from zptess.utils    import chop
 
@@ -45,10 +48,44 @@ from zptess.utils    import chop
 # ----------
 
 
+
 # -------
 # Classes
 # -------
 
+@implementer(IConsumer)
+class CircularBuffer(object):
+
+    def __init__(self, size):
+        self._buffer = deque([], size)
+        self._producer = None
+        self._push     = None
+
+    # -------------------
+    # IConsumer interface
+    # -------------------
+
+    def registerProducer(self, producer, streaming):
+        if streaming:
+            self._producer = IPushProducer(producer)
+        else:
+            raise ValueError("IPullProducer not supported")
+        producer.registerConsumer(self) # So the producer knows who to talk to
+        producer.resumeProducing()
+
+    def unregisterProducer(self):
+        self._producer.stopProducing()
+        self._producer = None
+
+    def write(self, data):
+        self._buffer.append(data)
+
+    # -------------------
+    # buffer API
+    # -------------------
+
+    def getBuffer(self):
+        return self._buffer
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -70,6 +107,7 @@ class PhotometerService(ClientService):
         self.protocol  = None
         self.serport   = None
         self.info      = None # Photometer info
+        self.buffer    = CircularBuffer(options['size'])
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] == 'tcp':
             endpoint = clientFromString(reactor, self.options['endpoint'])
@@ -84,20 +122,23 @@ class PhotometerService(ClientService):
         Although it is technically a synchronous operation, it works well
         with inline callbacks
         '''
-        
         self.log.info("starting {name} service", name=self.name)
-        if not self.limitedStart():
-            self.statsService = self.parent.getServiceNamed(STATS_SERVICE)
+        yield self.connect()
+        if not (self.reference and self.options['model'] == TESSW):
+                # We do not ask info to the reference photometer if it is a TESS-W
+                # since 'stars3' is connected by serial port and does not identify itself
+            self.info = yield self.getInfo()
+        if not self.reference:
+            yield self.initialActions()
+
+
+    def stopService(self):
+        self.log.info("stopping {name} service", name=self.name)
         try:
-            yield self.connect()
+            reactor.callLater(0, reactor.stop)
         except Exception as e:
-            self.log.failure("{excp}",excp=e)
-            #reactor.callLater(0, reactor.stop)
-        else:
-            if not (self.reference and self.options['model'] == TESSW):
-                self.info = yield self.getInfo()
-            if not self.reference:
-                yield self.initialActions()
+            log.error("could not stop the reactor")
+        return defer.succeed(None)
 
             
     # --------------
@@ -135,7 +176,7 @@ class PhotometerService(ClientService):
                 self.serport  = SerialPort(self.protocol, endpoint[0], reactor, baudrate=endpoint[1])
             except Exception as e:
                 self.log.error("{excp}",excp=e)
-                raise
+                yield self.stopService()
             else:
                 self.gotProtocol(self.protocol)
                 self.log.info("Using serial port {tty} at {baud} bps", tty=endpoint[0], baud=endpoint[1])
@@ -145,7 +186,7 @@ class PhotometerService(ClientService):
                 protocol = yield self.whenConnected(failAfterFailures=1)
             except Exception as e:
                 self.log.error("{excp}",excp=e)
-                raise
+                yield self.stopService()
             else:
                 self.gotProtocol(protocol)
                 self.log.info("Using TCP endpoint {endpoint}", endpoint=self.options['endpoint'])
@@ -158,7 +199,7 @@ class PhotometerService(ClientService):
         except Exception as e:
             self.log.error("Timeout when reading photometer info")
             self.log.failure("{excp}",excp=e)
-            #reactor.callLater(0, reactor.stop)
+            yield self.stopService()
         else:
             info['model'] = self.options['model']
             self.log.info("[{label}] Model     : {value}", label=self.label, value=info['model'])
@@ -183,7 +224,7 @@ class PhotometerService(ClientService):
             else:
                 self.log.info("[{label}] Writen ZP : {zp:0.2f}", label=self.label, zp = result['zp'])
             finally:
-                reactor.callLater(0,reactor.stop)
+                yield self.stopService()
        
 
     def limitedStart(self):
@@ -210,30 +251,14 @@ class PhotometerService(ClientService):
 
 
     def gotProtocol(self, protocol):
-        
-        def noop(msg): pass
-
         self.log.debug("got protocol")
-        self.protocol  = protocol
-        func = noop if self.limitedStart() else self.onReading
-        self.protocol.setReadingCallback(func)
-        self.protocol.setContext(self.options['endpoint'])
-
-
-
-    # ----------------------------
-    # Event Handlers from Protocol
-    # -----------------------------
-
-    def onReading(self, reading):
-        '''
-        Adds last visual magnitude estimate
-        and pass it upwards
-        '''
-        if self.reference:
-            self.statsService.queue['reference'].append(reading)
+        protocol.setContext(self.options['endpoint'])
+        self.buffer.registerProducer(protocol, True)
+        if self.limitedStart():
+            protocol.stopProducing()    # We don need to feed messages to the buffer
         else:
-            self.statsService.queue['test'].append(reading)
+            protocol.resumeProducing()
+        self.protocol  = protocol
 
 
 __all__ = [

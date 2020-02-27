@@ -28,6 +28,8 @@ from twisted.internet.serialport  import SerialPort
 from twisted.internet.protocol    import ClientFactory
 from twisted.protocols.basic      import LineOnlyReceiver
 from twisted.internet.threads     import deferToThread
+from twisted.internet.interfaces  import IPushProducer, IPullProducer, IConsumer
+from zope.interface               import implementer
 
 #--------------
 # local imports
@@ -133,6 +135,7 @@ class TESSProtocolFactory(ClientFactory):
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
+@implementer(IPushProducer)
 class TESSProtocol(LineOnlyReceiver):
 
 
@@ -146,9 +149,11 @@ class TESSProtocol(LineOnlyReceiver):
     def __init__(self, namespace):
         '''Sets the delimiter to the closihg parenthesis'''
         # LineOnlyReceiver.delimiter = b'\n'
-        self._onReading = set()                # callback sets
         self.log = Logger(namespace=namespace)
-        
+        self._consumer = None
+        self._paused   = True
+        self._stopped  = False
+
 
     def connectionMade(self):
         self.log.debug("connectionMade()")
@@ -158,21 +163,49 @@ class TESSProtocol(LineOnlyReceiver):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         line = line.decode('ascii')  # from bytearray to string
         self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
+        if self._paused or self._stopped:
+            self.log.debug("Producer paused {p} or stopped {s}", p=self._paused, s=self._stopped)
+            return
         handled = self._handleUnsolicitedResponse(line, now)
     
+    # -----------------------
+    # IPushProducer interface
+    # -----------------------
+
+    def stopProducing(self):
+        """
+        Stop producing data.
+        """
+        self._stop     = False
+
+
+    def pauseProducing(self):
+        """
+        Pause producing data.
+        """
+        self._pause    = True
+
+
+    def resumeProducing(self):
+        """
+        Resume producing data.
+        """
+        self._pause    = False
+
+
+    def registerConsumer(self, consumer):
+        '''
+        This is not really part of the IPushProducer interface
+        '''
+        self._consumer = IConsumer(consumer)
+
+
     # =================
     # TESS Protocol API
     # =================
 
     def setLogLevel(self, level):
         SetLogLevel(namespace='proto', levelStr=level)
-
-
-    def setReadingCallback(self, callback):
-        '''
-        API Entry Point
-        '''
-        self._onReading = callback
 
 
     def setContext(self, context):
@@ -254,8 +287,9 @@ class TESSProtocol(LineOnlyReceiver):
         elif ur['name'] == 'mHz reading':
             reading['freq'] = float(matchobj.group(1))/1000.0
         else:
-            return False  
-        self._onReading(reading)
+            return False
+        self.log.info(" *** TESS-W message")  
+        self._consumer.write(reading)
         return True
         
         

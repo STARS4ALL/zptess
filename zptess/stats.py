@@ -236,16 +236,17 @@ class StatsService(Service):
         '''Exports summary statistics to a common CSV file'''
         log.debug("Appending to CSV file {file}",file=self.options['csv_file'])
         # Adding metadata to the estimation
-        stats['mac']     = self.info['mac']  # Is it station or AP MAC ?????
-        stats['model']   = self.info['model']  # Is it station or AP MAC ?????
-        stats['tstamp']  = (datetime.datetime.utcnow() + datetime.timedelta(seconds=0.5)).strftime(TSTAMP_FORMAT)
-        stats['author']  = self.options['author']
-        stats['tess']    = self.info['name']
-        stats['updated'] = self.options['update']
-        stats['old_zp']  = self.info['zp'] 
+        stats['mac']      = self.info['mac']  
+        stats['model']    = self.info['model']  
+        stats['firmware'] = self.info['firmware']
+        stats['tstamp']   = (datetime.datetime.utcnow() + datetime.timedelta(seconds=0.5)).strftime(TSTAMP_FORMAT)
+        stats['author']   = self.options['author']
+        stats['tess']     = self.info['name']
+        stats['updated']  = self.options['update']
+        stats['old_zp']   = self.info['zp'] 
         # transform dictionary into readable header columns for CSV export
-        oldkeys = ['model','tess', 'tstamp', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'mac', 'old_zp', 'author', 'updated']
-        newkeys = ['Model','Name', 'Timestamp', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'Station MAC', 'OLD ZP', 'Author', 'Updated']
+        oldkeys = ['model','tess', 'tstamp', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'mac', 'old_zp', 'author', 'firmware', 'updated']
+        newkeys = ['Model','Name', 'Timestamp', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'Station MAC', 'OLD ZP', 'Author', 'Firmware', 'Updated']
         for old,new in zip(oldkeys,newkeys):
             stats[new] = stats.pop(old)
         # CSV file generation

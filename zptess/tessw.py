@@ -61,7 +61,7 @@ GET_INFO = {
 UNSOLICITED_RESPONSES = (
     {
         'name'    : 'Hz reading',
-        'pattern' : r'^<fH([ -]\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
+        'pattern' : r'^<fH (\d{5})><tA ([+-]\d{4})><tO ([+-]\d{4})><mZ ([+-]\d{4})>',       
     },
     {
         'name'    : 'mHz reading',
@@ -164,7 +164,7 @@ class TESSProtocol(LineOnlyReceiver):
         line = line.decode('ascii')  # from bytearray to string
         self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
         if self._paused or self._stopped:
-            self.log.debug("Producer paused {p} or stopped {s}", p=self._paused, s=self._stopped)
+            self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
             return
         handled = self._handleUnsolicitedResponse(line, now)
     
@@ -176,21 +176,24 @@ class TESSProtocol(LineOnlyReceiver):
         """
         Stop producing data.
         """
-        self._stop     = False
+        self.log.warn("stop producing data")
+        self._stopped     = False
 
 
     def pauseProducing(self):
         """
         Pause producing data.
         """
-        self._pause    = True
+        self.log.warn("pause producing data")
+        self._paused    = True
 
 
     def resumeProducing(self):
         """
         Resume producing data.
         """
-        self._pause    = False
+        self.log.warn("resume prodicing data")
+        self._paused    = False
 
 
     def registerConsumer(self, consumer):
@@ -288,7 +291,6 @@ class TESSProtocol(LineOnlyReceiver):
             reading['freq'] = float(matchobj.group(1))/1000.0
         else:
             return False
-        self.log.info(" *** TESS-W message")  
         self._consumer.write(reading)
         return True
         

@@ -108,6 +108,7 @@ class StatsService(Service):
     def stopService(self):
         log.info("stopping Stats Service")
         self.statTask.stop()
+        reactor.callLater(0,reactor.stop)
         return Service.stopService(self)
     
     
@@ -247,12 +248,17 @@ class StatsService(Service):
             stats[new] = stats.pop(old)
         # CSV file generation
         writeheader = not os.path.exists(self.options['csv_file'])
-        with open(self.options['csv_file'], mode='a+') as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=newkeys, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            if writeheader:
-                writer.writeheader()
-            writer.writerow(stats)
-        log.info("updated CSV file {file}",file=self.options['csv_file'])
+        try:
+            with open(self.options['csv_file'], mode='a+') as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=newkeys, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                if writeheader:
+                    writer.writeheader()
+                writer.writerow(stats)
+            log.info("updated CSV file {file}",file=self.options['csv_file'])
+        except Exception as e:
+            log.warn("Could not update  CSV file {file}", file=self.options['csv_file'])
+            log.error("{excp}",excp = e)
+
 
 
     @inlineCallbacks
@@ -272,7 +278,7 @@ class StatsService(Service):
         else:
             log.info("skipping updating of {tess} ZP",tess=self.info['name'])
             yield deferToThread(self._exportCSV, stats)
-        reactor.callLater(0,reactor.stop)
+        self.stopService()
         
 
     

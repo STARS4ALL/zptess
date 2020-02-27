@@ -256,8 +256,6 @@ class PhotometerService(ClientService):
         self.buffer.registerProducer(protocol, True)
         if self.limitedStart():
             protocol.stopProducing()    # We don need to feed messages to the buffer
-        else:
-            protocol.resumeProducing()
         self.protocol  = protocol
 
 

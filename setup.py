@@ -14,36 +14,36 @@ long_description = open('README.md').read()
 # Docunetation is uploaded in PyPi when registering
 # by issuing `python setup.py register`
 
-# try:
-#     import subprocess
-#     import pandoc
+try:
+    import subprocess
+    import pandoc
  
-# except:
-#     print("ERROR: pandoc is necessary to package this utility")
-#     sys.exit(1)
+except:
+    print("ERROR: pandoc is necessary to package this utility")
+    sys.exit(1)
 
-# try:
+try:
  
-#     process = subprocess.Popen(
-#         ['which pandoc'],
-#         shell=True,
-#         stdout=subprocess.PIPE,
-#         universal_newlines=True
-#     )
+    process = subprocess.Popen(
+        ['which pandoc'],
+        shell=True,
+        stdout=subprocess.PIPE,
+        universal_newlines=True
+    )
  
-#     pandoc_path = process.communicate()[0]
-#     pandoc_path = pandoc_path.strip('\n')
+    pandoc_path = process.communicate()[0]
+    pandoc_path = pandoc_path.strip('\n')
  
-#     pandoc.core.PANDOC_PATH = pandoc_path
+    pandoc.core.PANDOC_PATH = pandoc_path
  
-#     doc = pandoc.Document()
-#     doc.markdown = long_description
+    doc = pandoc.Document()
+    doc.markdown = long_description
  
-#     long_description = doc.rst
+    long_description = doc.rst
  
-# except:
-#     print("ERROR generating documentation with pandoc")
-#     sys.exit(1)
+except:
+    print("ERROR generating documentation with pandoc")
+    sys.exit(1)
    
 
 PKG_NAME     = 'zptess'

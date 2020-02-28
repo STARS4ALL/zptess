@@ -10,7 +10,6 @@
 
 from __future__ import division, absolute_import
 
-
 # ---------------
 # Twisted imports
 # ---------------
@@ -24,35 +23,10 @@ from twisted.internet.protocol    import ClientFactory
 
 from zptess.tessbase   import TESSBaseProtocol, TESSBaseProtocolFactory
 
-# ----------------
-# Module constants
-# ----------------
-
-# -----------------------
-# Module global variables
-# -----------------------
-
-
-
-# ----------------
-# Module functions
-# ----------------
-
-
-# ----------
-# Exceptions
-# ----------
-
-
-
 # -------
 # Classes
 # -------
 
-
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 
 class TESSProtocolFactory(TESSBaseProtocolFactory):
 
@@ -60,12 +34,9 @@ class TESSProtocolFactory(TESSBaseProtocolFactory):
         self.log.debug('Factory: Connected.')
         return TESSProtocol(self.namespace)
 
+
 class TESSProtocol(TESSBaseProtocol):
     label = "TESS-P" 
-
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 
 
 __all__ = [

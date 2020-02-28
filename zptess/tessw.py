@@ -102,11 +102,6 @@ def make_save_url(endpoint):
 # -------
 
 
-
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-
 class TESSProtocolFactory(TESSBaseProtocolFactory):
 
     def buildProtocol(self, addr):
@@ -114,13 +109,9 @@ class TESSProtocolFactory(TESSBaseProtocolFactory):
         return TESSProtocol(self.namespace)
 
 
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 
 @implementer(IPushProducer)
 class TESSProtocol(LineOnlyReceiver):
-
 
     # So that we can patch it in tests with Clock.callLater ...
     callLater = reactor.callLater
@@ -146,7 +137,6 @@ class TESSProtocol(LineOnlyReceiver):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         line = line.decode('latin_1')  # from bytearray to string
         self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
-        
         handled, reading = self._handleUnsolicitedResponse(line, now)
         if handled:
             self._consumer.write(reading)

@@ -10,10 +10,6 @@
 
 from __future__ import division, absolute_import
 
-import re
-import datetime
-import json
-
 # ---------------
 # Twisted imports
 # ---------------
@@ -27,28 +23,6 @@ from twisted.internet.protocol    import ClientFactory
 
 from zptess.tesscommon   import TESSBaseProtocol, TESSBaseProtocolFactory
 
-# ----------------
-# Module constants
-# ----------------
-
-
-# -----------------------
-# Module global variables
-# -----------------------
-
-
-
-# ----------------
-# Module functions
-# ----------------
-
-
-
-# ----------
-# Exceptions
-# ----------
-
-
 # -------
 # Classes
 # -------
@@ -58,10 +32,7 @@ class TESSProtocolFactory(TESSBaseProtocolFactory):
     def buildProtocol(self, addr):
         self.log.debug('Factory: Connected.')
         return TESSProtocol(self.namespace)
-        
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
+
 
 class TESSProtocol(TESSBaseProtocol):
     label = "TAS" 

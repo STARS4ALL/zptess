@@ -131,6 +131,13 @@ class ReadingsService(Service):
     # Statistics Helper functions
     # ----------------------------
 
+    def _computeZP(self, refFreq, tstFreq, zpfict, zpabs):
+        diff = 2.5*math.log10(testFreq/refFreq)
+        refMag  = zpfict - 2.5*math.log10(refFreq)
+        testMag = zpfict - 2.5*math.log10(testFreq)
+        testZP = round(zpabs + diff,2)
+        return testZP 
+
     def _accumulateRounds(self):
         log.info("="*72)
         refFreq,  refMag, refStddev  = self._statsFor('ref')

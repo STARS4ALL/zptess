@@ -287,6 +287,7 @@ class TESSProtocol(LineOnlyReceiver):
             self.write_deferred.callback(self.write_response)
             self.write_deferred = None
 
+
     def _handleSolicitedResponse(self, line, tstamp):
         '''
         Handle Solicted responses from zptess.

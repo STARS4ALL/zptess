@@ -73,8 +73,8 @@ class StatsService(Service):
         setLogLevel(namespace='stats', levelStr=options['log_level'])
         self.options = options
         self.period  = self.options['period']
-        self.central = self.options['central']
         self.nrounds = self.options['rounds']
+        self.central = self.options['central']
         self.curRound = 1
         if self.central not in ['mean','median']:
             throw 
@@ -85,8 +85,7 @@ class StatsService(Service):
             'testFreq' : list(),
         }
 
-   
-    @inlineCallbacks
+
     def startService(self):
         '''
         Starts Stats service
@@ -97,17 +96,13 @@ class StatsService(Service):
         self.statTask = task.LoopingCall(self._schedule)
         self.statTask.start(self.period, now=False)  # call every T seconds
         self.testPhotometer = self.parent.getServiceNamed(TEST_PHOTOMETER_SERVICE)
-        self.testLabel = self.testPhotometer.getLabel()
         self.refPhotometer = self.parent.getServiceNamed(REF_PHOTOMETER_SERVICE)
-        self.refLabel = self.refPhotometer.getLabel()
         self.queue['test']      = self.testPhotometer.buffer.getBuffer()
         self.queue['reference'] = self.refPhotometer.buffer.getBuffer()
-        info = yield self.refPhotometer.getPhotometerInfo()
-        self.refname = info['name']
-
        
+
     def stopService(self):
-        log.info("stopping Stats Service")
+        log.info("stopping {name}", name=self.name)
         self.statTask.stop()
         reactor.callLater(0,reactor.stop)
         return Service.stopService(self)
@@ -120,28 +115,40 @@ class StatsService(Service):
     @inlineCallbacks
     def _schedule(self):  
         if self.curRound > self.nrounds:
-            log.info("Not computing statistics anymore")
-        elif self.curRound < self.nrounds:
+            log.info("Finished readings")
+        elif self.curRound == 1:
+            info = yield self.refPhotometer.getPhotometerInfo()
+            self.refname  = info['name']
+            self.refLabel = info['label']
+            self.refzp    = info['zp'] if info['zp'] != 0 else self.options['zp_abs']
+            self.info     = info
+            info = yield self.testPhotometer.getPhotometerInfo()
+            self.testname  = info['name']
+            self.testLabel = info['label']
+            self.testzp    = info['zp']
+            yield self._accumulateRounds()
+        elif 1 < self.curRound < self.nrounds:
             yield self._accumulateRounds()
         else:
             yield self._accumulateRounds()
-            self._onStatsComplete(self._choose())
+            yield self._onStatsComplete(self._choose())
+            yield self.stopService()
 
     
     # ---------------------------
     # Statistics Helper functions
     # ----------------------------
 
-    def _doAccumulateRounds(self):
+    def _accumulateRounds(self):
         zpabs = self.options['zp_abs']
-        zpf = self.options['zp_fict']
+        zpfic  = self.options['zp_fict']
         log.info("-"*72)
         refFreq,  refStddev  = self._statsFor(self.queue['reference'], self.refLabel, self.refname)
-        testFreq, testStddev = self._statsFor(self.queue['test'], self.testLabel, self.info['name'])
+        testFreq, testStddev = self._statsFor(self.queue['test'],     self.testLabel, self.testname)
         if refFreq is not None and testFreq is not None:
             diff = 2.5*math.log10(testFreq/refFreq)
-            refMag  = zpf - 2.5*math.log10(refFreq)
-            testMag = zpf - 2.5*math.log10(testFreq)
+            refMag  = zpfic - 2.5*math.log10(refFreq)
+            testMag = zpfic - 2.5*math.log10(testFreq)
             testZP = round(zpabs + diff,2)     
             if refStddev != 0.0 and testStddev != 0.0:
                 log.info('ROUND {i:02d}: {rLab} Mag = {rM:0.2f}. {tLab} Mag = {tM:0.2f}, Diff = {d:0.3f} => {tLab} ZP = {zp:0.2f}',
@@ -158,20 +165,11 @@ class StatsService(Service):
                 log.warn('FROZEN {rLab} Mag = {rM:0.2f}, FROZEN {tLab} Mag = {tM:0.2f}', rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
 
 
-    @inlineCallbacks
-    def _accumulateRounds(self):
-        try:
-            self.info = yield self.testPhotometer.getPhotometerInfo()
-        except:
-            reactor.callLater(0, reactor.stop)
-        else:
-            self._doAccumulateRounds()
-
     def _choose(self):
         '''Choose the best statistics at the end of the round'''
         log.info("#"*72) 
         log.info("Best ZP        list is {bzp}",bzp=self.best['zp'])
-        log.info("Best {rLab} Freq list is {brf}",brf=self.best['refFreq'], rLab=self.refLabel)
+        log.info("Best {rLab} Freq list is {brf}",brf=self.best['refFreq'],  rLab=self.refLabel)
         log.info("Best {tLab} Freq list is {btf}",btf=self.best['testFreq'], tLab=self.testLabel)
         final = dict()
         old_zp = float(self.testPhotometer.info['zp'])
@@ -264,22 +262,18 @@ class StatsService(Service):
 
     @inlineCallbacks
     def _onStatsComplete(self, stats):
-        yield self.stopService()
         if self.options['update']:
             log.info("updating {tess} ZP to {zp}", tess=self.info['name'], zp=stats['zp'])
-            # This should not be synchronous, but I could not make it work either with
-            # the Twisted Agent or even deferring to thread
             try:
                 yield self.testPhotometer.writeZeroPoint(stats['zp'])
             except Exception as e:
                 log.error("Timeout when updating photometer zero point")
-                reactor.callLater(0, reactor.stop)
+                yield self.stopService()
             else:
                 yield deferToThread(self._exportCSV, stats)
         else:
-            log.info("skipping updating of {tess} ZP",tess=self.info['name'])
+            log.info("Not writting ZP in {tess} photometer",tess=self.info['name'])
             yield deferToThread(self._exportCSV, stats)
-        self.stopService()
         
 
     

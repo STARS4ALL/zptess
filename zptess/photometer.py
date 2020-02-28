@@ -227,7 +227,7 @@ class PhotometerService(ClientService):
     def initialActions(self):
         if self.options['dry_run']:
             self.log.info('Dry run. Will stop here ...') 
-            reactor.callLater(0,reactor.stop)
+            yield self.stopService()
         elif self.options['zero_point'] is not None:
             try:
                 result = yield self.protocol.writeZeroPoint(self.options['zero_point'])

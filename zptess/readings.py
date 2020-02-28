@@ -188,8 +188,8 @@ class ReadingsService(Service):
             log.error("Fallo estadistico: {e}",e=e)
             return None, None, None
         else: 
-            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s] & ZP = {zp:0.2f} =>  Mag {cMag:0.2f}, {clabel} Freq {cFreq:0.3f} Hz, StDev = {stddev:0.3f} Hz",
-                name=name, label=label, start=start, end=end, zp=zp, clabel=clabel, cFreq=cFreq, cMag=cMag, stddev=stddev, w=window)
+            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s][{sz:03d}] & ZP = {zp:0.2f} =>  Mag {cMag:0.2f}, {clabel} Freq {cFreq:0.3f} Hz, StDev = {stddev:0.3f} Hz",
+                name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, cFreq=cFreq, cMag=cMag, stddev=stddev, w=window)
             return cFreq, cMag, stddev
 
     

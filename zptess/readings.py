@@ -145,10 +145,10 @@ class ReadingsService(Service):
         rLab = self.phot['ref']['info']['name']
         tLab = self.phot['ref']['info']['name']
         if refFreq is not None and tstFreq is not None:
-            difFreq = 2.5*math.log10(tstFreq/refFreq)
+            difFreq = -2.5*math.log10(refFreq/tstFreq)
             difMag = refMag - testMag
             if refStddev != 0.0 and testStddev != 0.0:
-                log.info('ROUND         {i:02d}: Freq Diff = {difFreq:0.3f}, Mag Diff  {difMag:0.2f}',
+                log.info('ROUND         {i:02d}: Diff by -2.5*log(Freq[ref]/Freq[test]) = {difFreq:0.3f},    Diff by Mag[ref]-Mag[test]) = {difMag:0.2f}',
                     i=self.curRound, difFreq=difFreq, difMag=difMag)
                 self.curRound += 1
             elif refStddev == 0.0 and testStddev != 0.0:
@@ -186,8 +186,9 @@ class ReadingsService(Service):
             cMag    = zp  - 2.5*math.log10(cFreq)
         except statistics.StatisticsError as e:
             log.error("Fallo estadistico: {e}",e=e)
+            return None, None, None
         else: 
-            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s] & ZP = {zp:0.2f} => {clabel} Freq {cFreq:0.3f} Hz, Mag {cMag:0.2f}, StDev = {stddev:0.3f} Hz",
+            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s] & ZP = {zp:0.2f} =>  Mag {cMag:0.2f}, {clabel} Freq {cFreq:0.3f} Hz, StDev = {stddev:0.3f} Hz",
                 name=name, label=label, start=start, end=end, zp=zp, clabel=clabel, cFreq=cFreq, cMag=cMag, stddev=stddev, w=window)
             return cFreq, cMag, stddev
 

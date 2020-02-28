@@ -163,9 +163,7 @@ class TESSProtocol(LineOnlyReceiver):
         now = datetime.datetime.utcnow().replace(microsecond=0) + datetime.timedelta(seconds=0.5)
         line = line.decode('latin_1')  # from bytearray to string
         self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
-        if self._paused or self._stopped:
-            #self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
-            return
+        
         handled, reading = self._handleUnsolicitedResponse(line, now)
         if handled:
             self._consumer.write(reading)
@@ -272,6 +270,9 @@ class TESSProtocol(LineOnlyReceiver):
         Handle unsolicited responses from zptess.
         Returns True if handled, False otherwise
         '''
+        if self._paused or self._stopped:
+            #self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
+            return False, None
         ur, matchobj = self._match_unsolicited(line)
         if not ur:
             return False, None

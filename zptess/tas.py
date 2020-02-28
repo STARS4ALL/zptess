@@ -189,9 +189,7 @@ class TESSProtocol(LineOnlyReceiver):
         # It is important to handle request/responses first before the push producer stuff
         handled = self._handleSolicitedResponse(line, now)
         if handled:
-            return
-        if self._paused or self._stopped:
-            #self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
+            self._triggerCallbacks()
             return
         handled, reading = self._handleUnsolicitedResponse(line, now)
         if handled:
@@ -268,7 +266,7 @@ class TESSProtocol(LineOnlyReceiver):
     # Helper methods
     # --------------
 
-    def match_solicited(self, line):
+    def _match_solicited(self, line):
         '''Returns matched command descriptor or None'''
         for regexp in SOLICITED_PATTERNS:
             matchobj = regexp.search(line)
@@ -278,15 +276,26 @@ class TESSProtocol(LineOnlyReceiver):
         return None, None
 
 
+    def _triggerCallbacks(self):
+        # trigger pending callbacks
+        if self.read_deferred and self.cnt == 4: 
+            self.read_deferred.callback(self.read_response)
+            self.read_deferred = None
+            self.cnt = 0
+
+        if self.write_deferred and 'zp' in self.write_response: 
+            self.write_deferred.callback(self.write_response)
+            self.write_deferred = None
+
     def _handleSolicitedResponse(self, line, tstamp):
         '''
         Handle Solicted responses from zptess.
         Returns True if handled, False otherwise
         '''
-        sr, matchobj = self.match_solicited(line)
+        sr, matchobj = self._match_solicited(line)
         if not sr:
             return False
-
+        handñed = True
         if sr['name'] == 'name':
             self.read_response['tstamp'] = tstamp
             self.read_response['name'] = str(matchobj.group(1))
@@ -307,19 +316,8 @@ class TESSProtocol(LineOnlyReceiver):
             self.write_response['tstamp'] = tstamp
             self.write_response['zp'] = float(matchobj.group(1))
         else:
-            return False
-        
-        # trigger pending callbacks
-        if self.read_deferred and self.cnt == 4: 
-            self.read_deferred.callback(self.read_response)
-            self.read_deferred = None
-            self.cnt = 0
-
-        if self.write_deferred and 'zp' in self.write_response: 
-            self.write_deferred.callback(self.write_response)
-            self.write_deferred = None
-
-        return True
+            handñed = False
+        return handled
 
 
     def _handleUnsolicitedResponse(self, line, tstamp):
@@ -327,6 +325,9 @@ class TESSProtocol(LineOnlyReceiver):
         Handle Unsolicted responses from zptess.
         Returns True if handled, False otherwise
         '''
+        if self._paused or self._stopped:
+            #self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
+            return False, None
         try:
             reading = json.loads(line)
         except Exception as e:

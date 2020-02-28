@@ -156,9 +156,6 @@ class PhotometerService(ClientService):
         else:
             return defer.succeed(self.info)
 
-    def getLabel(self):
-        return self.label
-
     # --------------
     # Helper methods
     # ---------------
@@ -202,6 +199,7 @@ class PhotometerService(ClientService):
                 returnValue(info)
         else:
             info['model'] = self.options['model']
+            info['label'] = self.label
             self.log.info("[{label}] Model     : {value}", label=self.label, value=info['model'])
             self.log.info("[{label}] Name      : {value}", label=self.label, value=info['name'])
             self.log.info("[{label}] MAC       : {value}", label=self.label, value=info['mac'])
@@ -214,9 +212,10 @@ class PhotometerService(ClientService):
         if self.reference and (self.options['model'] == TESSW) and parts[0] == 'serial':
             info = {
                 'model'    : TESSW,
+                'label'    : self.label,
                 'name'     : self.options['refname'],
                 'mac'      : "TT:UU:WW:XX:YY:ZZ",
-                'zp'       : 0,
+                'zp'       : 20.50,
                 'firmware' : "",
             }
             self.log.error("Fixed photometer info with defaults {info}", info=info)

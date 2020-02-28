@@ -72,9 +72,10 @@ class StatsService(Service):
         Service.__init__(self)
         setLogLevel(namespace='stats', levelStr=options['log_level'])
         self.options = options
-        self.period  = self.options['period']
-        self.nrounds = self.options['rounds']
-        self.central = self.options['central']
+        self.period  = options['period']
+        self.nrounds = options['rounds']
+        self.central = options['central']
+        self.size    = options['size']
         self.curRound = 1
         if self.central not in ['mean','median']:
             throw 

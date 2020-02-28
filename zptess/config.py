@@ -161,19 +161,7 @@ def loadCmdLine(cmdline_options):
     options['test']['log_messages']   = select_log_level_for("test",gen_level, msg_level)
     if cmdline_options.number is not None:
         options['reference']['size']      = cmdline_options.number # yes, this is not a mistake
-  
-    options['read'] = {}
-    if cmdline_options.read:    
-        if cmdline_options.number is not None:
-            options['read']['size']      = cmdline_options.number # yes, this is not a mistake
-        if cmdline_options.iterations is not None:
-            options['read']['rounds']    = cmdline_options.iterations
-        if cmdline_options.zp_fict is not None:
-            options['read']['zp_fict']   = cmdline_options.zp_fict
-        if cmdline_options.zp_abs is not None:
-            options['read']['zp_abs']    = cmdline_options.zp_abs
-        options['read']['log_level']     = select_log_level_for("general",gen_level, msg_level)
-    
+
     options['stats'] = {}
     if cmdline_options.number is not None:
         options['stats']['size']      = cmdline_options.number # yes, this is not a mistake
@@ -187,7 +175,12 @@ def loadCmdLine(cmdline_options):
     options['stats']['author']        = cmdline_options.author
     options['stats']['update']        = cmdline_options.update
     options['stats']['csv_file']      = cmdline_options.csv_file
-
+  
+    
+    if cmdline_options.read:
+        options['read'] = options['stats']
+    else:
+        options['read'] = {}
         
     return options
 
@@ -227,11 +220,8 @@ def loadCfgFile(path):
     options['stats']['state_url']     = parser.get("stats","state_url")
     options['stats']['save_url']      = parser.get("stats","save_url")
     options['stats']['csv_file']      = parser.get("stats","csv_file")
-
-    options['read'] = {}
-    options['read']['period']         = parser.getint("stats","period") # yes, this is not a mistake
-    options['read']['rounds']         = parser.getint("stats","rounds") # yes, this is not a mistake
-    options['read']['size']           = parser.getint("stats","size")   # yes, this is not a mistake
+    # Whether we need it or not
+    options['read'] = options['stats']
     return options
 
 

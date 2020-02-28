@@ -72,15 +72,15 @@ class ReadingsService(Service):
         Service.__init__(self)
         setLogLevel(namespace='ReadingsService', levelStr=options['log_level'])
         self.options = options
-        self.period  = self.options['period']
-        self.nrounds = self.options['rounds']
-        self.curRound = 1
-        self.queue   = {}
-        self.best = {
-            'zp'       : list(),
-            'refFreq'  : list(),
-            'testFreq' : list(),
+        self.period  = options['period']
+        self.nrounds = options['rounds']
+        self.central = options['central']
+        self.size    = options['size']
+        self.phot = {
+            'ref' : {'queue': None, 'info': None},
+            'test': {'queue': None, 'info': None},
         }
+        self.curRound = 1
 
    
     def startService(self):
@@ -92,11 +92,10 @@ class ReadingsService(Service):
         Service.startService(self)
         self.statTask = task.LoopingCall(self._schedule)
         self.statTask.start(self.period, now=False)  # call every T seconds
-        self.testPhotometer = self.parent.getServiceNamed(TEST_PHOTOMETER_SERVICE)
+        self.tstPhotometer = self.parent.getServiceNamed(TEST_PHOTOMETER_SERVICE)
         self.refPhotometer = self.parent.getServiceNamed(REF_PHOTOMETER_SERVICE)
-        self.queue['test']      = self.testPhotometer.buffer.getBuffer()
-        self.queue['reference'] = self.refPhotometer.buffer.getBuffer()
-       
+        self.phot['test']['queue'] = self.tstPhotometer.buffer.getBuffer()
+        self.phot['ref']['queue']  = self.refPhotometer.buffer.getBuffer()
 
        
     def stopService(self):
@@ -116,14 +115,10 @@ class ReadingsService(Service):
             log.info("Finished readings")
         elif self.curRound == 1:
             info = yield self.refPhotometer.getPhotometerInfo()
-            self.refname  = info['name']
-            self.refLabel = info['label']
-            self.refzp    = info['zp'] if info['zp'] != 0 else self.options['zp_abs']
-            self.info     = info
-            info = yield self.testPhotometer.getPhotometerInfo()
-            self.testname  = info['name']
-            self.testLabel = info['label']
-            self.testzp    = info['zp']
+            self.phot['ref']['info'] = info
+            self.phot['ref']['info']['zp'] = info['zp'] if info['zp'] != 0 else self.options['zp_abs']
+            info = yield self.tstPhotometer.getPhotometerInfo()
+            self.phot['test']['info'] = info
             yield self._accumulateRounds()
         elif 1 < self.curRound < self.nrounds:
             yield self._accumulateRounds()
@@ -138,57 +133,56 @@ class ReadingsService(Service):
 
     def _accumulateRounds(self):
         log.info("="*72)
-        refFreq,  refStddev  = self._statsFor(self.queue['reference'], self.refLabel, self.refname)
-        testFreq, testStddev = self._statsFor(self.queue['test'],      self.testLabel, self.info['name'])
-        if refFreq is not None and testFreq is not None:
-            diffFreq = 2.5*math.log10(testFreq/refFreq)
-            refMag  = self.refzp  - 2.5*math.log10(refFreq)
-            testMag = self.testzp - 2.5*math.log10(testFreq)
-            diffMag = refMag - testMag
+        refFreq,  refMag, refStddev  = self._statsFor('ref')
+        tstFreq, testMag, testStddev = self._statsFor('test')
+        rLab = self.phot['ref']['info']['name']
+        tLab = self.phot['ref']['info']['name']
+        if refFreq is not None and tstFreq is not None:
+            difFreq = 2.5*math.log10(tstFreq/refFreq)
+            difMag = refMag - testMag
             if refStddev != 0.0 and testStddev != 0.0:
-                log.info('ROUND {i:02d}: {rLab} Mag = {rM:0.2f}. {tLab} Mag = {tM:0.2f}, Diff = {dif:0.3f} => {tLab} ZP = {zp:0.2f}',
-                    i=self.curRound, 
-                    rLab=self.refLabel, tLab=self.testLabel,
-                    rM=refMag, tM=testMag, 
-                    dif=diffMag, zp=self.testzp)
+                log.info('ROUND         {i:02d}: Freq Diff = {difFreq:0.3f}, Mag Diff  {difMag:0.2f}',
+                    i=self.curRound, difFreq=difFreq, difMag=difMag)
                 self.curRound += 1
             elif refStddev == 0.0 and testStddev != 0.0:
-                log.warn('FROZEN {rLab} Mag = {rM:0.2f}, {tLab} Mag = {tM:0.2f}', 
-                    rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
-            elif testStddev == 0.0 and refStddev != 0.0: 
-                log.warn('{rLab} Mag = {rM:0.2f}, FROZEN {tLab} Mag = {tM:0.2f}', 
-                    rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
+                log.warn('FROZEN {lab}', lab=rLab)
+            elif testStddev == 0.0 and refStddev != 0.0:
+                log.warn('FROZEN {lab}', lab=tLab)
             else:
-                log.warn('FROZEN {rLab} Mag = {rM:0.2f}, FROZEN {tLab} Mag = {tM:0.2f}', 
-                    rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
+                log.warn('FROZEN {rLab} and {tLab}', rLab=rLab, tLab=tLab)
 
 
 
-    def _statsFor(self, queue, label, name):
+    def _statsFor(self, tag):
         '''compute statistics for a given queue'''
-        size = len(queue)
-        seq =  [ item['freq'] for item in queue]
-        log.debug("{label} Frequencies: {lista}", label=label, lista=seq)
-        if size < self.options['size']:
+        queue       = self.phot[tag]['queue']
+        size        = len(queue)
+        if size == 0:
+            return None, None, None
+        label       = self.phot[tag]['info']['label']
+        name        = self.phot[tag]['info']['name']
+        zp          = self.phot[tag]['info']['zp']
+        start       = queue[0]['tstamp'].strftime("%H:%M:%S")
+        end         = queue[-1]['tstamp'].strftime("%H:%M:%S")
+        window      = (queue[-1]['tstamp'] - queue[0]['tstamp']).total_seconds()
+        frequencies = [ item['freq'] for item in queue]
+        clabel      = "Mean" if self.central == "mean" else "Median"
+        log.debug("{label} Frequencies: {seq}", label=label, seq=frequencies)
+        if size < self.size:      
             log.info('[{label}] {name:10s} waiting for enough samples, {n} remaining', 
-                label=label, name=name, n=self.options['size']-size)
-            return None, None
+                label=label, name=name, n=self.size-size)
+            return None, None, None
         try:
-            log.debug("queue = {q}",q=seq)
-            median  = statistics.median(seq)
-            mean    = statistics.mean(seq) 
-            #clabel  = "Mean" if self.central == "mean" else "Median"
-            stddev  = statistics.stdev(seq, mean)
-            start   = queue[0]['tstamp'].strftime("%H:%M:%S")
-            end     = queue[-1]['tstamp'].strftime("%H:%M:%S")
-            window  = (queue[-1]['tstamp'] - queue[0]['tstamp']).total_seconds()
+            log.debug("queue = {q}",q=frequencies)
+            cFreq   = statistics.mean(frequencies) if self.central == "mean" else statistics.median(frequencies)
+            stddev  = statistics.stdev(frequencies, cFreq)
+            cMag    = zp  - 2.5*math.log10(cFreq)
         except statistics.StatisticsError as e:
             log.error("Fallo estadistico: {e}",e=e)
         else: 
-            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s] => median = {median:0.3f} mean = {mean:0.3f} Hz, StDev = {stddev:0.2e} Hz",
-                name=name, label=label, start=start, end=end, median=median, mean=mean, stddev=stddev, w=window)
-            return median, stddev
-
+            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s] & ZP = {zp:0.2f} => {clabel} Freq {cFreq:0.3f} Hz, Mag {cMag:0.2f}, StDev = {stddev:0.3f} Hz",
+                name=name, label=label, start=start, end=end, zp=zp, clabel=clabel, cFreq=cFreq, cMag=cMag, stddev=stddev, w=window)
+            return cFreq, cMag, stddev
 
     
 

@@ -174,13 +174,8 @@ def loadCmdLine(cmdline_options):
     options['stats']['log_level']     = select_log_level_for("general",gen_level, msg_level)
     options['stats']['author']        = cmdline_options.author
     options['stats']['update']        = cmdline_options.update
+    options['stats']['read']          = cmdline_options.read
     options['stats']['csv_file']      = cmdline_options.csv_file
-  
-    
-    if cmdline_options.read:
-        options['read'] = options['stats']
-    else:
-        options['read'] = {}
         
     return options
 
@@ -220,8 +215,7 @@ def loadCfgFile(path):
     options['stats']['state_url']     = parser.get("stats","state_url")
     options['stats']['save_url']      = parser.get("stats","save_url")
     options['stats']['csv_file']      = parser.get("stats","csv_file")
-    # Whether we need it or not
-    options['read'] = options['stats']
+
     return options
 
 

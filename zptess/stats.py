@@ -59,7 +59,7 @@ class TESSEstimatorError(ValueError):
 # Module global variables
 # -----------------------
 
-log = Logger(namespace='stats')
+log = Logger(namespace='read')
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------    
@@ -70,23 +70,25 @@ class StatsService(Service):
 
     def __init__(self, options):
         Service.__init__(self)
-        setLogLevel(namespace='stats', levelStr=options['log_level'])
-        self.options = options
-        self.period  = options['period']
-        self.nrounds = options['rounds']
-        self.central = options['central']
-        self.size    = options['size']
+        setLogLevel(namespace='ReadingsService', levelStr=options['log_level'])
+        self.options  = options
+        self.period   = options['period']
+        self.nrounds  = options['rounds']
+        self.central  = options['central']
+        self.size     = options['size']
+        self.readMode = options['read']
+        self.phot = {
+            'ref' : {'queue': None, 'info': None},
+            'test': {'queue': None, 'info': None},
+        }
         self.curRound = 1
-        if self.central not in ['mean','median']:
-            throw 
-        self.queue   = {}
         self.best = {
             'zp'       : list(),
             'refFreq'  : list(),
             'testFreq' : list(),
         }
 
-
+   
     def startService(self):
         '''
         Starts Stats service
@@ -96,12 +98,12 @@ class StatsService(Service):
         Service.startService(self)
         self.statTask = task.LoopingCall(self._schedule)
         self.statTask.start(self.period, now=False)  # call every T seconds
-        self.testPhotometer = self.parent.getServiceNamed(TEST_PHOTOMETER_SERVICE)
+        self.tstPhotometer = self.parent.getServiceNamed(TEST_PHOTOMETER_SERVICE)
         self.refPhotometer = self.parent.getServiceNamed(REF_PHOTOMETER_SERVICE)
-        self.queue['test']      = self.testPhotometer.buffer.getBuffer()
-        self.queue['reference'] = self.refPhotometer.buffer.getBuffer()
-       
+        self.phot['test']['queue'] = self.tstPhotometer.buffer.getBuffer()
+        self.phot['ref']['queue']  = self.refPhotometer.buffer.getBuffer()
 
+       
     def stopService(self):
         log.info("stopping {name}", name=self.name)
         self.statTask.stop()
@@ -119,20 +121,24 @@ class StatsService(Service):
             log.info("Finished readings")
         elif self.curRound == 1:
             info = yield self.refPhotometer.getPhotometerInfo()
-            self.refname  = info['name']
-            self.refLabel = info['label']
-            self.refzp    = info['zp'] if info['zp'] != 0 else self.options['zp_abs']
-            self.info     = info
-            info = yield self.testPhotometer.getPhotometerInfo()
-            self.testname  = info['name']
-            self.testLabel = info['label']
-            self.testzp    = info['zp']
+            self.phot['ref']['info'] = info
+            self.phot['ref']['info']['zp'] = info['zp'] if info['zp'] != 0 else self.options['zp_abs']
+            info = yield self.tstPhotometer.getPhotometerInfo()
+            self.phot['test']['info'] = info
+            if not self.readMode:
+                self.phot['ref']['info']['zp']  = self.options['zp_fict']
+                self.phot['test']['info']['old_zp'] = self.phot['test']['info']['zp']
+                self.phot['test']['info']['zp'] = self.options['zp_fict']
             yield self._accumulateRounds()
         elif 1 < self.curRound < self.nrounds:
             yield self._accumulateRounds()
         else:
             yield self._accumulateRounds()
-            yield self._onStatsComplete(self._choose())
+            if not self.readMode:
+                stats = self._choose()
+                yield self._maybeUpdateZeroPoint(stats['zp'])
+                self._addMetadata(stats)
+                yield deferToThread(self._exportCSV, stats)
             yield self.stopService()
 
     
@@ -140,40 +146,78 @@ class StatsService(Service):
     # Statistics Helper functions
     # ----------------------------
 
+    def _computeZP(self, magDiff):
+        return round(self.options['zp_abs'] + magDiff,2)
+     
     def _accumulateRounds(self):
-        zpabs = self.options['zp_abs']
-        zpfic  = self.options['zp_fict']
-        log.info("-"*72)
-        refFreq,  refStddev  = self._statsFor(self.queue['reference'], self.refLabel, self.refname)
-        testFreq, testStddev = self._statsFor(self.queue['test'],     self.testLabel, self.testname)
-        if refFreq is not None and testFreq is not None:
-            diff = 2.5*math.log10(testFreq/refFreq)
-            refMag  = zpfic - 2.5*math.log10(refFreq)
-            testMag = zpfic - 2.5*math.log10(testFreq)
-            testZP = round(zpabs + diff,2)     
+        log.info("="*72)
+        refFreq,  refMag, refStddev  = self._statsFor('ref')
+        tstFreq, testMag, testStddev = self._statsFor('test')
+        rLab = self.phot['ref']['info']['name']
+        tLab = self.phot['ref']['info']['name']
+        if refFreq is not None and tstFreq is not None:
+            difFreq = -2.5*math.log10(refFreq/tstFreq)
+            difMag = refMag - testMag
             if refStddev != 0.0 and testStddev != 0.0:
-                log.info('ROUND {i:02d}: {rLab} Mag = {rM:0.2f}. {tLab} Mag = {tM:0.2f}, Diff = {d:0.3f} => {tLab} ZP = {zp:0.2f}',
-                rLab=self.refLabel, tLab=self.testLabel, i=self.curRound, rM=refMag, tM=testMag, d=diff, zp=testZP)
-                self.best['zp'].append(testZP)
-                self.best['refFreq'].append(refFreq)
-                self.best['testFreq'].append(testFreq)
+                log.info('ROUND         {i:02d}: Diff by -2.5*log(Freq[ref]/Freq[test]) = {difFreq:0.2f},    Diff by Mag[ref]-Mag[test]) = {difMag:0.2f}',
+                    i=self.curRound, difFreq=difFreq, difMag=difMag)
                 self.curRound += 1
+                self.best['zp'].append(self._computeZP(difMag))          # Collect this info wether we need it or not
+                self.best['refFreq'].append(refFreq)
+                self.best['testFreq'].append(tstFreq)
             elif refStddev == 0.0 and testStddev != 0.0:
-                log.warn('FROZEN {rLab} Mag = {rM:0.2f}, {tLab} Mag = {tM:0.2f}', rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
-            elif testStddev == 0.0 and refStddev != 0.0: 
-                log.warn('{rLab} Mag = {rM:0.2f}, FROZEN {tLab} Mag = {tM:0.2f}', rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
+                log.warn('FROZEN {lab}', lab=rLab)
+            elif testStddev == 0.0 and refStddev != 0.0:
+                log.warn('FROZEN {lab}', lab=tLab)
             else:
-                log.warn('FROZEN {rLab} Mag = {rM:0.2f}, FROZEN {tLab} Mag = {tM:0.2f}', rLab=self.refLabel, tLab=self.testLabel, rM=refMag, tM=testMag)
+                log.warn('FROZEN {rLab} and {tLab}', rLab=rLab, tLab=tLab)
+
+
+
+    def _statsFor(self, tag):
+        '''compute statistics for a given queue'''
+        queue       = self.phot[tag]['queue']
+        size        = len(queue)
+        if size == 0:
+            return None, None, None
+        label       = self.phot[tag]['info']['label']
+        name        = self.phot[tag]['info']['name']
+        zp          = self.phot[tag]['info']['zp']
+        start       = queue[0]['tstamp'].strftime("%H:%M:%S")
+        end         = queue[-1]['tstamp'].strftime("%H:%M:%S")
+        window      = (queue[-1]['tstamp'] - queue[0]['tstamp']).total_seconds()
+        frequencies = [ item['freq'] for item in queue]
+        clabel      = "Mean" if self.central == "mean" else "Median"
+        log.debug("{label} Frequencies: {seq}", label=label, seq=frequencies)
+        if size < self.size:      
+            log.info('[{label}] {name:10s} waiting for enough samples, {n} remaining', 
+                label=label, name=name, n=self.size-size)
+            return None, None, None
+        try:
+            log.debug("queue = {q}",q=frequencies)
+            cFreq   = statistics.mean(frequencies) if self.central == "mean" else statistics.median(frequencies)
+            stddev  = statistics.stdev(frequencies, cFreq)
+            cMag    = zp  - 2.5*math.log10(cFreq)
+        except statistics.StatisticsError as e:
+            log.error("Fallo estadistico: {e}",e=e)
+            return None, None, None
+        else: 
+            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s][{sz:d}] & ZP = {zp:0.2f} =>  Mag {cMag:0.2f}, {clabel} Freq {cFreq:0.3f} Hz, StDev = {stddev:0.3f} Hz",
+                name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, cFreq=cFreq, cMag=cMag, stddev=stddev, w=window)
+            return cFreq, cMag, stddev
 
 
     def _choose(self):
         '''Choose the best statistics at the end of the round'''
+        refLabel  = self.phot['ref']['info']['label']
+        testLabel = self.phot['test']['info']['label']
         log.info("#"*72) 
         log.info("Best ZP        list is {bzp}",bzp=self.best['zp'])
-        log.info("Best {rLab} Freq list is {brf}",brf=self.best['refFreq'],  rLab=self.refLabel)
-        log.info("Best {tLab} Freq list is {btf}",btf=self.best['testFreq'], tLab=self.testLabel)
+        log.info("Best {rLab} Freq list is {brf}",brf=self.best['refFreq'],  rLab=refLabel)
+        log.info("Best {tLab} Freq list is {btf}",btf=self.best['testFreq'], tLab=testLabel)
         final = dict()
-        old_zp = float(self.testPhotometer.info['zp'])
+        old_zp = float(self.phot['test']['info']['old_zp'])
+        final['old_zp'] = old_zp
         try:
             final['zp']       = statistics.mode(self.best['zp'])
         except statistics.StatisticsError as e:
@@ -195,57 +239,48 @@ class StatsService(Service):
         final['magDiff']  = round(2.5*math.log10(final['testFreq']/final['refFreq']),2)
         log.info("{rLab} Freq. = {rF:0.3f} Hz , {tLab} Freq. = {tF:0.3f}, {rLab} Mag. = {rM:0.2f}, {tLab} Mag. = {tM:0.2f}, Diff {d:0.2f}", 
                 rF= final['refFreq'], tF=final['testFreq'], rM=final['refMag'], tM=final['testMag'], d=final['magDiff'],
-                rLab=self.refLabel, tLab=self.testLabel)
-        log.info("OLD {tLab} ZP = {old_zp:0.2f}, NEW {tLab} ZP = {new_zp:0.2f}", old_zp=old_zp, new_zp= final['zp'], tLab=self.testLabel)
+                rLab=refLabel, tLab=testLabel)
+        log.info("OLD {tLab} ZP = {old_zp:0.2f}, NEW {tLab} ZP = {new_zp:0.2f}", old_zp=old_zp, new_zp= final['zp'], tLab=testLabel)
         log.info("#"*72)
         return final
 
 
-    def _statsFor(self, queue, label, name):
-        '''compute statistics for a given queue'''
-        s = len(queue)
-        l =  [ item['freq'] for item in queue]
-        log.debug("{label} Frequencies: {lista}", label=label, lista=l)
-        if s < self.options['size']:
-            log.info('[{label}] {name:10s} waiting for enough samples, {n} remaining', 
-                label=label, name=name, n=self.options['size']-s)
-            return None, None
-        try:
-            log.debug("queue = {q}",q=l)
-            central = statistics.mean(l) if self.central == "mean" else statistics.median(l)
-            clabel  = "Mean" if self.central == "mean" else "Median"
-            stddev  = statistics.stdev(l, central)
-            start   = queue[0]['tstamp'].strftime("%H:%M:%S")
-            end     = queue[-1]['tstamp'].strftime("%H:%M:%S")
-            window  = (queue[-1]['tstamp'] - queue[0]['tstamp']).total_seconds()
-        except statistics.StatisticsError as e:
-            log.error("Fallo estadistico: {e}",e=e)
-        else: 
-            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s] => {clabel} = {central:0.3f} Hz, StDev = {stddev:0.2e} Hz",
-                name=name, label=label, start=start, end=end, clabel=clabel, central=central, stddev=stddev, w=window)
-            return central, stddev
 
-    # ----------------------
-    # Other Helper functions
-    # ----------------------
-
-    def _exportCSV(self, stats):
-        '''Exports summary statistics to a common CSV file'''
-        log.debug("Appending to CSV file {file}",file=self.options['csv_file'])
+    def _addMetadata(self, stats):
         # Adding metadata to the estimation
-        stats['mac']      = self.info['mac']  
-        stats['model']    = self.info['model']  
-        stats['firmware'] = self.info['firmware']
+        stats['tess']     = self.phot['test']['info']['name']
+        stats['mac']      = self.phot['test']['info']['mac']  
+        stats['model']    = self.phot['test']['info']['model']  
+        stats['firmware'] = self.phot['test']['info']['firmware']
         stats['tstamp']   = (datetime.datetime.utcnow() + datetime.timedelta(seconds=0.5)).strftime(TSTAMP_FORMAT)
         stats['author']   = self.options['author']
-        stats['tess']     = self.info['name']
         stats['updated']  = self.options['update']
-        stats['old_zp']   = self.info['zp'] 
         # transform dictionary into readable header columns for CSV export
         oldkeys = ['model','tess', 'tstamp', 'testMag', 'testFreq', 'refMag', 'refFreq', 'magDiff', 'zp', 'mac', 'old_zp', 'author', 'firmware', 'updated']
         newkeys = ['Model','Name', 'Timestamp', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'Station MAC', 'OLD ZP', 'Author', 'Firmware', 'Updated']
         for old,new in zip(oldkeys,newkeys):
             stats[new] = stats.pop(old)
+
+
+    @inlineCallbacks
+    def _maybeUpdateZeroPoint(self, zp):
+        # Adding metadata to the estimation
+        name = self.phot['test']['info']['name']
+        if self.options['update']:
+            log.info("updating {tess} ZP to {zp}", tess=name, zp=zp)
+            try:
+                yield self.testPhotometer.writeZeroPoint(zp)
+            except Exception as e:
+                log.error("Timeout when updating photometer zero point")
+        else:
+            log.info("Not writting ZP to {tess} photometer",tess=name)
+
+
+    def _exportCSV(self, stats):
+        '''Exports summary statistics to a common CSV file'''
+        log.debug("Appending to CSV file {file}",file=self.options['csv_file'])
+        # Adding metadata to the estimation
+        # transform dictionary into readable header columns for CSV export
         # CSV file generation
         writeheader = not os.path.exists(self.options['csv_file'])
         try:
@@ -258,27 +293,6 @@ class StatsService(Service):
         except Exception as e:
             log.warn("Could not update  CSV file {file}", file=self.options['csv_file'])
             log.error("{excp}",excp = e)
-
-
-
-    @inlineCallbacks
-    def _onStatsComplete(self, stats):
-        if self.options['update']:
-            log.info("updating {tess} ZP to {zp}", tess=self.info['name'], zp=stats['zp'])
-            try:
-                yield self.testPhotometer.writeZeroPoint(stats['zp'])
-            except Exception as e:
-                log.error("Timeout when updating photometer zero point")
-                yield self.stopService()
-            else:
-                yield deferToThread(self._exportCSV, stats)
-        else:
-            log.info("Not writting ZP in {tess} photometer",tess=self.info['name'])
-            yield deferToThread(self._exportCSV, stats)
-        
-
-    
-
 
     
 

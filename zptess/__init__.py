@@ -41,7 +41,6 @@ VERSION_STRING = "{0} on Twisted {1}, Python {2}.{3}".format(__version__, __twis
 STATS_SERVICE           = 'Statistics Service'
 TEST_PHOTOMETER_SERVICE = 'Test Photometer'
 REF_PHOTOMETER_SERVICE  = 'Reference Photometer'
-READ_SERVICE            = 'Readings Service'
 
 TSTAMP_FORMAT           = "%Y-%m-%dT%H:%M:%SZ"
 

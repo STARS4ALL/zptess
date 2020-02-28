@@ -37,7 +37,8 @@ from zope.interface               import implementer
 
 import zptess.utils
 
-from zptess.logger   import setLogLevel as SetLogLevel
+from zptess.logger       import setLogLevel as SetLogLevel
+from zptess.tessbase     import TESSBaseProtocolFactory
 
 # ----------------
 # Module constants
@@ -96,12 +97,6 @@ def make_save_url(endpoint):
 # ----------
 
 
-class TESSError(Exception):
-    '''Base class for all exceptions below'''
-    pass
-
-
-
 # -------
 # Classes
 # -------
@@ -112,24 +107,12 @@ class TESSError(Exception):
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
-class TESSProtocolFactory(ClientFactory):
-
-    def __init__(self, namespace):
-        self.namespace = namespace
-        self.log = Logger(namespace=namespace)
-
-    def startedConnecting(self, connector):
-        self.log.debug('Factory: Started to connect.')
+class TESSProtocolFactory(TESSBaseProtocolFactory):
 
     def buildProtocol(self, addr):
         self.log.debug('Factory: Connected.')
         return TESSProtocol(self.namespace)
 
-    def clientConnectionLost(self, connector, reason):
-        self.self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
-
-    def clientConnectionFailed(self, connector, reason):
-        self.self.log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -297,7 +280,6 @@ class TESSProtocol(LineOnlyReceiver):
 
 
 __all__ = [
-    "TESSError",
     "TESSProtocol",
     "TESSProtocolFactory",
 ]

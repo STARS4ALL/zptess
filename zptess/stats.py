@@ -137,8 +137,8 @@ class StatsService(Service):
             if not self.readMode:
                 stats = self._choose()
                 yield self._maybeUpdateZeroPoint(stats['zp'])
-                self._addMetadata(stats)
-                yield deferToThread(self._exportCSV, stats)
+                newkeys = self._addMetadata(stats)
+                yield deferToThread(self._exportCSV, stats, newkeys)
             yield self.stopService()
 
     
@@ -159,7 +159,7 @@ class StatsService(Service):
             difFreq = -2.5*math.log10(refFreq/tstFreq)
             difMag = refMag - testMag
             if refStddev != 0.0 and testStddev != 0.0:
-                log.info('ROUND         {i:02d}: Diff by -2.5*log(Freq[ref]/Freq[test]) = {difFreq:0.2f},    Diff by Mag[ref]-Mag[test]) = {difMag:0.2f}',
+                log.info('ROUND       {i:02d}: Diff by -2.5*log(Freq[ref]/Freq[test]) = {difFreq:0.2f},    Diff by Mag[ref]-Mag[test]) = {difMag:0.2f}',
                     i=self.curRound, difFreq=difFreq, difMag=difMag)
                 self.curRound += 1
                 self.best['zp'].append(self._computeZP(difMag))          # Collect this info wether we need it or not
@@ -202,7 +202,7 @@ class StatsService(Service):
             log.error("Fallo estadistico: {e}",e=e)
             return None, None, None
         else: 
-            log.info("[{label}] {name:10s} ({start}-{end})[{w:0.1f}s][{sz:d}] & ZP = {zp:0.2f} =>  Mag {cMag:0.2f}, {clabel} Freq {cFreq:0.3f} Hz, StDev = {stddev:0.3f} Hz",
+            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] & ZP {zp:0.2f} =>> Mag {cMag:0.2f}, {clabel} Freq {cFreq:0.3f} Hz, StDev {stddev:0.3f} Hz",
                 name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, cFreq=cFreq, cMag=cMag, stddev=stddev, w=window)
             return cFreq, cMag, stddev
 
@@ -260,6 +260,7 @@ class StatsService(Service):
         newkeys = ['Model','Name', 'Timestamp', 'Magnitud TESS.', 'Frecuencia', 'Magnitud Referencia', 'Frec Ref', 'Offset vs stars3', 'ZP', 'Station MAC', 'OLD ZP', 'Author', 'Firmware', 'Updated']
         for old,new in zip(oldkeys,newkeys):
             stats[new] = stats.pop(old)
+        return newkeys
 
 
     @inlineCallbacks
@@ -276,7 +277,7 @@ class StatsService(Service):
             log.info("Not writting ZP to {tess} photometer",tess=name)
 
 
-    def _exportCSV(self, stats):
+    def _exportCSV(self, stats, newkeys):
         '''Exports summary statistics to a common CSV file'''
         log.debug("Appending to CSV file {file}",file=self.options['csv_file'])
         # Adding metadata to the estimation

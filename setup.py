@@ -21,7 +21,7 @@ DESCRIPTION  = 'Utility to calibrate TESS-W photometers',
 LICENSE      = 'MIT'
 KEYWORDS     = 'Astronomy Python RaspberryPi'
 URL          = 'http://github.com/astrorafael/tessdb/'
-PACKAGES     = ["zptess","zptess.service"]
+PACKAGES     = ["zptess"]
 DEPENDENCIES = [
                   'pyserial',
                   'treq',
@@ -43,31 +43,13 @@ CLASSIFIERS  = [
     'Development Status :: 4 - Beta',
 ]
 
-
-
-
 if os.name == "posix":
-  import shlex
-    
   DATA_FILES  = [ 
     ('/etc/zptess',      ['files/etc/zptess/config.example.ini',]),
     ('/usr/local/bin',   ['files/usr/local/bin/zptessw',
                           'files/usr/local/bin/zptessp',
                           'files/usr/local/bin/zptas',]),
-  ]
-  
-  # Some fixes before setup
-  if not os.path.exists("/var/zptess"):
-    print("creating directory /var/zptess")
-    args = shlex.split( "mkdir /var/zptess")
-    subprocess.call(args)
-
-elif os.name == "nt":
-
-  DATA_FILES  = [ 
-    (r'C:\zptess',        [r'files\etc\zptess\config.example.ini', r'files\winnt\zptess.bat']),
-  ]
-
+   ]
 else:
   print("ERROR: unsupported OS {name}".format(name = os.name))
   sys.exit(1)
@@ -79,7 +61,7 @@ setup(name                  = PKG_NAME,
           author           = AUTHOR,
           author_email     = AUTHOR_EMAIL,
           description      = DESCRIPTION,
-          long_description = long_description,
+          long_description = LONG_DESCRIPTION,
           long_description_content_type = "text/markdown",
           license          = LICENSE,
           keywords         = KEYWORDS,

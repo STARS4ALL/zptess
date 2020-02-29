@@ -13,19 +13,7 @@ import versioneer
 # Docunetation is uploaded in PyPi when registering
 # by issuing `python setup.py register`
 
-try:
-    import pypandoc
-except:
-    print("ERROR: pypandoc is necessary to package this utility")
-    sys.exit(1)
-try:
-    long_description = pypandoc.convert('README.md', 'rst')
- 
-except:
-    print("ERROR generating documentation with pypandoc")
-    sys.exit(1)
-   
-
+LONG_DESCRIPTION = open('README.md').read()
 PKG_NAME     = 'zptess'
 AUTHOR       = 'Rafael Gonzalez'
 AUTHOR_EMAIL = 'astrorafael@gmail.es'
@@ -92,6 +80,7 @@ setup(name                  = PKG_NAME,
           author_email     = AUTHOR_EMAIL,
           description      = DESCRIPTION,
           long_description = long_description,
+          long_description_content_type = "text/markdown",
           license          = LICENSE,
           keywords         = KEYWORDS,
           url              = URL,

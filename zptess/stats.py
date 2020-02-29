@@ -270,7 +270,7 @@ class StatsService(Service):
         if self.options['update']:
             log.info("updating {tess} ZP to {zp}", tess=name, zp=zp)
             try:
-                yield self.testPhotometer.writeZeroPoint(zp)
+                yield self.tstPhotometer.writeZeroPoint(zp)
             except Exception as e:
                 log.error("Timeout when updating photometer zero point")
         else:

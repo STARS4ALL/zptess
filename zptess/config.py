@@ -195,10 +195,11 @@ def loadCfgFile(path):
     parser.read(path)
 
     options['reference'] = {}
-    options['reference']['endpoint']      = parser.get("reference","endpoint")
-    options['reference']['log_messages']  = parser.getboolean("reference","log_messages")
-    options['reference']['refname']       = parser.get("reference","refname")
-    options['reference']['size']          = parser.getint("stats","size") # yes, this is not a mistake
+    options['reference']['endpoint']     = parser.get("reference","endpoint")
+    options['reference']['log_messages'] = parser.getboolean("reference","log_messages")
+    options['reference']['name']         = parser.get("reference","name")
+    options['reference']['mac']          = parser.get("reference","mac")
+    options['reference']['size']         = parser.getint("stats","size") # yes, this is not a mistake
   
     options['test'] = {}
     options['test']['endpoint']       = parser.get("test","endpoint")

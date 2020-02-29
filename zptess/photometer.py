@@ -213,8 +213,8 @@ class PhotometerService(ClientService):
             info = {
                 'model'    : TESSW,
                 'label'    : self.label,
-                'name'     : self.options['refname'],
-                'mac'      : "TT:UU:WW:XX:YY:ZZ",
+                'name'     : self.options['name'],
+                'mac'      : self.options['mac'],
                 'zp'       : 20.50,
                 'firmware' : "",
             }

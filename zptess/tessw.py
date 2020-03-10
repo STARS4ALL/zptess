@@ -244,7 +244,7 @@ class TESSProtocol(LineOnlyReceiver):
         Returns True if handled, False otherwise
         '''
         if self._paused or self._stopped:
-            #self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
+            self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
             return False, None
         ur, matchobj = self._match_unsolicited(line)
         if not ur:
@@ -256,8 +256,10 @@ class TESSProtocol(LineOnlyReceiver):
         reading['tstamp'] = tstamp
         if ur['name'] == 'Hz reading':
             reading['freq']   = float(matchobj.group(1))/1.0
+            self.log.debug("Matched {name}", name=ur['name'])
         elif ur['name'] == 'mHz reading':
             reading['freq'] = float(matchobj.group(1))/1000.0
+            self.log.debug("Matched {name}", name=ur['name'])
         else:
             return False, None
         return True, reading

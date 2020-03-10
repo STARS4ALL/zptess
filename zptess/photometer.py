@@ -151,7 +151,7 @@ class PhotometerService(ClientService):
 
     def getPhotometerInfo(self):
         if self.protocol is None:
-            log.warn("Requested photometer info but no protocol yet!")
+            self.log.warn("Requested photometer info but no protocol yet!")
             return defer.fail()
         if self.info is None:
             return self.getInfo()

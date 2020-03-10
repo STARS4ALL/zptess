@@ -148,7 +148,7 @@ def loadCmdLine(cmdline_options):
     options['reference']['log_level']    = select_log_level_for("general",gen_level, msg_level)
     options['reference']['log_messages'] = select_log_level_for("ref",gen_level, msg_level)
     if cmdline_options.ref_name is not None:
-        options['reference']['refname']      = cmdline_options.ref_name
+        options['reference']['name']      = cmdline_options.ref_name
     if cmdline_options.number is not None:
         options['reference']['size']      = cmdline_options.number # yes, this is not a mistake
   
@@ -160,7 +160,7 @@ def loadCmdLine(cmdline_options):
     options['test']['log_level']      = select_log_level_for("general",gen_level, msg_level)
     options['test']['log_messages']   = select_log_level_for("test",gen_level, msg_level)
     if cmdline_options.number is not None:
-        options['reference']['size']      = cmdline_options.number # yes, this is not a mistake
+        options['test']['size']      = cmdline_options.number # yes, this is not a mistake
 
     options['stats'] = {}
     if cmdline_options.number is not None:

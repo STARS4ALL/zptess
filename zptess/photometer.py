@@ -56,10 +56,11 @@ from zptess.utils    import chop
 @implementer(IConsumer)
 class CircularBuffer(object):
 
-    def __init__(self, size):
+    def __init__(self, size, log):
         self._buffer = deque([], size)
         self._producer = None
         self._push     = None
+        self.log       = log
 
     # -------------------
     # IConsumer interface
@@ -79,6 +80,7 @@ class CircularBuffer(object):
 
     def write(self, data):
         self._buffer.append(data)
+        self.log.debug("appending {data} to queue({len})", data=data, len=len(self._buffer))
 
     # -------------------
     # buffer API
@@ -107,7 +109,7 @@ class PhotometerService(ClientService):
         self.protocol  = None
         self.serport   = None
         self.info      = None # Photometer info
-        self.buffer    = CircularBuffer(options['size'])
+        self.buffer    = CircularBuffer(options['size'], self.log)
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] == 'tcp':
             endpoint = clientFromString(reactor, self.options['endpoint'])

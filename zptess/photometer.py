@@ -80,7 +80,6 @@ class CircularBuffer(object):
 
     def write(self, data):
         self._buffer.append(data)
-        self.log.debug("appending {data} to queue({len})", data=data, len=len(self._buffer))
 
     # -------------------
     # buffer API

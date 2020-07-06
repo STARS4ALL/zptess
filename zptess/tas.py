@@ -21,7 +21,7 @@ from twisted.internet.protocol    import ClientFactory
 # local imports
 # -------------
 
-from zptess.tesscommon   import TESSBaseProtocol, TESSBaseProtocolFactory
+from zptess.tessbase   import TESSBaseProtocol, TESSBaseProtocolFactory
 
 # -------
 # Classes

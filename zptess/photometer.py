@@ -126,8 +126,24 @@ class PhotometerService(ClientService):
         self.log.info("starting {name} service", name=self.name)
         yield self.connect()
         self.info = yield self.getInfo()
-        if not self.reference:
-            yield self.initialActions()
+        if self.reference:
+           returnValue(None)
+        # Now this is for the test photometer only
+        if self.options['dry_run']:
+            self.log.info('Dry run. Will stop here ...') 
+            yield self.stopService()
+        elif self.info is None:
+            yield self.stopService()
+        elif self.options['zero_point'] is not None:
+            try:
+                result = yield self.protocol.writeZeroPoint(self.options['zero_point'])
+            except Exception as e:
+                self.log.error("Timeout when updating Zero Point")
+                self.log.failure("{excp}",excp=e)
+            else:
+                self.log.info("[{label}] Writen ZP : {zp:0.2f}", label=self.label, zp = result['zp'])
+            finally:
+                yield self.stopService()
 
 
     def stopService(self):
@@ -194,10 +210,7 @@ class PhotometerService(ClientService):
         except Exception as e:
             self.log.error("Timeout when reading photometer info")
             info = self.fixIt()
-            if info is None:
-                yield self.stopService()
-            else:
-                returnValue(info)
+            returnValue(info)   # May be None
         else:
             info['model'] = self.options['model']
             info['label'] = self.label
@@ -223,22 +236,6 @@ class PhotometerService(ClientService):
             return info
         else:
             return None
-
-    @inlineCallbacks
-    def initialActions(self):
-        if self.options['dry_run']:
-            self.log.info('Dry run. Will stop here ...') 
-            yield self.stopService()
-        elif self.options['zero_point'] is not None:
-            try:
-                result = yield self.protocol.writeZeroPoint(self.options['zero_point'])
-            except Exception as e:
-                self.log.error("Timeout when updating Zero Point")
-                self.log.failure("{excp}",excp=e)
-            else:
-                self.log.info("[{label}] Writen ZP : {zp:0.2f}", label=self.label, zp = result['zp'])
-            finally:
-                yield self.stopService()
        
 
     def limitedStart(self):

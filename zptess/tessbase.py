@@ -72,32 +72,8 @@ from zptess.logger   import setLogLevel as SetLogLevel
 # New CI: 20.45
 # Write EEPROM done!
 
-# SOLICITED Responses Patterns
-SOLICITED_RESPONSES = (
-    {
-        'name'    : 'firmware',
-        'pattern' : r'^Compiled (.+)',       
-    },
-    {
-        'name'    : 'mac',
-        'pattern' : r'^MAC: ([0-9A-Za-z]{12})',       
-    },
-    {
-        'name'    : 'name',
-        'pattern' : r'^TSP SN: (TSP\w{3})',       
-    },
-    {
-        'name'    : 'zp',
-        'pattern' : r'^Actual CI: (\d{1,2}.\d{1,2})',       
-    },
-    {
-        'name'    : 'written_zp',
-        'pattern' : r'^New CI: (\d{1,2}.\d{1,2})',       
-    },
-    
-)
 
-SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in SOLICITED_RESPONSES ]
+
 
 
 # -----------------------
@@ -162,6 +138,26 @@ class TESSBaseProtocolFactory(ClientFactory):
 @implementer(IPushProducer)
 class TESSBaseProtocol(LineOnlyReceiver):
 
+    SOLICITED_RESPONSES = [
+        {
+            'name'    : 'firmware',
+            'pattern' : r'^Compiled (.+)',       
+        },
+        {
+            'name'    : 'mac',
+            'pattern' : r'^MAC: ([0-9A-Za-z]{12})',       
+        },
+        {
+            'name'    : 'zp',
+            'pattern' : r'^Actual CI: (\d{1,2}.\d{1,2})',       
+        },
+        {
+            'name'    : 'written_zp',
+            'pattern' : r'^New CI: (\d{1,2}.\d{1,2})',       
+        },
+    ]
+
+    SOLICITED_PATTERNS = [ ]    # Filled in by subclasses
 
     # So that we can patch it in tests with Clock.callLater ...
     callLater = reactor.callLater
@@ -273,11 +269,12 @@ class TESSBaseProtocol(LineOnlyReceiver):
 
     def _match_solicited(self, line):
         '''Returns matched command descriptor or None'''
-        for regexp in SOLICITED_PATTERNS:
+        for regexp in self.SOLICITED_PATTERNS:
             matchobj = regexp.search(line)
             if matchobj:
-                self.log.debug("matched {pattern}", pattern=SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)]['name'])
-                return SOLICITED_RESPONSES[SOLICITED_PATTERNS.index(regexp)], matchobj
+                i = self.SOLICITED_PATTERNS.index(regexp)
+                self.log.debug("matched {pattern}", pattern=self.SOLICITED_RESPONSES[i]['name'])
+                return self.SOLICITED_RESPONSES[i], matchobj
         return None, None
 
 

@@ -36,7 +36,15 @@ class TESSProtocolFactory(TESSBaseProtocolFactory):
 
 
 class TESSProtocol(TESSBaseProtocol):
-    label = "TESS-P" 
+    label = "TESS-P"
+
+    def __init__(self, namespace):
+		super().__init__(namespace)
+		self.SOLICITED_RESPONSES.append({
+            'name'    : 'name',
+            'pattern' : r'^TSP SN: (TSP\w{3})',       
+        })
+        self.SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in self.SOLICITED_RESPONSES ]
 
 
 __all__ = [

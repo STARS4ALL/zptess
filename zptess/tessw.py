@@ -233,8 +233,9 @@ class TESSProtocol(LineOnlyReceiver):
         for regexp in UNSOLICITED_PATTERNS:
             matchobj = regexp.search(line)
             if matchobj:
+                i = UNSOLICITED_PATTERNS.index(regexp)
                 #self.log.debug("matched {pattern}", pattern=UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)]['name'])
-                return UNSOLICITED_RESPONSES[UNSOLICITED_PATTERNS.index(regexp)], matchobj
+                return UNSOLICITED_RESPONSES[i], matchobj
         return None, None
 
 

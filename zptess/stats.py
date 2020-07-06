@@ -202,7 +202,7 @@ class StatsService(Service):
             log.error("Statistics error: {e}", e=e)
             return None, None, None
         else: 
-            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] & ZP {zp:0.2f} => m = {cMag:0.2f}, {clabel}(f) = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
+            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] & ZP {zp:0.2f} => m = {cMag:0.2f}, {clabel} = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
                 name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, cFreq=cFreq, cMag=cMag, stddev=stddev, w=window)
             return cFreq, cMag, stddev
 

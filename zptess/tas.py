@@ -10,6 +10,8 @@
 
 from __future__ import division, absolute_import
 
+import re
+
 # ---------------
 # Twisted imports
 # ---------------
@@ -36,6 +38,14 @@ class TESSProtocolFactory(TESSBaseProtocolFactory):
 
 class TESSProtocol(TESSBaseProtocol):
     label = "TAS" 
+
+    def __init__(self, namespace):
+        super().__init__(namespace)
+        self.SOLICITED_RESPONSES.append({
+            'name'    : 'name',
+            'pattern' : r'^TAS SN: (TAS\w{3})',       
+        })
+        self.SOLICITED_PATTERNS = [ re.compile(sr['pattern']) for sr in self.SOLICITED_RESPONSES ]
 
    
 

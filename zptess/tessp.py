@@ -9,6 +9,7 @@
 # -------------------
 
 from __future__ import division, absolute_import
+import re
 
 # ---------------
 # Twisted imports
@@ -39,8 +40,8 @@ class TESSProtocol(TESSBaseProtocol):
     label = "TESS-P"
 
     def __init__(self, namespace):
-		super().__init__(namespace)
-		self.SOLICITED_RESPONSES.append({
+        super().__init__(namespace)
+        self.SOLICITED_RESPONSES.append({
             'name'    : 'name',
             'pattern' : r'^TSP SN: (TSP\w{3})',       
         })

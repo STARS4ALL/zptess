@@ -159,10 +159,10 @@ class StatsService(Service):
             difFreq = -2.5*math.log10(refFreq/tstFreq)
             difMag = refMag - testMag
             if refStddev != 0.0 and testStddev != 0.0:
-                log.info('ROUND       {i:02d}: Diff by -2.5*log(Freq[ref]/Freq[test]) = {difFreq:0.2f},    Diff by Mag[ref]-Mag[test]) = {difMag:0.2f}',
-                    i=self.curRound, difFreq=difFreq, difMag=difMag)
+                log.info('ROUND       {i:02d}: Diff by -2.5*log(Freq[ref]/Freq[test]) = {difFreq:0.2f}',
+                    i=self.curRound, difFreq=difFreq)
                 self.curRound += 1
-                self.best['zp'].append(self._computeZP(difMag))          # Collect this info wether we need it or not
+                self.best['zp'].append(self._computeZP(difFreq))          # Collect this info wether we need it or not
                 self.best['refFreq'].append(refFreq)
                 self.best['testFreq'].append(tstFreq)
             elif refStddev == 0.0 and testStddev != 0.0:
@@ -195,16 +195,26 @@ class StatsService(Service):
             return None, None, None
         try:
             log.debug("queue = {q}",q=frequencies)
-            cFreq   = statistics.mean(frequencies) if self.central == "mean" else statistics.median(frequencies)
-            stddev  = statistics.stdev(frequencies, cFreq)
-            cMag    = zp  - 2.5*math.log10(cFreq)
+            mnFreq   = statistics.mean(frequencies)
+            mdFreq   = statistics.median(frequencies)
+            sdmn  = statistics.stdev(frequencies, mnFreq)
+            sdmd  = statistics.stdev(frequencies, mdFreq)
+            mnMag    = zp  - 2.5*math.log10(mnFreq)
+            mdMag    = zp  - 2.5*math.log10(mdFreq)
         except statistics.StatisticsError as e:
             log.error("Statistics error: {e}", e=e)
             return None, None, None
         else: 
-            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] & ZP {zp:0.2f} => m = {cMag:0.2f}, {clabel} = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
-                name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, cFreq=cFreq, cMag=cMag, stddev=stddev, w=window)
-            return cFreq, cMag, stddev
+            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] mean   => m = {cMag:0.2f}, {clabel} = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
+                name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, 
+                cFreq=mnFreq, cMag=mnMag, stddev=sdmn, w=window)
+            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] median => m = {cMag:0.2f}, {clabel} = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
+                name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, 
+                cFreq=mdFreq, cMag=mdMag, stddev=sdmd, w=window)
+            if self.central == "mean":
+                return mnFreq, mnMag, sdmn
+            else:
+                return mdFreq, mdMag, sdmd
 
 
     def _choose(self):

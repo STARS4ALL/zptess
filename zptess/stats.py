@@ -205,11 +205,11 @@ class StatsService(Service):
             log.error("Statistics error: {e}", e=e)
             return None, None, None
         else: 
-            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] mean   => m = {cMag:0.2f}, {clabel} = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
-                name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, 
+            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] mean   => m = {cMag:0.2f}, f = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
+                name=name, label=label, start=start, end=end, sz=size, zp=zp, 
                 cFreq=mnFreq, cMag=mnMag, stddev=sdmn, w=window)
-            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] median => m = {cMag:0.2f}, {clabel} = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
-                name=name, label=label, start=start, end=end, sz=size, zp=zp, clabel=clabel, 
+            log.info("[{label}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] median => m = {cMag:0.2f}, f = {cFreq:0.3f} Hz, \u03C3 = {stddev:0.3f} Hz",
+                name=name, label=label, start=start, end=end, sz=size, zp=zp, 
                 cFreq=mdFreq, cMag=mdMag, stddev=sdmd, w=window)
             if self.central == "mean":
                 return mnFreq, mnMag, sdmn

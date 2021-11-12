@@ -1,6 +1,9 @@
-Prioridad alta
-==============
-1) Logging de mensajes por cada objero y su relacion con la linea de comando
-2) scripts simplificados de opciones
-3) Poder fijar a capón el ZP de un TESS
+SHORT TERM
+==========
 
+* que pasa con las 4 inconsistencias? => que no tenemos log de 4 calibraciones de TASD89
+* Migrar repositorio zptess->new a zptess. Etiquetas. Ficheros antiguos que ya no se necesitan => borrar primero.
+* Pending bug fixes:
+  zptool.utils.paging() no funcione en estos caso:
+  - con lsitas/tuplas y size=None
+  - con cursores y size != None

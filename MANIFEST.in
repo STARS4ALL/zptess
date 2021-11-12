@@ -1,8 +1,3 @@
 include versioneer.py
-include zptess/_version.py
-include files/etc/zptess/config.example.ini
-include files/usr/local/bin/zptessw
-include files/usr/local/bin/zptessp
-include files/usr/local/bin/zptas
-
+include src/zptess/_version.py
 

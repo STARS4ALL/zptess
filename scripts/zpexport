@@ -1,0 +1,7 @@
+#!/bin/bash
+# ----------------------------------------------------------------------
+# Copyright (c) 20121 astrorafael@gmail.com.
+#
+# See the LICENSE file for details
+# ----------------------------------------------------------------------
+python3 -m zptool --dbase zptess/zptess.db --log-file zptess/zptool.log batch export --email --updated True --latest --base-dir /tmp/zptool $*

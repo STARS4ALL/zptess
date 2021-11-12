@@ -1,39 +1,58 @@
+# TESS calibration tool
 
-# zptess
-Command line utility to calibrate TESS-W at LICA
+Calibration tool for the [TESS-W photometer](https://tess.stars4all.eu/) and derivates.
 
-## Installation
+## Migration
 
+## Operation
+
+### Summary
+
+1. `zpbegin` to open a calibration batch
+2. one or several of `zptessw`, `zptas`, `zptessp` commands for calibration
+3. `zpend` to close the calibration batch
+4. `zpexport` to export the results and email
+
+### Detailed
+
+#### Open a calibration batch
 ```bash
-git clone https://github.com/STARS4ALL/zptess.git
-sudo python setup.py install
+zpbegin
+2021-11-06 17:36:37,397 [INFO] ============== zptool 0+unknown ==============
+2021-11-06 17:36:37,397 [INFO] Opened database file zptess.db
+2021-11-06 17:36:37,470 [INFO] A new batch has been opened
 ```
-or
 
+#### Calibrate one or several photometers
+
+1.a Check the test photometer identity
 ```bash
-pip install --user zptess
+zptessw -a {author} -o {offset} -d
+````
+
+1.b Alternatively, run a full calibration run without updating neither the database nor photometer ZP
+```bash
+zptessw -a {author} -o {offset} -t
+````
+
+2.a Calibrate and update the Zero Point
+```bash
+zptessw -a {author} -o {offset} -u
 ```
 
-## Run
-
-See `python -m zptess --help` for help
-
-## The calibration process
-
-Samples from the reference TESS-W and the new TESS-W are taken and stored in circular buffers (default: 25 samples). An estimator of central tendency of frequencies is taken on each buffer (default estimator: median). The standard deviation from this estimator is also computed to asses the quality of readings. If this standard deviation is zero on either buffer, the whole process is discarded. Otherwise, we keep the estimated central tendency of reference and test frequencies and compute a candidate Zero Point.
-
-This process is repeated in a series of rounds (default: 5 rounds) and we select the "best" estimation of frequencies and Zero Point. The best freequency estimation is chosen as the *mode* with a fallback to *median* if mode does not exists.
-
-#### Formulae
+2.a Alternatively, run a full calibration run without updating photometer ZP
+```bash
+zptessw -a {author} -o {offset}
 ```
-Mag[ref] = ZP[fict] - 2.5*log10(Freq[ref])
-Mag[tst] = ZP[fict] - 2.5*log10(Freq[tst])
-Offset   = 2.5*log10(Freq[tst]/Freq[ref])
 
-ZP[calibrated] = ZP[ref] + Offset
-
-where 
-	ZP[fict] is a ficticios zero point of 20.50 to compare readings with the TESS Windows utility 
-	         by Cristobal García.
-	ZP[ref] is the absolute Zero Point of the calibrated TESS-W (20.44) determined by LICA.
+#### Close a calibration batch
+```bash
+zpend
+2021-11-06 17:37:40,678 [INFO] ============== zptool 0+unknown ==============
+2021-11-06 17:37:40,678 [INFO] Opened database file zptess.db
+2021-11-06 17:37:40,739 [INFO] Current open batch has been closed
+```
+#### Export callibration batch results and optionally email with the results
+```bash
+zpexport
 ```

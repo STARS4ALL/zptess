@@ -1,2 +1,0 @@
-python -m zptess -a Rafael --tess-p --tcp --console --config files/etc/zptess/config.example.ini
-

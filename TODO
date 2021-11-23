@@ -1,6 +1,6 @@
 SHORT TERM
 ==========
-
+* algo no funciona en el LICA ...
 * que pasa con las 4 inconsistencias? => que no tenemos log de 4 calibraciones de TASD89
 * Migrar repositorio zptess->new a zptess. Etiquetas. Ficheros antiguos que ya no se necesitan => borrar primero.
 * Pending bug fixes:

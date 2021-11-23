@@ -4,4 +4,4 @@
 #
 # See the LICENSE file for details
 # ----------------------------------------------------------------------
-python3 -m zptess --console --dbase zptess/zptess.db --log-file zptess/zptess.log --model tess-p --rounds 5 --samples 75 --port serial:1 $*
+python -m zptess --console --dbase zptess.db --log-file zptess.log --model tess-p --rounds 5 --samples 75 --port serial:1 $*

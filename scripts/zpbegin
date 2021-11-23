@@ -4,4 +4,4 @@
 #
 # See the LICENSE file for details
 # ----------------------------------------------------------------------
-python3 -m zptool --dbase zptess/zptess.db --log-file zptess/zptool.log batch begin $*
+python -m zptool --dbase zptess.db --log-file zptool.log batch begin $*

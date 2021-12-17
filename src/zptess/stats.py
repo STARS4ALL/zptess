@@ -169,10 +169,11 @@ class StatsService(Service):
         
     def _accumulateRounds(self):
         log.info("="*72)
-        if self.isEmpty('ref') or self.isEmpty('test'):
-            return 
-        ref_stats = self._statsFor('ref')
-        tst_stats = self._statsFor('test')
+        tst_stats = None; ref_stats = None;
+        if not self.isEmpty('ref'):
+            ref_stats = self._statsFor('ref')
+        if not  self.isEmpty('test'):
+            tst_stats = self._statsFor('test')
 
         if tst_stats is not None and ref_stats is not None:
             difFreq = -2.5*math.log10(ref_stats['freq']/tst_stats['freq'])
@@ -198,7 +199,9 @@ class StatsService(Service):
 
 
     def isEmpty(self, tag):
-        return len(self.phot[tag]['queue']) == 0
+        phot  = self.phot.get(tag, None)
+        queue = phot.get('queue', None)
+        return (phot is None) or (queue is None) or len(queue) == 0
 
 
     def _statsFor(self, tag):

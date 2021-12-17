@@ -105,11 +105,10 @@ def make_save_url(endpoint):
 class TESSProtocolFactory(TESSBaseProtocolFactory):
 
     def buildProtocol(self, addr):
-        self.log.debug('Factory: Connected.')
         if self.old_protocol:
             return TESSOldProtocol(self.namespace)
         else:
-            return TESSProtocol(self.namespace)
+            return TESSJsonProtocol(self.namespace)
 
 
 
@@ -130,13 +129,15 @@ class TESSOldProtocol(LineOnlyReceiver):
         self._consumer = None
         self._paused   = True
         self._stopped  = False
+        self.log.info("Created protocol {who}",who=self.__class__.__name__)
 
 
     def connectionMade(self):
-        self.log.debug("connectionMade()")
+        self.log.debug("{who} connectionMade()", who=self.__class__.__name__)
 
 
     def lineReceived(self, line):
+        self.log.debug("{who} lineReceived()",who=self.__class__.__name__)
         now = datetime.datetime.now(datetime.timezone.utc)
         line = line.decode('latin_1')  # from bytearray to string
         self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
@@ -272,8 +273,8 @@ class TESSOldProtocol(LineOnlyReceiver):
 
 
 @implementer(IPushProducer)
-class TESSProtocol(TESSOldProtocol):
-
+class TESSJsonProtocol(TESSOldProtocol):
+       
     def _handleUnsolicitedResponse(self, line, tstamp):
         '''
         Handle unsolicited responses from zptess.

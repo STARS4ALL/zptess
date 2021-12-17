@@ -117,6 +117,7 @@ class TESSOldProtocol(LineOnlyReceiver):
 
     # So that we can patch it in tests with Clock.callLater ...
     callLater = reactor.callLater
+    conflicting_firmware = ('Nov 25 2021 v 3.2',)
 
     # -------------------------
     # Twisted Line Receiver API
@@ -139,7 +140,7 @@ class TESSOldProtocol(LineOnlyReceiver):
     def lineReceived(self, line):
         self.log.debug("{who} lineReceived()",who=self.__class__.__name__)
         now = datetime.datetime.now(datetime.timezone.utc)
-        line = line.decode('latin_1')  # from bytearray to string
+        line = line.decode('latin_1')  # from 'bytes' to 'str'
         self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
         handled, reading = self._handleUnsolicitedResponse(line, now)
         if handled:
@@ -225,6 +226,10 @@ class TESSOldProtocol(LineOnlyReceiver):
         result['zp'] = float(matchobj.groups(1)[0])
         matchobj = GET_INFO['firmware'].search(text)
         result['firmware'] = matchobj.groups(1)[0]
+        firmware = result['firmware']
+        if firmware in self.conflicting_firmware:
+            self.delimiter = b'}'
+            self.lineReceived = self.adhoc_lineReceived
         return(result)
 
        
@@ -274,13 +279,25 @@ class TESSOldProtocol(LineOnlyReceiver):
 
 @implementer(IPushProducer)
 class TESSJsonProtocol(TESSOldProtocol):
+
+   
+    def adhoc_lineReceived(self, line):
+        '''This is only for a btach of TESS-W where the JSON comes without <LF><CR>'''
+        self.log.debug("{who} lineReceived()",who=self.__class__.__name__)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        line += b'}'
+        line = line.decode('latin_1')  # from 'bytes' to 'str'
+        self.log.info("<== TESS-W [{l:02d}] {line}", l=len(line), line=line)
+        handled, reading = self._handleUnsolicitedResponse(line, now)
+        if handled:
+            self._consumer.write(reading)
+    
        
     def _handleUnsolicitedResponse(self, line, tstamp):
         '''
         Handle unsolicited responses from zptess.
         Returns True if handled, False otherwise
         '''
-       
         if self._paused or self._stopped:
             self.log.debug("Producer either paused({p}) or stopped({s})", p=self._paused, s=self._stopped)
             return False, None

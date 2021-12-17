@@ -32,7 +32,6 @@ from zptess.photometer.tessbase   import TESSBaseProtocol, TESSBaseProtocolFacto
 class TESSProtocolFactory(TESSBaseProtocolFactory):
 
     def buildProtocol(self, addr):
-        self.log.debug('Factory: Connected.')
         return TESSProtocol(self.namespace)
 
 

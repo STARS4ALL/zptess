@@ -103,6 +103,10 @@ class StatsService(Service):
             'ref_freq'  : list(),
             'test_freq' : list(),
         }
+        # To be overriden when the ref photometer comes alive
+        # this is useful only when activating the test photometer
+        self.zp_abs  = 20.50
+        self.zp_fict = 20.50 
         pub.subscribe(self.onPhotometerInfo, 'photometer_info')
 
    

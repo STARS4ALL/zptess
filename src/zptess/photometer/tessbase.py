@@ -181,10 +181,11 @@ class TESSBaseProtocol(LineOnlyReceiver):
 
       
     def connectionMade(self):
-        self.log.debug("connectionMade()")
+        self.log.debug("{who} connectionMade()", who=self.__class__.__name__)
 
 
     def lineReceived(self, line):
+        self.log.debug("{who} lineReceived()",who=self.__class__.__name__)
         now = datetime.datetime.now(datetime.timezone.utc)
         line = line.decode('latin_1')  # from bytearray to string
         self.log.info("<== {label:6} [{l:02d}] {line}", l=len(line), label=self.label, line=line)

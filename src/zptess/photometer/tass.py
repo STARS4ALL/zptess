@@ -37,6 +37,7 @@ class TESSProtocolFactory(TESSBaseProtocolFactory):
 
 
 class TESSProtocol(TESSBaseProtocol):
+    
     label = "TAS" 
 
     def __init__(self, namespace):

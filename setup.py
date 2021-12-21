@@ -49,7 +49,10 @@ SCRIPTS = [
     "scripts/zptessw",
     "scripts/zptessp",
     "scripts/zptas",
-    "scripts/zptool"
+    "scripts/zptool",
+    "scripts/zpbegin",
+    "scripts/zpend",
+    "scripts/zpexport", 
 ]
 
 DATA_FILES  = []

@@ -197,7 +197,7 @@ class PhotometerService(ClientService):
         try:
             yield self.protocol.writeZeroPoint(zero_point)
         except Exception as e:
-            log.error("Timeout when updating photometer zero point")
+            self.log.error("Timeout when updating photometer zero point")
 
 
     def getPhotometerInfo(self):

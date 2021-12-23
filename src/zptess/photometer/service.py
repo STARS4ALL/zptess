@@ -26,7 +26,7 @@ from twisted.application.service  import Service
 from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet.endpoints   import clientFromString
 from twisted.internet.interfaces  import IPushProducer, IPullProducer, IConsumer
-from zope.interface               import implementer
+from zope.interface               import implementer, implements
 
 # -------------------
 # Third party imports
@@ -68,7 +68,6 @@ class CircularBuffer(object):
         self._buffer   = deque([], size)
         self._buffer2  = DeferredQueue(backlog=1) # for database
         self._producer = None
-        self._push     = None
         self.log       = log
 
     # -------------------
@@ -101,6 +100,62 @@ class CircularBuffer(object):
     def getBuffer2(self):
         return self._buffer2
 
+@implementer(IConsumer, IPushProducer)
+class Deduplicater:
+    '''Removes duplicates readings in TESS JSON payloads'''
+    #implements(IConsumer, IPushProducer)
+
+    def __init__(self, log):
+        self._producer = None
+        self._consumer = None
+        self.log       = log
+        self._prev_seq = None
+
+    # -------------------
+    # IConsumer interface
+    # -------------------
+
+    def registerProducer(self, producer, streaming):
+        if streaming:
+            self._producer = IPushProducer(producer)
+        else:
+            raise ValueError("IPullProducer not supported")
+        producer.registerConsumer(self) # So the producer knows who to talk to
+        producer.resumeProducing()
+
+    def unregisterProducer(self):
+        self._producer.stopProducing()
+        self._producer = None
+
+    def write(self, data):
+        cur_seq = data.get('udp', None)
+        if cur_seq is not None and cur_seq != self._prev_seq:
+            self._prev_seq = cur_seq
+            self._consumer.write(data)
+
+
+    # -----------------------
+    # IPushProducer interface
+    # -----------------------
+
+    def pauseProducing(self):
+       self._producer.pauseProducing() 
+
+    def resumeProducing(self):
+       self._producer.resumeProducing()
+
+    def stopProducing(self):
+       self._producer.stopProducing()
+
+    def registerConsumer(self, consumer):
+        '''
+        This is not really part of the IPushProducer interface
+        '''
+        self._consumer = IConsumer(consumer)
+
+
+
+
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -132,6 +187,7 @@ class PhotometerService(ClientService):
         self.protocol  = None
         self.info      = None # Photometer info
         self.buffer    = CircularBuffer(options['size'], self.log)
+        self.deduplicater = Deduplicater(self.log)
         pub.subscribe(self.onUpdateZeroPoint, 'update_zero_point')
         parts = chop(self.options['endpoint'], sep=':')
         if parts[0] == 'tcp':
@@ -310,7 +366,9 @@ class PhotometerService(ClientService):
     def gotProtocol(self, protocol):
         self.log.debug("got protocol")
         protocol.setContext(self.options['endpoint'])
-        self.buffer.registerProducer(protocol, True)
+        # Buld the chain of producers/consumers
+        self.deduplicater.registerProducer(protocol, True)
+        self.buffer.registerProducer(self.deduplicater, True)
         if self.limitedStart():
             protocol.stopProducing()    # We don need to feed messages to the buffer
         self.protocol  = protocol

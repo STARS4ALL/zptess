@@ -301,6 +301,7 @@ class PhotometerService(ClientService):
             info = yield self.protocol.readPhotometerInfo()
         except Exception as e:
             self.log.error("Timeout when reading photometer info")
+            self.log.failure("{e}",e=e)
             info = yield self.fixIt()
             return(info)   # May be None
         else:

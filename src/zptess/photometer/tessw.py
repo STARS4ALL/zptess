@@ -219,12 +219,20 @@ class TESSOldProtocol(LineOnlyReceiver):
         text = yield treq.text_content(resp)
         self.log.info("<== TESS-W [HTTP GET] {url}", url=url)
         matchobj = GET_INFO['name'].search(text)
+        if not matchobj:
+            self.log.error("TESS-W name not found!. Check unit's name")
         result['name'] = matchobj.groups(1)[0]
         matchobj = GET_INFO['mac'].search(text)
+        if not matchobj:
+            self.log.error("TESS-W MAC not found!")
         result['mac'] = matchobj.groups(1)[0]
         matchobj = GET_INFO['zp'].search(text)
+        if not matchobj:
+            self.log.error("TESS-W ZP not found!")
         result['zp'] = float(matchobj.groups(1)[0])
         matchobj = GET_INFO['firmware'].search(text)
+        if not matchobj:
+            self.log.error("TESS-W Firmware not found!")
         result['firmware'] = matchobj.groups(1)[0]
         firmware = result['firmware']
         if firmware in self.conflicting_firmware:

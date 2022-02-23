@@ -4,4 +4,4 @@
 #
 # See the LICENSE file for details
 # ----------------------------------------------------------------------
-python -m zptool --console --dbase zptess.db --log-file zptess.log $*
+python -m zptool --dbase zptess.db --log-file zptess.log $*

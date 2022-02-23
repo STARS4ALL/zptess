@@ -23,12 +23,12 @@ from zptool.utils import paging
 
 
 EXPORT_CSV_HEADERS = [ "Model","Name","Timestamp","Magnitud TESS.","Frecuencia","Magnitud Referencia",
-					"Frec Ref","Offset vs stars3","ZP","Station MAC","OLD ZP",
+					"Frec Ref","MagDiff vs stars3","ZP (raw)", "Extra offset", "Final ZP", "Station MAC","OLD ZP",
 					"Author","Firmware","Updated"]
-EXPORT_CSV_ADD_HEADERS = ["Additional ZP Offset","# Rounds", "ZP Sel. Method", "Freq Method", "Ref Freq Method"]
+EXPORT_CSV_ADD_HEADERS = ["# Rounds", "ZP Sel. Method", "Freq Method", "Ref Freq Method"]
 
 EXPORT_HEADERS = ("model","name","session", "test_mag", "test_freq", "ref_mag", "ref_freq", 
-					"mag_diff", "zero_point", "mac", "prev_zp", "author", "firmware", "upd_flag")
+					"mag_diff", "raw_zero_point", "offset", "zero_point", "mac", "prev_zp", "author", "firmware", "upd_flag")
 EXPORT_ADD_HEADERS = ("offset","nrounds","zero_point_method","test_freq_method","ref_freq_method" )
        		
 NAMES_MAP = {

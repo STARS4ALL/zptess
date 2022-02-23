@@ -125,7 +125,8 @@ AS SELECT
     ROUND(ref_t.freq, 3)        AS ref_freq,
     ref_t.freq_method           AS ref_freq_method,
     ROUND(ref_t.mag, 2)         AS ref_mag,
-    ROUND(ref_t.mag - test_t.mag, 2) AS mag_diff
+    ROUND(ref_t.mag - test_t.mag, 2) AS mag_diff,
+    ROUND(test_t.zero_point, 2) - test_t.offset as raw_zero_point
 
 FROM summary_t AS ref_t
 JOIN summary_t AS test_t USING (session)

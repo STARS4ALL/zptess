@@ -133,7 +133,7 @@ class Deduplicater:
             self._prev_seq = cur_seq
             self._consumer.write(data)
         elif cur_seq is None:
-
+            self._consumer.write(data) # old prtocol, not JSON protocol
 
     # -----------------------
     # IPushProducer interface

@@ -132,6 +132,7 @@ class Deduplicater:
         if cur_seq is not None and cur_seq != self._prev_seq:
             self._prev_seq = cur_seq
             self._consumer.write(data)
+        elif cur_seq is None:
 
 
     # -----------------------

@@ -101,7 +101,6 @@ def cmdline():
     parser.add_argument('--ref-model', type=str, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()], default=TESSW.lower(), help='Ref. photometer model')
     parser.add_argument('--ref-old-protocol',  action='store_true', default=False, help='Use very old protocol instead of JSON')
  
-    parser.add_argument('--execute',  type=str, choices=["none","ref","test","both"], default="both", help='execute photometer readings')
     parser.add_argument('-m', '--messages', type=str, choices=["none","ref","test","both"], default="none", help='display protocol messages.')
     group2 = parser.add_mutually_exclusive_group()
     group2.add_argument('-v', '--verbose',  action='store_true', help='verbose output')

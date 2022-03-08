@@ -49,7 +49,7 @@ GET_INFO = {
     # These apply to the /config page
     'name'  : re.compile(r"(stars\d+)"),       
     'mac'   : re.compile(r"MAC: ([0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2})"),       
-    'zp'    : re.compile(r"ZP: (\d{1,2}\.\d{1,2})"),
+    'zp'    : re.compile(r"(ZP|CI): (\d{1,2}\.\d{1,2})"),
     #'zp'    : re.compile(r"Const\.: (\d{1,2}\.\d{1,2})"),
     'firmware' : re.compile(r"Compiled: (.+?)<br>"),  # Non-greedy matching until <br>
     # This applies to the /setconst?cons=nn.nn page
@@ -229,7 +229,7 @@ class TESSOldProtocol(LineOnlyReceiver):
         matchobj = GET_INFO['zp'].search(text)
         if not matchobj:
             self.log.error("TESS-W ZP not found!")
-        result['zp'] = float(matchobj.groups(1)[0])
+        result['zp'] = float(matchobj.groups(1)[1]) # Beware the seq index, it is not 0 as usual. See the regexp!
         matchobj = GET_INFO['firmware'].search(text)
         if not matchobj:
             self.log.error("TESS-W Firmware not found!")

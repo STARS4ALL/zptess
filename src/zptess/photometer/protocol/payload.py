@@ -137,7 +137,7 @@ class JSONPayload:
     # ---------------------------
 
     def onDataReceived(self, data, tstamp):
-        self.log.info("<== {label:6s} J [{l:02d}] {line}", l=len(data), label=self.label, line=data)
+        self.log.info("<== {label:6s} [{l:02d}] {line}", l=len(data), label=self.label, line=data)
         try:
             reading = json.loads(data)
         except Exception as e:

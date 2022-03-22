@@ -92,8 +92,8 @@ def createParser():
 	group.add_argument('-v', '--verbose', action='store_true', help='Verbose output.')
 	group.add_argument('-q', '--quiet',   action='store_true', help='Quiet output.')
 	parser.add_argument('-nk','--no-console', action='store_true', help='Do not log to console.')
-	parser.add_argument('--log-file', type=str, default=None, help='Optional log file')
-	parser.add_argument('--dbase', type=str, default="zptess.db", help='ZPTESS SQlite database')
+	parser.add_argument('-l', '--log-file', type=str, default=None, help='Optional log file')
+	parser.add_argument('-d', '--dbase', type=str, default="zptess.db", help='ZPTESS SQlite database')
 
 	
 	# --------------------------

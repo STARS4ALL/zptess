@@ -11,8 +11,10 @@
 
 
 import os
-import sqlite3
 import glob
+import uuid
+import datetime
+import sqlite3
 
 # ---------------
 # Twisted imports
@@ -37,78 +39,35 @@ from pubsub import pub
 # local imports
 # -------------
 
-from zptess import SQL_SCHEMA, SQL_INITIAL_DATA_DIR, SQL_UPDATES_DATA_DIR, TSTAMP_FORMAT
-
+from zptess import SQL_SCHEMA, SQL_INITIAL_DATA_DIR, SQL_UPDATES_DATA_DIR, TSTAMP_FORMAT, TSTAMP_SESSION_FMT
 from zptess.logger import setLogLevel
+from zptess.dbase import NAMESPACE, log 
+from zptess.dbase.utils import create_database, create_schema
 from zptess.dbase.dao import DataAccesObject
 
 # ----------------
 # Module constants
 # ----------------
 
-NAMESPACE = 'dbase'
-
-DATABASE_FILE = 'zptess.db'
-
 SQL_TEST_STRING = "SELECT COUNT(*) FROM summary_t"
 
-# -----------------------
-# Module global variables
-# -----------------------
-
-log = Logger(NAMESPACE)
 
 # ------------------------
 # Module Utility Functions
 # ------------------------
 
+# SQLite has a default datetime.datetime adapter built in but
+# we like to write in our own ISO format
+def timestamp_adapter(tstamp):
+    return tstamp.strftime(TSTAMP_FORMAT)
+
+sqlite3.register_adapter(datetime.datetime, timestamp_adapter)
+
 def getPool(*args, **kargs):
-    '''Get connetion pool for sqlite3 driver'''
+    '''Get connetion pool for sqlite3 driver (Twisted only)'''
     kargs['check_same_thread'] = False
     return adbapi.ConnectionPool("sqlite3", *args, **kargs)
 
-
-def open_database(dbase_path):
-    '''Creates a Database file if not exists and returns a connection'''
-    output_dir = os.path.dirname(dbase_path)
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
-    if not os.path.exists(dbase_path):
-        with open(dbase_path, 'w') as f:
-            pass
-        log.info("Created database file {0}".format(dbase_path))
-    return sqlite3.connect(dbase_path)
-
-
-def create_database(connection, schema_path, initial_data_dir_path, updates_data_dir, query):
-    created = True
-    cursor = connection.cursor()
-    try:
-        cursor.execute(query)
-    except Exception:
-        created = False
-    if not created:
-        with open(schema_path) as f: 
-            lines = f.readlines() 
-        script = ''.join(lines)
-        connection.executescript(script)
-        log.info("Created data model from {0}".format(os.path.basename(schema_path)))
-        file_list = glob.glob(os.path.join(initial_data_dir_path, '*.sql'))
-        for sql_file in file_list:
-            log.info("Populating data model from {0}".format(os.path.basename(sql_file)))
-            with open(sql_file) as f: 
-                lines = f.readlines() 
-            script = ''.join(lines)
-            connection.executescript(script)
-    else:
-        file_list = glob.glob(os.path.join(updates_data_dir, '*.sql'))
-        for sql_file in file_list:
-            log.info("Applying updates to data model from {0}".format(os.path.basename(sql_file)))
-            with open(sql_file) as f: 
-                lines = f.readlines() 
-            script = ''.join(lines)
-            connection.executescript(script)
-    connection.commit()
 
 def read_database_version(connection):
     cursor = connection.cursor()
@@ -117,7 +76,41 @@ def read_database_version(connection):
     version = cursor.fetchone()[0]
     return version
 
+def write_database_uuid(connection):
+    guid = str(uuid.uuid4())
+    cursor = connection.cursor()
+    param = {'section': 'database','property':'uuid','value': guid}
+    cursor.execute(
+        '''
+        INSERT INTO config_t(section,property,value) 
+        VALUES(:section,:property,:value)
+        ''',
+        param
+    )
+    connection.commit()
+    return guid
 
+def make_database_uuid(connection):
+    cursor = connection.cursor()
+    query = 'SELECT value FROM config_t WHERE section = "database" AND property = "uuid";'
+    cursor.execute(query)
+    guid = cursor.fetchone()
+    if guid:
+        try:
+            uuid.UUID(guid[0])  # Validate UUID
+        except ValueError:
+            guid = write_database_uuid(connection)
+        else:
+            guid = guid[0]
+    else:
+        guid = write_database_uuid(connection)
+    return guid
+
+
+def read_configuration(connection):
+     cursor = connection.cursor()
+     cursor.execute("SELECT section, property, value FROM config_t ORDER BY section")
+     return cursor.fetchall()
 
 # --------------
 # Module Classes
@@ -126,18 +119,23 @@ def read_database_version(connection):
 class DatabaseService(Service):
 
     # Service name
-    NAME = NAMESPACE
+    NAME = 'Database Service'
 
-    def __init__(self, options, *args, **kargs):
-        super().__init__(*args, **kargs)   
-        setLogLevel(namespace=NAMESPACE, levelStr='info')
-        self.path          = options['path']
-        self.session       = options['session']
-        self.test_mode     = options['test']
-        self.author        = options['author']
-        self.only_create   = options['create']
-        self.pool          = None
-        self.getPoolFunc   = getPool
+    def __init__(self, path, test_mode, create_only=False, *args, **kargs):
+        super().__init__(*args, **kargs)
+        self.path = path
+        self.getPoolFunc = getPool
+        self.create_only = create_only
+        self.test_mode   = test_mode
+
+    #------------
+    # Service API
+    # ------------
+
+
+    def startService(self):
+        setLogLevel(namespace=NAMESPACE, levelStr='warn')
+        self.session       = None
         self.refSamples    = list()
         self.testSamples   = list()
         self.refRounds     = list()
@@ -147,78 +145,86 @@ class DatabaseService(Service):
             'ref' : {'info': None},
             'test': {'info': None},
         }
-        pub.subscribe(self.onPhotometerInfo,  'photometer_info')
+        pub.subscribe(self.onPhotometerInfo,  'phot_info')
         pub.subscribe(self.onRoundStatInfo,   'round_stats_info')
         pub.subscribe(self.onSummaryStatInfo, 'summary_stats_info')
-    
-    #------------
-    # Service API
-    # ------------
+        pub.subscribe(self.onSampleReceived,  'phot_sample')
+        pub.subscribe(self.onCalibrationStart,'calibration_begin')
 
-    def startService(self):
-        log.info("Starting Database Service on {database}", database=self.path)
-        if self.test_mode:
-            log.warn("Database won't be updated")
-        connection = open_database(self.path)
-        create_database(connection, SQL_SCHEMA, SQL_INITIAL_DATA_DIR, SQL_UPDATES_DATA_DIR, SQL_TEST_STRING)
+        connection, new_database = create_database(self.path)
+        if new_database:
+            log.warn("Created new database file at {f}",f=self.path)
+        just_created, file_list = create_schema(connection, SQL_SCHEMA, SQL_INITIAL_DATA_DIR, SQL_UPDATES_DATA_DIR, SQL_TEST_STRING)
+        if just_created:
+            for sql_file in file_list:
+                log.warn("Populating data model from {f}", f=os.path.basename(sql_file))
+        else:
+            for sql_file in file_list:
+                log.warn("Applying updates to data model from {f}", f=os.path.basename(sql_file))
+        #levels  = read_debug_levels(connection)
         version = read_database_version(connection)
+        guid    = make_database_uuid(connection)
+        log.warn("Starting {service} on {database}, version = {version}, UUID = {uuid}", 
+            database = self.path, 
+            version  = version,
+            service  = self.name,
+            uuid     = guid,
+        )
+    
         # Remainder Service initialization
         super().startService()
+        self._initial_config = read_configuration(connection)
         connection.commit()
         connection.close()
-        self.openPool()
-        self.dao = DataAccesObject(self.pool, None)
-        self.dao.version = version
-        if self.only_create:
-            reactor.callLater(0, self.parent.stopService)
+        if self.create_only:
+            self.quit(exit_code=0)
+        else:
+            self.openPool()
+            self.dao = DataAccesObject(self.pool)
+            self.dao.version = version
 
 
     @inlineCallbacks
     def stopService(self):
+        log.info("Stopping {name}", name=self.name)
+        pub.unsubscribe(self.onPhotometerInfo,  'phot_info')
+        pub.unsubscribe(self.onRoundStatInfo,   'round_stats_info')
+        pub.unsubscribe(self.onSummaryStatInfo, 'summary_stats_info')
+        pub.unsubscribe(self.onSampleReceived,  'phot_sample')
+        pub.unsubscribe(self.onCalibrationStart,'calibration_begin')
+      
+        self.session = None
         if self.test_mode:
             log.warn("Database is not being updated")
         else:
-            if self.testSamples:
-                n1 = len(self.testSamples)
-                samples  = self.purge('test', self.testRounds, self.testSamples)
-                n2 = len(samples)
-                log.info("From {n1} test initial samples, saving {n2} samples only", n1=n1, n2=n2)
-                yield self.dao.samples.savemany(samples)
-            if self.refSamples:
-                n1 = len(self.refSamples)
-                samples  = self.purge('ref', self.refRounds, self.refSamples)
-                n2 = len(samples)
-                log.info("From {n1} ref. initial samples, saving {n2} samples only", n1=n1, n2=n2)
-                yield self.dao.samples.savemany(samples)
-            if self.refRounds:
-                log.info("Saving {n} ref. rounds stats records", n=len(self.refRounds))
-                yield self.dao.rounds.savemany(self.refRounds)
-            if self.testRounds:
-                log.info("Saving {n} test rounds stats records", n=len(self.testRounds))
-                yield self.dao.rounds.savemany(self.testRounds)
-            if self.summary_stats:
-                log.info("Saving {n} summary stats records", n=len(self.summary_stats))
-                yield self.dao.summary.savemany(self.summary_stats)
+            yield self._flush()
         self.closePool()
-        log.info("Stopping Database Service")
         try:
             reactor.stop()
         except Exception as e:
             pass
-            #os.kill(os.getpid(), signal.SIGINT)
 
 
     # ---------------
     # OPERATIONAL API
     # ---------------
 
-    def onPhotometerInfo(self, role, circ_buffer, info):
-        reactor.callLater(0, self._write, role, circ_buffer.getBuffer2(), info)
+    
+    def getInitialConfig(self, section):
+        '''For service startup, avoiding async code'''
+        g = filter(lambda i: True if i[0] == section else False, self._initial_config)
+        return dict(map(lambda i: (i[1], i[2]) ,g))
+
+    def onCalibrationStart(self, session):
+        self.session = session
+
+    def onPhotometerInfo(self, role, info):
+        self.phot[role]['info'] = info
 
     def onRoundStatInfo(self, role, stats_info):
-        stats_info['name']    = self.phot[role]['info']['name']
+        if self.session is None:    # Discard rounds info not bound to sessions
+            return
         stats_info['mac']     = self.phot[role]['info']['mac']
-        stats_info['role']    = role
         stats_info['session'] = self.session
         if role == 'ref':
             self.refRounds.append(stats_info)
@@ -233,30 +239,46 @@ class DatabaseService(Service):
         stats_info['firmware'] = self.phot[role]['info']['firmware']
         stats_info['role']     = role
         stats_info['session']  = self.session
-        stats_info['author']   = self.author
         self.summary_stats.append(stats_info)
-
-    @inlineCallbacks
-    def loadRefPhotDefaults(self):
-        ref = yield self.dao.config.loadSection('reference')
-        return(ref)
-
-    @inlineCallbacks
-    def loadAbsoluteZeroPoint(self):
-        ref = yield self.dao.config.load('reference','zp_abs')
-        # Assume that we always have this loaded, no need for error check
-        return(float(ref['zp_abs']))
 
     # -------------
     # Helper methods
     # --------------
-    def purge(self, role, rounds, samples):
+
+    @inlineCallbacks
+    def _flush(self):
+        '''Flushes samples to database'''
+        if self.testSamples:
+            n1 = len(self.testSamples)
+            samples  = self._purge('test', self.testRounds, self.testSamples)
+            n2 = len(samples)
+            log.info("From {n1} test initial samples, saving {n2} samples only", n1=n1, n2=n2)
+            yield self.dao.samples.savemany(samples)
+        if self.refSamples:
+            n1 = len(self.refSamples)
+            samples  = self._purge('ref', self.refRounds, self.refSamples)
+            n2 = len(samples)
+            log.info("From {n1} ref. initial samples, saving {n2} samples only", n1=n1, n2=n2)
+            yield self.dao.samples.savemany(samples)
+        if self.refRounds:
+            log.info("Saving {n} ref. rounds stats records", n=len(self.refRounds))
+            yield self.dao.rounds.savemany(self.refRounds)
+        if self.testRounds:
+            log.info("Saving {n} test rounds stats records", n=len(self.testRounds))
+            yield self.dao.rounds.savemany(self.testRounds)
+        if self.summary_stats:
+            log.info("Saving {n} summary stats records", n=len(self.summary_stats))
+            yield self.dao.summary.savemany(self.summary_stats)
+
+
+    def _purge(self, role, rounds, samples):
         indexes = list()
         log.debug("{n} {r} samples before purge", r=role, n=len(samples))
         # Finding the list of indices to slice the samples
         for r in rounds:
             start_index = None
             end_index  = None
+            # This is valid for both ISO strings or native datetime objects
             for i, s in enumerate(samples):
                 ts = s['tstamp']
                 if ts == r['begin_tstamp']:
@@ -267,6 +289,8 @@ class DatabaseService(Service):
                     log.debug("{r} found ({i},{j}) indexes", r=role, i=start_index, j=end_index)
                     indexes.append((start_index, end_index))
                     break
+        if not indexes:
+            return list()   # No samples to purge
         # Carefully slice the samples taking care of overlapping
         t0 = indexes[0]
         result = list(samples[t0[0]:t0[1]+1]) 
@@ -275,36 +299,32 @@ class DatabaseService(Service):
                 i, j =   t1[0],  t1[1]+1
                 log.debug("{r} no overlap intervals {t0}, {t1}", r=role, t0=t0, t1=t1)
                 log.debug("{r} slicing to [{i}:{j}]", r=role, i=i, j=j)
-                result.extend(samples[i:j]) # No overlapping
             else:
                 i, j =   t0[1]+1, t1[1]+1
                 log.debug("purge {r} overlapping intervals {t0}, {t1}", r=role, t0=t0, t1=t1)
                 log.debug("purge {r} slicing to [{i}:{j}]", r=role, i=i, j=j)
-                result.extend(samples[i:j]) # Overlapping
+            result.extend(samples[i:j]) # Overlapping
         log.debug("{n} {r} samples after purge", r=role, n=len(result))
         return result
 
 
 
-    @inlineCallbacks
-    def _write(self, role, queue, info):
-        '''Configuration from command line arguments'''
-        self.phot[role]['info'] = info
-        session = self.session
-        while True:
-            sample  = yield queue.get() # From a Deferre queue
-            data = {
-                'tstamp'  : sample['tstamp'].strftime(TSTAMP_FORMAT),
-                'role'    : role,
-                'session' : session,
-                'seq'     : sample.get('udp', None),    # Only exists in JSON based messages
-                'freq'    : sample['freq'],
-                'temp_box': sample.get('tamb', None),   # Only exists in JSON based messages
-            }
-            if role == 'ref':
-                self.refSamples.append(data)
-            else:
-                self.testSamples.append(data)
+    def onSampleReceived(self, role, sample):
+        '''Get new sample from photometers'''
+        if self.session is None:    # Discard samples not bound to sessions
+            return
+        data = {
+            'tstamp'  : sample['tstamp'],   # native datetime object
+            'session' : self.session,
+            'role'    : role,
+            'seq'     : sample.get('udp', None),    # Only exists in JSON based messages
+            'freq'    : sample['freq'],
+            'temp_box': sample.get('tamb', None),   # Only exists in JSON based messages
+        }
+        if role == 'ref':
+            self.refSamples.append(data)
+        else:
+            self.testSamples.append(data)
 
 
     # =============
@@ -328,5 +348,7 @@ class DatabaseService(Service):
     def closePool(self):
         '''setup the connection pool for asynchronouws adbapi'''
         log.debug("Closing a DB Connection to {conn!s}", conn=self.path)
-        self.pool.close()
+        if self.pool:
+            self.pool.close()
+        self.pool = None
         log.debug("Closed a DB Connection to {conn!s}", conn=self.path)

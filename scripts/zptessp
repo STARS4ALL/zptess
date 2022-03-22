@@ -4,4 +4,4 @@
 #
 # See the LICENSE file for details
 # ----------------------------------------------------------------------
-python -m zptess --console --dbase $HOME/zptess/zptess.db --log-file $HOME/zptess/zptess.log --model tess-p --ref-old-protocol --rounds 5 --samples 75 --port serial:1 $*
+python -m zptess -c -d $HOME/zptess/zptess.db -l $HOME/zptess/zptess.log -rO -tM tess-p -S 75 -tE serial:1 $*

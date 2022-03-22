@@ -1,11 +1,10 @@
---------------------------------------------------------
--- Miscelaneous data to be inserted at database creation
---------------------------------------------------------
-
 -- Global section
+BEGIN TRANSACTION;
 
-INSERT INTO config_t(section, property, value) 
+INSERT OR REPLACE INTO config_t(section, property, value) 
 VALUES ('database', 'version', '02');
+
+DELETE FROM config_t WHERE section = 'reference';
 
 ------------------------------
 -- Calibration process section
@@ -54,8 +53,6 @@ INSERT INTO config_t(section, property, value)
 VALUES ('ref-stats', 'period', '5');
 INSERT INTO config_t(section, property, value) 
 VALUES ('ref-stats', 'central', 'median');
-INSERT INTO config_t(section, property, value) 
-VALUES ('ref-stats', 'period', '5');
 
 -------------------------------
 --  Test photometer section
@@ -65,6 +62,7 @@ VALUES ('ref-stats', 'period', '5');
 
 INSERT INTO config_t(section, property, value) 
 VALUES ('test-device', 'model', 'TESS-W');
+
 -- Default device protocol and comm method
 
 INSERT INTO config_t(section, property, value) 
@@ -80,5 +78,5 @@ INSERT INTO config_t(section, property, value)
 VALUES ('test-stats', 'period', '5');
 INSERT INTO config_t(section, property, value) 
 VALUES ('test-stats', 'central', 'median');
-INSERT INTO config_t(section, property, value) 
-VALUES ('test-stats', 'period', '5');
+
+COMMIT;

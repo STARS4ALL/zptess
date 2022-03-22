@@ -35,7 +35,7 @@ from zptess.dbase import tables
 # Module constants
 # ----------------
 
-NAMESPACE = 'DBASE'
+NAMESPACE = 'dbase'
 
 # -----------------------
 # Module global variables
@@ -64,7 +64,7 @@ class DataAccesObject():
     # Service API
     # ------------
 
-    def start(self,*args):
+    def start(self, *args):
         log.info('Starting DAO')
 
         self.config = tables.ConfigTable(

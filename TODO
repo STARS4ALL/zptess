@@ -1,9 +1,12 @@
 SHORT TERM
 ==========
-* algo no funciona en el LICA ...
-* que pasa con las 4 inconsistencias? => que no tenemos log de 4 calibraciones de TASD89
-* Migrar repositorio zptess->new a zptess. Etiquetas. Ficheros antiguos que ya no se necesitan => borrar primero.
+
+* 'freq_offset' support para el TAS y el TESS-P
 * Pending bug fixes:
   zptool.utils.paging() no funcione en estos caso:
   - con lsitas/tuplas y size=None
   - con cursores y size != None
+
+
+* stars488 saca por el puerto serie solo el formato antiguo
+* stars63 saca por el puerto serie tanto JSON como el formato antiguo

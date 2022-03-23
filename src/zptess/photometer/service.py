@@ -152,7 +152,7 @@ class PhotometerService(ClientService):
             self.log.critical("{excp}",excp=e)
             pub.sendMessage('photometer_off', role=self.role)
             return(None)
-        except Excception as e:
+        except Exception as e:
             self.log.failure("{excp}",excp=e)
             pub.sendMessage('photometer_off', role=self.role)
             return(None)

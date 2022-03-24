@@ -84,6 +84,7 @@ class CommandLineService(MultiService):
         # 'zptess' calzado a pelo poque parece que no se captura de la command line
         log.warn("zptess {full_version}",full_version=FULL_VERSION_STRING)
         self.dbaseServ = self.parent.getServiceNamed(DatabaseService.NAME)
+        self.dbaseServ.setReadOnlyMode(options['test_mode'])
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
         pub.subscribe(self.onCalibrationEnd, 'calibration_end')
         pub.subscribe(self.onPhotometerOffline, 'photometer_off')

@@ -121,12 +121,13 @@ class DatabaseService(Service):
     # Service name
     NAME = 'Database Service'
 
-    def __init__(self, path, test_mode, create_only=False, *args, **kargs):
+    def __init__(self, path, create_only=False, *args, **kargs):
         super().__init__(*args, **kargs)
         self.path = path
         self.getPoolFunc = getPool
         self.create_only = create_only
-        self.test_mode   = test_mode
+        self.test_mode = True # Assume a safe position
+        
 
     #------------
     # Service API
@@ -209,6 +210,8 @@ class DatabaseService(Service):
     # OPERATIONAL API
     # ---------------
 
+    def setTestMode(test_mode):
+        self.test_mode   = test_mode
     
     def getInitialConfig(self, section):
         '''For service startup, avoiding async code'''

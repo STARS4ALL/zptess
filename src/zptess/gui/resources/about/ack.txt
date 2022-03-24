@@ -1,0 +1,3 @@
+AZOTEA software development has been possible through ACTION, an European Union's Horizon 2020 research and innovation project under grant agreement number 824603.
+
+See https://actionproject.eu/ for more details.

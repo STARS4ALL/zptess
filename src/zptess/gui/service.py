@@ -37,7 +37,7 @@ from zptess import set_status_code
 from zptess.logger  import setLogLevel
 from zptess.dbase.service   import DatabaseService
 from zptess.gui.application import Application
-#from zptess.gui.controller.application import ApplicationController
+from zptess.gui.controller.application import ApplicationController
 
 
 # ----------------

@@ -179,11 +179,12 @@ class MenuBar(ttk.Frame):
         pub.sendMessage('quit', exit_code=0)
 
 
-    def doAbout(self, db_version):
+    def doAbout(self, db_version, db_uuid):
         version = _("Version {0}\nDatabase version {1}").format(__version__, db_version)
         about = AboutDialog(
             title      = _("About AZOTEA"),
             version    = version, 
+            uuid       = uuid,
             descr_path = ABOUT_DESC_TXT, 
             ack_path   = ABOUT_ACK_TXT, 
             img_path   = ABOUT_IMG, 

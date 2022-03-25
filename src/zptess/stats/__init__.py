@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Copyright (c) 2020
+# Copyright (c) 2022
 #
 # See the LICENSE file for details
 # see the AUTHORS file for authors

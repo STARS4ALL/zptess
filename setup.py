@@ -20,7 +20,7 @@ DEPENDENCIES = [
     'pyserial',   # RS232 handling
     'pypubsub',   # Publish/Subscribe support for Model/View/Controller
     'tabulate',   # fancy display tables for zptool,
-    'PIL',        # For the GUI
+    'Pillow',        # For the GUI
 ]
 
 CLASSIFIERS  = [

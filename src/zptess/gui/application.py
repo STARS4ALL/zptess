@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # ----------------------------------------------------------------------
-# Copyright (c) 2020
+# Copyright (c) 2022
 #
 # See the LICENSE file for details
 # see the AUTHORS file for authors
@@ -47,10 +47,11 @@ from zptess.logger import setLogLevel
 # from zptess.gui.widgets.combos  import ROICombo, CameraCombo, ObserverCombo, LocationCombo
 # from zptess.gui.widgets.consent import ConsentDialog
 # from zptess.gui.widgets.date import DateFilterDialog
-# from zptess.gui.preferences import Preferences
+from zptess.gui.preferences import Preferences
 
-from zptess.gui.widgets.about import AboutDialog
 from zptess.gui import ABOUT_DESC_TXT, ABOUT_ACK_TXT, ABOUT_IMG, ABOUT_ICONS
+from zptess.gui.widgets.about import AboutDialog
+from zptess.gui.preferences   import Preferences
 
 # ----------------
 # Module constants
@@ -162,6 +163,7 @@ class MenuBar(ttk.Frame):
         # File submenu
         file_menu = tk.Menu(menu_bar, tearoff=False)
         file_menu.add_separator()
+        file_menu.add_command(label=_("Preferences..."), command=self.onMenuPreferences)
         file_menu.add_command(label=_("Quit"), command=self.quit)
         menu_bar.add_cascade(label=_("File"), menu=file_menu)
        

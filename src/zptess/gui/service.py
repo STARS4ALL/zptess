@@ -85,11 +85,11 @@ class GraphicalService(Service):
         self.application = Application()
         self.dbaseService = self.parent.getServiceNamed(DatabaseService.NAME)
         self.controllers = (
-            # ApplicationController(
-            #     parent  = self, 
-            #     view    = self.application, 
-            #     model   = self.dbaseService.dao,
-            # ),
+            ApplicationController(
+                parent  = self, 
+                view    = self.application, 
+                model   = self.dbaseService.dao,
+            ),
             
         )
         # Dirty monkey patching

@@ -183,6 +183,7 @@ class DatabaseService(Service):
             self.openPool()
             self.dao = DataAccesObject(self.pool)
             self.dao.version = version
+            self.dao.uuid = guid
 
 
     @inlineCallbacks

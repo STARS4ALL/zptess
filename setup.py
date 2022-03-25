@@ -19,7 +19,8 @@ DEPENDENCIES = [
     'treq',       # like requests, Twisted style 
     'pyserial',   # RS232 handling
     'pypubsub',   # Publish/Subscribe support for Model/View/Controller
-    'tabulate',   # fancy display tables for zptool
+    'tabulate',   # fancy display tables for zptool,
+    'PIL',        # For the GUI
 ]
 
 CLASSIFIERS  = [

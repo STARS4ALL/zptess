@@ -28,7 +28,7 @@ IMG_ROI     = resource_filename(__name__, os.path.join('resources', 'img', 'roi.
 # About Widget resources configuration
 ABOUT_DESC_TXT = resource_filename(__name__, os.path.join('resources', 'about', 'descr.txt'))
 ABOUT_ACK_TXT  = resource_filename(__name__, os.path.join('resources', 'about', 'ack.txt'))
-ABOUT_IMG      = resource_filename(__name__, os.path.join('resources', 'about', 'azotea192.png'))
+ABOUT_IMG      = resource_filename(__name__, os.path.join('resources', 'about', 'esfera192.png'))
 ABOUT_ICONS = (
 	('Universidad Complutense de Madrid', resource_filename(__name__, os.path.join('resources', 'about', 'ucm64.png'))),
 	('GUAIX', resource_filename(__name__, os.path.join('resources', 'about', 'guaix60.jpg'))),

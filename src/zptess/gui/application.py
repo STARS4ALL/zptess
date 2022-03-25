@@ -45,10 +45,11 @@ from zptess.logger import setLogLevel
 
 # from zptess.gui.widgets.contrib import ToolTip
 # from zptess.gui.widgets.combos  import ROICombo, CameraCombo, ObserverCombo, LocationCombo
-# from zptess.gui.widgets.about import AboutDialog
 # from zptess.gui.widgets.consent import ConsentDialog
 # from zptess.gui.widgets.date import DateFilterDialog
 # from zptess.gui.preferences import Preferences
+
+from zptess.gui.widgets.about import AboutDialog
 from zptess.gui import ABOUT_DESC_TXT, ABOUT_ACK_TXT, ABOUT_IMG, ABOUT_ICONS
 
 # ----------------
@@ -180,11 +181,10 @@ class MenuBar(ttk.Frame):
 
 
     def doAbout(self, db_version, db_uuid):
-        version = _("Version {0}\nDatabase version {1}").format(__version__, db_version)
+        version = _("Software version {0}\nDatabase version {1}\nUUID:{2}").format(__version__, db_version, db_uuid)
         about = AboutDialog(
             title      = _("About AZOTEA"),
             version    = version, 
-            uuid       = uuid,
             descr_path = ABOUT_DESC_TXT, 
             ack_path   = ABOUT_ACK_TXT, 
             img_path   = ABOUT_IMG, 

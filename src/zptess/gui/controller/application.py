@@ -81,7 +81,8 @@ class ApplicationController:
     def onDatabaseVersionReq(self):
         try:
             version = self.model.version
-            self.view.menuBar.doAbout(version)
+            uuid = self.model.uuid
+            self.view.menuBar.doAbout(version, uuid)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -111,27 +112,9 @@ class ApplicationController:
             pub.sendMessage('quit', exit_code = 1)
 
 
-    @inlineCallbacks
-    def onSaveConsentReq(self):
-        try:
-            now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-            yield self.model.config.save(section='gdpr', property='agree', value='Yes')
-            yield self.model.config.save(section='gdpr', property='tstamp', value=now)
-            yield self.onCheckPreferencesReq()
-        except Exception as e:
-            log.failure('{e}',e=e)
-            pub.sendMessage('quit', exit_code = 1)
-
-
-    @inlineCallbacks
     def onBootReq(self):
         try:
             log.info('starting Application Controller')
-            consent  = yield self.model.config.load(section='gdpr', property='agree')
-            if not consent:
-                self.view.openConsentDialog()
-            else:
-                pub.sendMessage('check_preferences_req')
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)

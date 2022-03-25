@@ -1,9 +1,17 @@
 SHORT TERM
 ==========
 
-* 'freq_offset' support para el TAS y el TESS-P
+* GUI
+- Preferences:
+  1. Mejorar el layout
+  1. Modleo ¿donde se selecciona?
+  
+  2. Hacer el TestPhotometerFrame
+  3. lectira inicial y mapeos
+
+
 * Pending bug fixes:
-  zptool.utils.paging() no funcione en estos caso:
+  zptool.utils.paging() no funciona en estos caso:
   - con lsitas/tuplas y size=None
   - con cursores y size != None
 

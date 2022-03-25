@@ -31,8 +31,10 @@ from twisted.logger import Logger
 # local imports
 # -------------
 
-from zptess.gui.preferences.reference import ReferenceFrame
-# from zptess.gui.preferences.test import TestFrame
+from zptess.gui.preferences.refphot import RefPhotometerFrame
+from zptess.gui.preferences.testphot import TestPhotometerFrame
+
+# from zptess.gui.preferences.test import TestPhotometerFrame
 
 
 # ----------------
@@ -75,7 +77,7 @@ class Preferences(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.close)
         notebook = ttk.Notebook(self)
         notebook.pack(fill='both', expand=True)
-        ref_frame = ReferenceFrame(
+        ref_frame = RefPhotometerFrame(
             notebook,
             label         = _("Reference Photometer"),
             initial_event = "referece_info_load_req",
@@ -83,21 +85,18 @@ class Preferences(tk.Toplevel):
             cancel_event  = None,
         )
         ref_frame.pack(fill='both', expand=True)
-        notebook.add(ref_frame, text=_("Reference Phot."))
-        # test_frame = TestFrame(
-        #     notebook,
-        #     label= _("Test Photometer"),
-        #     initial_event="observer_list_req",
-        #     detail_event="observer_details_req",
-        #     default_event="observer_set_default_req",
-        #     save_event="observer_save_req",
-        #     delete_event="observer_delete_req",
-        #     purge_event=None,
-        # )
-        # test_frame.pack(fill='both', expand=True)
-        # notebook.add(test_frame, text=_("Test Photometer"))
-
+        notebook.add(ref_frame, text= _("Reference Photometer"))
+        test_frame = TestPhotometerFrame(
+            notebook,
+            label         = _("Test Photometer"),
+            initial_event = "referece_info_load_req",
+            save_event    = "referece_info_save_req",
+            cancel_event  = None,
+        )
+        test_frame.pack(fill='both', expand=True)
+        notebook.add(test_frame, text= _("Test Photometer"))
         self.notebook       = notebook
         self.referenceFrame = ref_frame
-        # self.testFrame      = test_frame
+        self.testFrame      = test_frame
+
         

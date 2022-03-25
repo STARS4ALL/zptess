@@ -55,10 +55,7 @@ NAMESPACE = 'gui'
 log  = Logger(namespace=NAMESPACE)
 
 
-
-
-
-class ReferenceFrame(BasePreferencesFrame):
+class TestPhotometerFrame(BasePreferencesFrame):
 
     def __init__(self, parent,  *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
@@ -70,10 +67,6 @@ class ReferenceFrame(BasePreferencesFrame):
         super().build()
         container = self._container
         self.stats = StatisticsWidget(container)
-        self.stats.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=10, pady=5)
+        self.stats.pack(side=tk.TOP, fill=tk.BOTH, expand=False, padx=2, pady=2)
         self.comms = CommunicationsWidget(container)
-        self.comms.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=10, pady=5)
-
-      
-
-       
+        self.comms.pack(side=tk.TOP, fill=tk.BOTH, expand=False, ipadx=4, ipady=2, padx=2, pady=2)

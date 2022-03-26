@@ -3,13 +3,21 @@ SHORT TERM
 
 * GUI
 - Preferences:
-  1. Mejorar el layout
-  1. Modleo ¿donde se selecciona?
-  
-  2. Hacer el TestPhotometerFrame
-  3. lectira inicial y mapeos
+  *. lectira inicial y mapeos
 - DAO de ssioness de batch_t
   y el controlador que tenga openSession(), closeSession() y PurgeSession()
+- MAin  Screen
+  - Menu Bar
+  - Main Panel:
+    - panel superior con test photometer
+      - izda photometer info, medio progress y right medidas
+    - panel inferior con reference photometer
+      - izda photometer info, medio progress y right medidas
+    - panel lateral izdo con la calibración
+      - arriba estado de calibracion
+      - medio opciones de calibración
+      - abajo con gestion del batch (combo box con acciones abrir, cerrar, exportar y purgar)
+   - Status bar: con el estado del batch (fechas, y emailed flags)
 
 
 * Pending bug fixes:

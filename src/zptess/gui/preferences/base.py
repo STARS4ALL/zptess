@@ -36,6 +36,7 @@ from twisted.logger import Logger
 
 from zptess.utils import chop
 from zptess.gui.widgets.contrib import ToolTip, LabelInput
+from zptess.gui.widgets.validators import float_validator, ip_validator
 
 # ----------------
 # Module constants
@@ -50,8 +51,15 @@ NAMESPACE = 'gui'
 # Module global variables
 # -----------------------
 
-
 log  = Logger(namespace=NAMESPACE)
+
+# -----------------------
+# Module global functions
+# -----------------------
+
+# -----------------------
+# Module auxiliar classes
+# -----------------------
 
 class StatisticsWidget(ttk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
@@ -68,9 +76,11 @@ class StatisticsWidget(ttk.LabelFrame):
         widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.E)
         ToolTip(widget, _("# samples to average"))
 
+        vcmd  = (self.register(float_validator), '%P')
+        ivcmd = (self.register(self.invalid_period),)
         widget = ttk.Label(self, text= _("Period (sec.)"))
         widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Entry(self, textvariable=self._period, width=5,)
+        widget = ttk.Entry(self, textvariable=self._period, width=5, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
         widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.E)
         ToolTip(widget, _("Calculate average each T seconds"))
         
@@ -78,6 +88,9 @@ class StatisticsWidget(ttk.LabelFrame):
         widget.grid(row=2, column=0, padx=2, pady=2, sticky=tk.E)
         widget = ttk.Radiobutton(self, text=_("Median"), variable=self._central, value="median")
         widget.grid(row=2, column=1, padx=2, pady=2, sticky=tk.E)
+
+    def invalid_period(self):
+        self._period.set(5.0)
 
     def set(self, values):
         self._central.set(values['central'])
@@ -112,20 +125,24 @@ class CommunicationsWidget(ttk.LabelFrame):
         widget = ttk.Radiobutton(comm_frame, text=_("UDP"), variable=self._method, command=self.changeLabels, value="udp")
         widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
         comm_frame.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
-        widget = ttk.Checkbutton(left_frame, text= _("Use old protocol"))
+        widget = ttk.Checkbutton(left_frame, text= _("Old protocol"))
         widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=6)
+        ToolTip(widget, _("use old style messages instead of JSON messages"))
         left_frame.pack(side=tk.LEFT,fill=tk.BOTH,  padx=0, pady=0)
 
         # right frame elements
+        # we cannot validate IP addresses because the Entry widget is also being used for serial port text strings
         right_frame = ttk.Frame(self)
         self._addr_w = ttk.Label(right_frame, text= _("IP Address"))
         self._addr_w.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
         widget = ttk.Entry(right_frame, width=12, textvariable=self._addr)
+        ToolTip(widget, _("IP Address or Serial Port Name"))
         widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
         self._port_w = ttk.Label(right_frame, text= _("TCP/UDP Port"))
         self._port_w.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
         widget = ttk.Spinbox(right_frame, textvariable=self._port, width=5, from_= 0, to=65535)
         widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
+        ToolTip(widget, _("TCP/UDP port or baud rate"))
         right_frame.pack(side=tk.LEFT,fill=tk.BOTH,  padx=0, pady=0)
 
     def changeLabels(self):

@@ -36,6 +36,8 @@ from twisted.logger import Logger
 
 from zptess.utils import chop
 from zptess.gui.widgets.contrib import ToolTip, LabelInput
+from zptess.gui.widgets.validators import float_validator, ip_validator, mac_validator
+
 from zptess.gui.preferences.base import BasePreferencesFrame, StatisticsWidget, CommunicationsWidget
 
 # ----------------
@@ -79,9 +81,11 @@ class DeviceInfoWidget(ttk.LabelFrame):
         widget = ttk.Entry(self, width=16, textvariable=self._dev_name)
         widget.grid(row=1, column=1, padx=0, pady=0, sticky=tk.E)
 
+        vcmd  = (self.register(mac_validator), '%P')
+        ivcmd = (self.register(self.invalid_mac),)
         widget = ttk.Label(self, text= _("MAC Address"))
         widget.grid(row=2, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Entry(self, width=16, textvariable=self._mac)
+        widget = ttk.Entry(self, width=16, textvariable=self._mac, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
         widget.grid(row=2, column=1, padx=0, pady=0, sticky=tk.E)
 
         widget = ttk.Label(self, text= _("Firmware"))
@@ -89,28 +93,48 @@ class DeviceInfoWidget(ttk.LabelFrame):
         widget = ttk.Entry(self, width=25, textvariable=self._firmware)
         widget.grid(row=3, column=1, padx=0, pady=0, sticky=tk.E)
 
+        vcmd = (self.register(float_validator), '%P')
+        ivcmd = (self.register(self.invalid_freq_off),)
         widget = ttk.Label(self, text= _("Frequency Offset (Hz)"))
         widget.grid(row=4, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Entry(self, width=6, textvariable=self._freq_offset)
+        widget = ttk.Entry(self, width=6, textvariable=self._freq_offset, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
         widget.grid(row=4, column=1, padx=0, pady=0, sticky=tk.E)
+        ToolTip(widget, _("Dark current of longest integration time expressed in frequency"))
 
+        ivcmd = (self.register(self.invalid_zp),)
         widget = ttk.Label(self, text= _("Zero Point"))
         widget.grid(row=5, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Entry(self, width=6, textvariable=self._zp)
+        widget = ttk.Entry(self, width=6, textvariable=self._zp, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
         widget.grid(row=5, column=1, padx=0, pady=0, sticky=tk.E)
+        ToolTip(widget, _("ZP used in the firmware"))
 
+        ivcmd = (self.register(self.invalid_zp_abs),)
         widget = ttk.Label(self, text= _("Absolute Zero Point"))
         widget.grid(row=6, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Entry(self, width=6, textvariable=self._zp_abs)
+        widget = ttk.Entry(self, width=6, textvariable=self._zp_abs, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
         widget.grid(row=6, column=1, padx=0, pady=0, sticky=tk.E)
+        ToolTip(widget, _("Determined calibrated against a SQM photometer"))
+
+
+    def invalid_mac(self):
+        self._mac.set('AA:BB:CC:DD:EE:FF')
+
+    def invalid_zp(self):
+        self._zp.set(0)
+
+    def invalid_freq_off(self):
+        self._freq_offset.set(0)
+
+    def invalid_zp_abs(self):
+        self._zp_abs.set(0)
 
     def set(self, values):
-        self._dev_name = values['name']
-        self._mac = values['mac']
-        self._zp = values['zp']
-        self._zp_abs = values['zp_abs']
-        self._firmware = values['firmware']
-        self._freq_offset = values['freq_offset']
+        self._dev_name.set(values['name'])
+        self._mac.set(values['mac'])
+        self._zp.set(values['zp'])
+        self._zp_abs.set(values['zp_abs'])
+        self._firmware.set(values['firmware'])
+        self._freq_offset.set(values['freq_offset'])
 
     def get(self):
         return {

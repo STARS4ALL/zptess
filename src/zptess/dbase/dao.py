@@ -104,5 +104,15 @@ class DataAccesObject():
             insert_mode         = tables.INSERT,
             log_level           = 'info',
         )
+
+        self.batch = tables.Table(
+            pool                = self.pool, 
+            table               = 'batch_t',
+            id_column           = 'rowid',
+            natural_key_columns = ('begin_tstamp',), 
+            other_columns       = ('end_tstamp','email_sent','calibrations'),
+            insert_mode         = tables.INSERT,
+            log_level           = 'info',
+        )
         
         

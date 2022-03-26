@@ -8,6 +8,8 @@ SHORT TERM
   
   2. Hacer el TestPhotometerFrame
   3. lectira inicial y mapeos
+- DAO de ssioness de batch_t
+  y el controlador que tenga openSession(), closeSession() y PurgeSession()
 
 
 * Pending bug fixes:

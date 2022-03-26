@@ -72,7 +72,7 @@ class StatisticsWidget(ttk.LabelFrame):
     def build(self):
         widget = ttk.Label(self, text= _("Samples"))
         widget.grid(row=0, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Spinbox(self, textvariable=self._samples, width=5, from_= 3, to=625)
+        widget = ttk.Spinbox(self, textvariable=self._samples, width=5, justify=tk.RIGHT, from_= 3, to=625)
         widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.E)
         ToolTip(widget, _("# samples to average"))
 
@@ -80,7 +80,7 @@ class StatisticsWidget(ttk.LabelFrame):
         ivcmd = (self.register(self.invalid_period),)
         widget = ttk.Label(self, text= _("Period (sec.)"))
         widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Entry(self, textvariable=self._period, width=5, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
+        widget = ttk.Entry(self, textvariable=self._period, width=5, justify=tk.RIGHT, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
         widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.E)
         ToolTip(widget, _("Calculate average each T seconds"))
         
@@ -140,7 +140,7 @@ class CommunicationsWidget(ttk.LabelFrame):
         widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
         self._port_w = ttk.Label(right_frame, text= _("TCP/UDP Port"))
         self._port_w.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
-        widget = ttk.Spinbox(right_frame, textvariable=self._port, width=5, from_= 0, to=65535)
+        widget = ttk.Spinbox(right_frame, textvariable=self._port, justify=tk.RIGHT, width=5, from_= 0, to=65535)
         widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
         ToolTip(widget, _("TCP/UDP port or baud rate"))
         right_frame.pack(side=tk.LEFT,fill=tk.BOTH,  padx=0, pady=0)

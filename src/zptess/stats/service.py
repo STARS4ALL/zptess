@@ -236,7 +236,8 @@ class StatisticsService(Service):
             self.log.info('[{label:4s}] {name:8s} waiting for enough samples, {pend} remaining', 
                 label = self._label, 
                 name = stats_info['name'], 
-                pend = stats_info['size'] - stats_info['current']
+                pend = stats_info['size'] - stats_info['current'],
+
             )
             pub.sendMessage('stats_progress', role=self._role, stats_info=stats_info)
         else:

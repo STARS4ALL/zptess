@@ -99,7 +99,7 @@ class DeviceInfoWidget(ttk.LabelFrame):
         widget.grid(row=4, column=0, padx=0, pady=0, sticky=tk.W)
         widget = ttk.Entry(self, width=6, textvariable=self._freq_offset, justify=tk.RIGHT, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
         widget.grid(row=4, column=1, padx=0, pady=0, sticky=tk.E)
-        ToolTip(widget, _("Dark current of longest integration time expressed in frequency"))
+        ToolTip(widget, _("Sensor frequency offset"))
 
         ivcmd = (self.register(self.invalid_zp),)
         widget = ttk.Label(self, text= _("Zero Point"))

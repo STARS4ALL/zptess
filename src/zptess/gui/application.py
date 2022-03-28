@@ -44,6 +44,7 @@ from zptess import __version__
 from zptess.logger import setLogLevel
 
 from zptess.gui.widgets.contrib import ToolTip
+from zptess.gui.widgets.photpanel import PhotometerPanel
 # from zptess.gui.widgets.combos  import ROICombo, CameraCombo, ObserverCombo, LocationCombo
 # from zptess.gui.widgets.consent import ConsentDialog
 # from zptess.gui.widgets.date import DateFilterDialog
@@ -210,9 +211,10 @@ class MainFrame(ttk.Frame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.uiid = 0
-        self.diid = 0
-        self.build()
+        self.testPanel = PhotometerPanel(self, text="Test Photometer")
+        self.testPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=0)
+        self.refPanel = PhotometerPanel(self, text="Reference Photometer")
+        self.refPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=0)
 
     def start(self):
         pass

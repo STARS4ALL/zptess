@@ -2,6 +2,10 @@ SHORT TERM
 ==========
 
 * GUI
+
+- PhotometerPanel como composited de PhotmeterInfoPanel, PhotometerStatusPanel y PhotometerStatsPanel
+
+
 - Preferences:
   *. lectira inicial y mapeos
 - DAO de ssioness de batch_t

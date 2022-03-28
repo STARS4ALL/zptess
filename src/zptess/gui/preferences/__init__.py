@@ -83,8 +83,8 @@ class Preferences(tk.Toplevel):
         ref_frame = RefPhotometerFrame(
             notebook,
             label         = _("Reference Photometer"),
-            initial_event = "referece_info_load_req",
-            save_event    = "referece_info_save_req",
+            initial_event = "ref_config_load_req",
+            save_event    = "ref_config_save_req",
             cancel_event  = None,
         )
         ref_frame.pack(fill='both', expand=True)
@@ -92,8 +92,8 @@ class Preferences(tk.Toplevel):
         test_frame = TestPhotometerFrame(
             notebook,
             label         = _("Test Photometer"),
-            initial_event = "referece_info_load_req",
-            save_event    = "referece_info_save_req",
+            initial_event = "test_config_load_req",
+            save_event    = "test_config_save_req",
             cancel_event  = None,
         )
         test_frame.pack(fill='both', expand=True)

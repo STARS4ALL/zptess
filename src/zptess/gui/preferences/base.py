@@ -99,9 +99,9 @@ class StatisticsWidget(ttk.LabelFrame):
 
     def get(self):
         return {
-            'central': self._central,
-            'samples': self._samples,
-            'period' : self._period
+            'central': self._central.get(),
+            'samples': self._samples.get(),
+            'period' : self._period.get()
         }
     
 class CommunicationsWidget(ttk.LabelFrame):
@@ -216,14 +216,14 @@ class BasePreferencesFrame(ttk.Frame):
     # ------------
     # Save Control
     # ------------
-
+    
     # When pressing the save button
     def onSaveButton(self):
-        pass
+        raise NotImplementedError()
 
     # response from controller to save button
     def saveOkResp(self):
-       pass
+       raise NotImplementedError()
 
     # --------------
     # Cancel Control

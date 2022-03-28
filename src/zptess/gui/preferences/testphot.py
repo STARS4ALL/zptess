@@ -82,3 +82,4 @@ class TestPhotometerFrame(BasePreferencesFrame):
         config['test-device'] = self.comms.get()
         config['test-device']['model'] = self._model.get()
         pub.sendMessage('test_config_save_req',config=config)
+        pub.sendMessage('gui_preferences_close')

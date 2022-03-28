@@ -211,10 +211,10 @@ class MainFrame(ttk.Frame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.testPanel = PhotometerPanel(self, text="Test Photometer")
-        self.testPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=0)
-        self.refPanel = PhotometerPanel(self, text="Reference Photometer")
-        self.refPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=0)
+        self.testPanel = PhotometerPanel(self, text= _("Test Photometer"))
+        self.testPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=10, ipadx=5, ipady=5)
+        self.refPanel = PhotometerPanel(self, text= _("Reference Photometer"))
+        self.refPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=10)
 
     def start(self):
         pass

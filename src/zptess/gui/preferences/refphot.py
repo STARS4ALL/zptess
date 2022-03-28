@@ -180,5 +180,4 @@ class RefPhotometerFrame(BasePreferencesFrame):
         config2 = self.devinfo.get()
         config['ref-device'] = {**config1, **config2, "model":self._model.get()}
         pub.sendMessage(self._save_event, config=config)
-        pub.sendMessage('gui_preferences_close')
-       
+      

@@ -80,15 +80,6 @@ class Preferences(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.close)
         notebook = ttk.Notebook(self)
         notebook.pack(fill='both', expand=True)
-        ref_frame = RefPhotometerFrame(
-            notebook,
-            label         = _("Reference Photometer"),
-            initial_event = "ref_config_load_req",
-            save_event    = "ref_config_save_req",
-            cancel_event  = None,
-        )
-        ref_frame.pack(fill='both', expand=True)
-        notebook.add(ref_frame, text= _("Reference Photometer"))
         test_frame = TestPhotometerFrame(
             notebook,
             label         = _("Test Photometer"),
@@ -98,6 +89,15 @@ class Preferences(tk.Toplevel):
         )
         test_frame.pack(fill='both', expand=True)
         notebook.add(test_frame, text= _("Test Photometer"))
+        ref_frame = RefPhotometerFrame(
+            notebook,
+            label         = _("Reference Photometer"),
+            initial_event = "ref_config_load_req",
+            save_event    = "ref_config_save_req",
+            cancel_event  = None,
+        )
+        ref_frame.pack(fill='both', expand=True)
+        notebook.add(ref_frame, text= _("Reference Photometer"))
         self.notebook       = notebook
         self.referenceFrame = ref_frame
         self.testFrame      = test_frame

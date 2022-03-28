@@ -102,9 +102,24 @@ class PreferencesController:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
 
-    def onRefConfigSaveReq(self):
-        raise NotImplementedError
 
-    def onTestConfigSaveReq(self):
-        raise NotImplementedError
+    @inlineCallbacks
+    def onRefConfigSaveReq(self, config):
+        try:
+            yield self.config.saveSection('ref-stats', config['ref-stats'])
+            yield self.config.saveSection('ref-device', config['ref-device'])
+            self.view.menuBar.preferences.referenceFrame.saveOkResp()
+        except Exception as e:
+            log.failure('{e}',e=e)
+            pub.sendMessage('quit', exit_code = 1)
+
+    @inlineCallbacks
+    def onTestConfigSaveReq(self, config):
+        try:
+            yield self.config.saveSection('test-stats', config['test-stats'])
+            yield self.config.saveSection('test-device', config['test-device'])
+            self.view.menuBar.preferences.testFrame.saveOkResp()
+        except Exception as e:
+            log.failure('{e}',e=e)
+            pub.sendMessage('quit', exit_code = 1)
 

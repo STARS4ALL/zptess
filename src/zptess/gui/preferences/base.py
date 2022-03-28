@@ -125,7 +125,7 @@ class CommunicationsWidget(ttk.LabelFrame):
         widget = ttk.Radiobutton(comm_frame, text=_("UDP"), variable=self._method, command=self.changeLabels, value="udp")
         widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
         comm_frame.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=2)
-        widget = ttk.Checkbutton(left_frame, text= _("Old protocol"))
+        widget = ttk.Checkbutton(left_frame, text= _("Old protocol"),  variable=self._old_proto)
         widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=2, pady=6)
         ToolTip(widget, _("use old style messages instead of JSON messages"))
         left_frame.pack(side=tk.LEFT,fill=tk.BOTH,  padx=0, pady=0)
@@ -162,6 +162,7 @@ class CommunicationsWidget(ttk.LabelFrame):
         self._method.set(proto)
         self._addr.set(addr)
         self._port.set(port)
+        self._old_proto.set(values['old_proto'])
         self.changeLabels()
 
     def get(self):
@@ -219,11 +220,14 @@ class BasePreferencesFrame(ttk.Frame):
     
     # When pressing the save button
     def onSaveButton(self):
+        '''To be subclassed'''
         raise NotImplementedError()
 
     # response from controller to save button
     def saveOkResp(self):
-       raise NotImplementedError()
+        '''May be subclassed'''
+        pub.sendMessage('gui_preferences_close')
+
 
     # --------------
     # Cancel Control

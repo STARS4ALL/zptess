@@ -30,6 +30,7 @@ from zptess import SQL_SCHEMA, SQL_INITIAL_DATA_DIR, SQL_UPDATES_DATA_DIR
 
 from zptess.logger import setLogLevel
 from zptess.dbase import tables
+from zptess.dbase.batch import BatchTable
 
 # ----------------
 # Module constants
@@ -105,7 +106,7 @@ class DataAccesObject():
             log_level           = 'info',
         )
 
-        self.batch = tables.Table(
+        self.batch = BatchTable(
             pool                = self.pool, 
             table               = 'batch_t',
             id_column           = 'rowid',

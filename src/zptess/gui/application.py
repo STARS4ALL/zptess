@@ -43,7 +43,7 @@ from zptess import __version__
 
 from zptess.logger import setLogLevel
 
-# from zptess.gui.widgets.contrib import ToolTip
+from zptess.gui.widgets.contrib import ToolTip
 # from zptess.gui.widgets.combos  import ROICombo, CameraCombo, ObserverCombo, LocationCombo
 # from zptess.gui.widgets.consent import ConsentDialog
 # from zptess.gui.widgets.date import DateFilterDialog
@@ -78,7 +78,7 @@ class Application(tk.Tk):
         super().__init__(*args, **kwargs)
         self.title(f'ZPTESS {__version__}')
         self.protocol('WM_DELETE_WINDOW', self.quit)
-        self.geometry("800x600+0+0")
+        #self.geometry("800x600+0+0")
         self.build()
         
     def quit(self):
@@ -88,15 +88,15 @@ class Application(tk.Tk):
     def start(self):
         self.menuBar.start()
         self.mainArea.start()
-        #self.statusBar.start()
+        self.statusBar.start()
         
     def build(self):
         self.menuBar  = MenuBar(self)
         self.menuBar.pack(side=tk.TOP, fill=tk.X, expand=True,  padx=10, pady=5)
         self.mainArea  = MainFrame(self)
         self.mainArea.pack(side=tk.TOP, fill=tk.X, expand=True,  padx=10, pady=5)
-        #self.statusBar = StatusBar(self)
-        #self.statusBar.pack(side=tk.TOP, fill=tk.X, expand=True,  padx=10, pady=5)
+        self.statusBar = StatusBar(self)
+        self.statusBar.pack(side=tk.TOP, fill=tk.X, expand=True,  padx=10, pady=5)
 
     # ----------------
     # Error conditions
@@ -220,8 +220,6 @@ class MainFrame(ttk.Frame):
     def build(self):
         pass
 
-     
-
 
 class StatusBar(ttk.Frame):
 
@@ -230,14 +228,36 @@ class StatusBar(ttk.Frame):
         self.build()
 
     def start(self):
-        pass
+        pub.sendMessage('status_bar_req')
 
     def build(self):
         # Process status items
-        pass
+        self.batch_start = tk.StringVar()
+        widget = ttk.Label(self, textvariable=self.batch_start, justify=tk.LEFT, width=30, borderwidth=1, relief=tk.SUNKEN)
+        widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
+        ToolTip(widget, text=_("Last batch start timestamp"))
+
+        self.batch_end = tk.StringVar()
+        widget = ttk.Label(self, textvariable=self.batch_end, justify=tk.LEFT, width=30, borderwidth=1, relief=tk.SUNKEN)
+        widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
+        ToolTip(widget, text=_("Last batch end timestamp"))
+
+        self.batch_number = tk.StringVar()
+        widget = ttk.Label(self, textvariable=self.batch_number, justify=tk.RIGHT, width=3, borderwidth=1, relief=tk.SUNKEN)
+        widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
+        ToolTip(widget, text=_("Photometers calibrated"))
+
+        self.emailed = tk.StringVar()
+        widget = ttk.Label(self, textvariable=self.emailed, justify=tk.LEFT, width=12, borderwidth=1, relief=tk.SUNKEN)
+        widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
+        ToolTip(widget, text=_("Was batch emailed?"))
 
     def clear(self):
         pass
 
-    def update(self, what, detail, progress, error=False):
-        pass
+    def set(self, batch_info):
+        N = batch_info['calibrations']
+        self.batch_start.set(f"Started @ {batch_info['begin_tstamp']}")
+        self.batch_end.set(f"Ended @ {batch_info['end_tstamp']}")
+        self.batch_number.set(N if N else 0)
+        self.emailed.set("Emailed" if batch_info['email_sent'] else "Not Emailed")

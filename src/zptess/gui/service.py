@@ -39,6 +39,7 @@ from zptess.dbase.service   import DatabaseService
 from zptess.gui.application import Application
 from zptess.gui.controller.application import ApplicationController
 from zptess.gui.controller.preferences import PreferencesController
+from zptess.gui.controller.statusbar import StatusBarController
 
 
 # ----------------
@@ -96,6 +97,11 @@ class GraphicalService(Service):
                 view    = self.application, 
                 model   = self.dbaseService.dao.config,
             ),
+            StatusBarController(
+                parent  = self, 
+                view    = self.application, 
+                model   = self.dbaseService.dao,
+            )
         )
 
         tksupport.install(self.application)

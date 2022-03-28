@@ -19,6 +19,9 @@ SHORT TERM
       - abajo con gestion del batch (combo box con acciones abrir, cerrar, exportar y purgar)
    - Status bar: con el estado del batch (fechas, y emailed flags)
 
+* Implementar en el GUI habliltar y desabilitar TCP/UDP opciones cuando
+el modelo de TESSW es TAS o TESS-P. para loas ttk hay que hacerlo a través de los estilos
+poque no tiene la opcion de 'state'
 
 * Pending bug fixes:
   zptool.utils.paging() no funciona en estos caso:

@@ -70,3 +70,15 @@ class TestPhotometerFrame(BasePreferencesFrame):
         self.stats.pack(side=tk.TOP, fill=tk.BOTH, expand=False, padx=2, pady=2)
         self.comms = CommunicationsWidget(container)
         self.comms.pack(side=tk.TOP, fill=tk.BOTH, expand=False, ipadx=4, ipady=2, padx=2, pady=2)
+
+    # ------------
+    # Save Control
+    # ------------
+
+    # When pressing the save button
+    def onSaveButton(self):
+        config = dict()
+        config['test-stats'] = self.stats.get()
+        config['test-device'] = self.comms.get()
+        config['test-device']['model'] = self._model.get()
+        pub.sendMessage('test_config_save_req',config=config)

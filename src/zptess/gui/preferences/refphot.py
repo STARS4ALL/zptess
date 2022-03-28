@@ -165,4 +165,12 @@ class RefPhotometerFrame(BasePreferencesFrame):
         self.comms.pack(side=tk.TOP, fill=tk.BOTH, expand=False, ipadx=4, ipady=2, padx=2, pady=2)
         self.devinfo = DeviceInfoWidget(container)
         self.devinfo.pack(side=tk.TOP, fill=tk.BOTH, expand=False, ipadx=2, ipady=4, padx=2, pady=2)
+
+    # When pressing the save button
+    def onSaveButton(self):
+        config = dict()
+        config['ref-stats'] = self.stats.get()
+        config['ref-device'] = self.comms.get()
+        config['ref-device']['model'] = self._model.get()
+        pub.sendMessage('ref_config_save_req',config=config)
        

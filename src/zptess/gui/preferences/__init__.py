@@ -21,6 +21,8 @@ from   tkinter import ttk
 # Third party imports
 # -------------------
 
+from pubsub import pub
+
 # ---------------
 # Twisted imports
 # ---------------
@@ -63,10 +65,11 @@ class Preferences(tk.Toplevel):
         self._owner = owner
         self.build()
         self.grab_set()
+        pub.subscribe(self.close, 'gui_preferences_close')
 
     def start(self):
         self.referenceFrame.start()
-        #self.testFrame.start()
+        self.testFrame.start()
         
     def close(self):
         self._owner.preferences = None

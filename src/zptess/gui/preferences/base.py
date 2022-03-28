@@ -201,7 +201,6 @@ class BasePreferencesFrame(ttk.Frame):
         container_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True,  padx=10, pady=5)
         self._container = container_frame
 
-
         bottom_frame = ttk.Frame(self)
         bottom_frame.pack(side=tk.BOTTOM, expand=True, fill=tk.X, padx=10, pady=5)
 
@@ -232,10 +231,6 @@ class BasePreferencesFrame(ttk.Frame):
 
     # When pressing the delete button
     def onCancelButton(self):
-       pass
-
-    # Ok response to delete request
-    def deleteOkResponse(self, count):
-       pass
+       pub.sendMessage('gui_preferences_close')
 
  

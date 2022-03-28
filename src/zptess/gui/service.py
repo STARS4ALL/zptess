@@ -38,6 +38,7 @@ from zptess.logger  import setLogLevel
 from zptess.dbase.service   import DatabaseService
 from zptess.gui.application import Application
 from zptess.gui.controller.application import ApplicationController
+from zptess.gui.controller.preferences import PreferencesController
 
 
 # ----------------
@@ -90,10 +91,12 @@ class GraphicalService(Service):
                 view    = self.application, 
                 model   = self.dbaseService.dao,
             ),
-            
+            PreferencesController(
+                parent  = self, 
+                view    = self.application, 
+                model   = self.dbaseService.dao.config,
+            ),
         )
-        # Dirty monkey patching
-        
 
         tksupport.install(self.application)
         #self.task.start(3, now=False) # call every T seconds

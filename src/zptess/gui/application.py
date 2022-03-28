@@ -197,6 +197,7 @@ class MenuBar(ttk.Frame):
     def onMenuAboutVersion(self):
         pub.sendMessage('database_version_req')
 
+
     def onMenuPreferences(self):
         preferences = Preferences(self)
         self.preferences = preferences

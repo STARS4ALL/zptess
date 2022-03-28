@@ -158,7 +158,7 @@ class CommunicationsWidget(ttk.LabelFrame):
             self._port_w.configure(text= _("UDP Port"))
 
     def set(self, values):
-        proto, addr, port = chop(values['endpoint'])
+        proto, addr, port = chop(values['endpoint'], sep=':')
         self._method.set(proto)
         self._addr.set(addr)
         self._port.set(port)

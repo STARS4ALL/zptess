@@ -63,6 +63,11 @@ class TestPhotometerFrame(BasePreferencesFrame):
     def start(self):
         pub.sendMessage(self._initial_event)
 
+    def set(self, config):
+        self._model.set(config['model'])
+        self.stats.set(config)
+        self.comms.set(config)
+
     def build(self):
         super().build()
         container = self._container

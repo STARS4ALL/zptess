@@ -200,7 +200,7 @@ class PhotometerPanel(ttk.LabelFrame):
         self.progress.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
         self.stats = PhotometerStatsPanel(self)
         self.stats.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Checkbutton(self, text= _("Edit"), variable=self._enable, command=self.onEnablePanel)
+        widget = ttk.Checkbutton(self, text= self._text, variable=self._enable, command=self.onEnablePanel)
         self.configure(labelwidget=widget) 
 
     def onEnablePanel(self):

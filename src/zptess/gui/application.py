@@ -42,17 +42,11 @@ from twisted.internet import defer, threads
 from zptess import __version__
 
 from zptess.logger import setLogLevel
-
-from zptess.gui.widgets.contrib import ToolTip
-from zptess.gui.widgets.photpanel import PhotometerPanel
-# from zptess.gui.widgets.combos  import ROICombo, CameraCombo, ObserverCombo, LocationCombo
-# from zptess.gui.widgets.consent import ConsentDialog
-# from zptess.gui.widgets.date import DateFilterDialog
-from zptess.gui.preferences import Preferences
-
 from zptess.gui import ABOUT_DESC_TXT, ABOUT_ACK_TXT, ABOUT_IMG, ABOUT_ICONS
+from zptess.gui.preferences import Preferences
+from zptess.gui.widgets.contrib import ToolTip
+from zptess.gui.widgets.photpanel import PhotometerPanel, CalibrationPanel
 from zptess.gui.widgets.about import AboutDialog
-from zptess.gui.preferences   import Preferences
 
 # ----------------
 # Module constants
@@ -211,10 +205,18 @@ class MainFrame(ttk.Frame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.testPanel = PhotometerPanel(self, text= _("Test Photometer"))
+        left_panel = ttk.Frame(self)
+        left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, pady=0, ipadx=0, ipady=0)
+        right_panel = ttk.Frame(self)
+        right_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, pady=0, ipadx=0, ipady=0)
+
+        self.testPanel = PhotometerPanel(left_panel, text= _("Test Photometer"))
         self.testPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=10, ipadx=5, ipady=5)
-        self.refPanel = PhotometerPanel(self, text= _("Reference Photometer"))
+        self.refPanel = PhotometerPanel(left_panel, text= _("Reference Photometer"))
         self.refPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=10)
+
+        self.calibPanel = CalibrationPanel(right_panel)
+        self.calibPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=0)
 
     def start(self):
         pass

@@ -126,8 +126,6 @@ class DatabaseService(Service):
         self.path = path
         self.getPoolFunc = getPool
         self.create_only = create_only
-        self.test_mode = True # Assume a safe position
-        
 
     #------------
     # Service API
@@ -137,6 +135,7 @@ class DatabaseService(Service):
     def startService(self):
         setLogLevel(namespace=NAMESPACE, levelStr='warn')
         self.session       = None
+        self.test_mode     = True # Assume a safe position
         self.refSamples    = list()
         self.testSamples   = list()
         self.refRounds     = list()
@@ -197,7 +196,7 @@ class DatabaseService(Service):
       
         self.session = None
         if self.test_mode:
-            log.warn("Database is not being updated")
+            log.warn("Test mode: Database is not being updated")
         else:
             yield self._flush()
         self.closePool()
@@ -237,6 +236,8 @@ class DatabaseService(Service):
 
 
     def onSummaryStatInfo(self, role, stats_info):
+        if self.session is None:    # Discard summary info info not bound to sessions
+            return
         stats_info['model']    = self.phot[role]['info']['model']
         stats_info['name']     = self.phot[role]['info']['name']
         stats_info['mac']      = self.phot[role]['info']['mac']

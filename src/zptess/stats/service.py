@@ -97,14 +97,14 @@ class CircularBuffer(object):
     def getProgressInfo(self):
         ring  = self._buffer
         freq_offset = self._freq_offset
-        begin_tstamp= ring[0]['tstamp']
-        end_tstamp  = ring[-1]['tstamp']
+        begin_tstamp= ring[0]['tstamp']  if len(ring) else None
+        end_tstamp  = ring[-1]['tstamp'] if len(ring) else None
         return {
             'nsamples': self._nsamples,
             'current' : len(self._buffer),
             'begin_tstamp': begin_tstamp,
             'end_tstamp'  : end_tstamp,
-            'duration': (end_tstamp - begin_tstamp).total_seconds()
+            'duration': (end_tstamp - begin_tstamp).total_seconds() if begin_tstamp is not None else None
         }
 
     def getStats(self):

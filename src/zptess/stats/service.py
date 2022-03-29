@@ -11,6 +11,7 @@
 import sys
 import datetime
 import math
+import random
 import statistics
 
 from collections import deque
@@ -90,10 +91,25 @@ class CircularBuffer(object):
     def write(self, data):
         self._buffer.append(data)
 
+    def isFull(self):
+        return not len(self._buffer) < self._nsamples
+
+    def getProgressInfo(self):
+        ring  = self._buffer
+        freq_offset = self._freq_offset
+        begin_tstamp= ring[0]['tstamp']
+        end_tstamp  = ring[-1]['tstamp']
+        return {
+            'nsamples': self._nsamples,
+            'current' : len(self._buffer),
+            'begin_tstamp': begin_tstamp,
+            'end_tstamp'  : end_tstamp,
+            'duration': (end_tstamp - begin_tstamp).total_seconds()
+        }
+
     def getStats(self):
         ring        = self._buffer
-        if len(ring) < self._nsamples:      # Not yet there ...
-            return dict()
+        N           = len(self._buffer)
         zp_fict     = self._zp_fict
         central     = self._central
         freq_offset = self._freq_offset
@@ -115,6 +131,7 @@ class CircularBuffer(object):
         else: 
             stats_info = {
                 'nsamples'    : self._nsamples,
+                'current'     : N,
                 'central'     : central,
                 'zp_fict'     : zp_fict,
                 'begin_tstamp': begin_tstamp, # native datetime object
@@ -135,6 +152,7 @@ class CircularBuffer(object):
 class StatisticsService(Service):
 
     NAME    = 'Statistics Service'
+    T       = 1.50    # Progress task period
 
     def __init__(self, options, isRef, alone):
         self.options = options
@@ -177,13 +195,10 @@ class StatisticsService(Service):
         )
         pub.subscribe(self.onSampleReceived, 'phot_sample')
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
-        self.statTask = task.LoopingCall(self._schedule)
-        if self._role == 'test':
-            reactor.callLater(self._period/2, self.statTask.start, self._period, now=False)
-            #self.statTask.start(self._period, now=False)  # call every T seconds
-        else:
-            self.statTask.start(self._period, now=False)  # call every T seconds
-
+        self.statTask = task.LoopingCall(self._compute)
+        self.progressTask = task.LoopingCall(self._progress)
+        t = random.uniform(0, self.T/2)
+        reactor.callLater(t, self.progressTask.start, self.T, now=False)
 
     def stopService(self):
         self.log.info("[{label:4s}] {name:8s} Stopping {service}",
@@ -193,6 +208,8 @@ class StatisticsService(Service):
         )
         pub.unsubscribe(self.onSampleReceived, 'phot_sample')
         pub.unsubscribe(self.onPhotometerInfo, 'phot_info')
+        if self.progressTask.running:
+            self.progressTask.stop()
         if self.statTask.running:
             self.statTask.stop()
         return defer.succeed(None)
@@ -223,41 +240,47 @@ class StatisticsService(Service):
         if role == self._role:
             self._buffer.write(sample) # Stores samples from its own device
 
+
+    def _progress(self):
+        '''Progress task'''
+        if self._buffer.isFull() and self.progressTask.running:
+            self.progressTask.stop() # Self stop this task
+            self.statTask.start(self._period, now=True)
+            return
+        stats_info = self._buffer.getProgressInfo()
+        stats_info['name'] = '?????' if not self._dev_name else self._dev_name
+        stats_info['role'] = self._role
+        self.log.info('[{label:4s}] {name:8s} waiting for enough samples, {pend} remaining', 
+                label = self._label, 
+                name = stats_info['name'], 
+                pend = stats_info['nsamples'] - stats_info['current'],
+        )
+        pub.sendMessage('stats_progress', role=self._role, stats_info=stats_info)
+        
+
     @inlineCallbacks
-    def _schedule(self):  
+    def _compute(self): 
+        '''Compute statistics task''' 
         stats_info = yield deferToThread(self._buffer.getStats)
         if stats_info is None:
             return
-        if not stats_info:
-            stats_info['name'] = '?????' if not self._dev_name else self._dev_name
-            stats_info['role'] = self._role
-            stats_info['size'] = self._samples
-            stats_info['current'] = self._buffer.curSize()
-            self.log.info('[{label:4s}] {name:8s} waiting for enough samples, {pend} remaining', 
-                label = self._label, 
-                name = stats_info['name'], 
-                pend = stats_info['size'] - stats_info['current'],
-
-            )
-            pub.sendMessage('stats_progress', role=self._role, stats_info=stats_info)
-        else:
-            stats_info['name'] = self._dev_name
-            stats_info['role'] = self._role
-            stats_info['zp_fict'] = self._zp_fict
-            self.log.info("[{label:4s}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] {central:6s} f = {cFreq:0.3f} Hz, \u03C3 = {sFreq:0.3f} Hz, m = {cMag:0.2f} @ {zp:0.2f}",
-                label   = self._label, 
-                name    = stats_info['name'], 
-                start   = stats_info['begin_tstamp'].strftime("%H:%M:%S"),
-                end     = stats_info['end_tstamp'].strftime("%H:%M:%S"), 
-                sz      = stats_info['nsamples'],
-                zp      = stats_info['zp_fict'], 
-                central = stats_info['central'],
-                cFreq   = stats_info['freq'], 
-                cMag    = stats_info['mag'], 
-                sFreq   = stats_info['stddev'],
-                w       = stats_info['duration']
-            )
-            pub.sendMessage('stats_info', role=self._role, stats_info=stats_info)
+        stats_info['name'] = self._dev_name
+        stats_info['role'] = self._role
+        stats_info['zp_fict'] = self._zp_fict
+        self.log.info("[{label:4s}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] {central:6s} f = {cFreq:0.3f} Hz, \u03C3 = {sFreq:0.3f} Hz, m = {cMag:0.2f} @ {zp:0.2f}",
+            label   = self._label, 
+            name    = stats_info['name'], 
+            start   = stats_info['begin_tstamp'].strftime("%H:%M:%S"),
+            end     = stats_info['end_tstamp'].strftime("%H:%M:%S"), 
+            sz      = stats_info['nsamples'],
+            zp      = stats_info['zp_fict'], 
+            central = stats_info['central'],
+            cFreq   = stats_info['freq'], 
+            cMag    = stats_info['mag'], 
+            sFreq   = stats_info['stddev'],
+            w       = stats_info['duration']
+        )
+        pub.sendMessage('stats_info', role=self._role, stats_info=stats_info)
 
 
     # --------------

@@ -75,7 +75,7 @@ class CommandLineService(MultiService):
         setLogLevel(namespace=NAMESPACE, levelStr='info')
         self._cmd_options = vars(options)
         self._test_transport_method = None
-       
+        log.info("{o}",o=self._cmd_options)
     #------------
     # Service API
     # ------------
@@ -84,7 +84,7 @@ class CommandLineService(MultiService):
         # 'zptess' calzado a pelo poque parece que no se captura de la command line
         log.warn("zptess {full_version}",full_version=FULL_VERSION_STRING)
         self.dbaseServ = self.parent.getServiceNamed(DatabaseService.NAME)
-        self.dbaseServ.setTestMode(options['test_mode'])
+        self.dbaseServ.setTestMode(self._cmd_options['test'])
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
         pub.subscribe(self.onCalibrationEnd, 'calib_end')
         pub.subscribe(self.onPhotometerOffline, 'phot_offline')
@@ -134,13 +134,13 @@ class CommandLineService(MultiService):
         if info is None:
             log.warn("[{label}] No photometer info available. Is it Connected?", label=label)
         else:
-            log.info("[{label}] Role      : {value}", label=label, value=info['role'])
-            log.info("[{label}] Model     : {value}", label=label, value=info['model'])
-            log.info("[{label}] Name      : {value}", label=label, value=info['name'])
-            log.info("[{label}] MAC       : {value}", label=label, value=info['mac'])
-            log.info("[{label}] Zero Point: {value:.02f} (old)", label=label, value=info['zp'])
-            log.info("[{label}] Dark Freq.: {value}", label=label, value=info['freq_offset'])
-            log.info("[{label}] Firmware  : {value}", label=label, value=info['firmware'])
+            log.info("[{label}] Role         : {value}", label=label, value=info['role'])
+            log.info("[{label}] Model        : {value}", label=label, value=info['model'])
+            log.info("[{label}] Name         : {value}", label=label, value=info['name'])
+            log.info("[{label}] MAC          : {value}", label=label, value=info['mac'])
+            log.info("[{label}] Zero Point   : {value:.02f} (old)", label=label, value=info['zp'])
+            log.info("[{label}] Offset Freq. : {value}", label=label, value=info['freq_offset'])
+            log.info("[{label}] Firmware     : {value}", label=label, value=info['firmware'])
       
     # ==============
     # Helper methods
@@ -158,9 +158,7 @@ class CommandLineService(MultiService):
         self.buildPhotometer(isRef=False, prefix=TEST)
 
     def build(self):
-        if self._cmd_options['create']:
-            pass
-        elif self._cmd_options['dry_run']:
+        if self._cmd_options['dry_run']:
             self.buildPhotometer(isRef=False, prefix=TEST)
         elif self._cmd_options['write_zero_point']:
             self.buildPhotometer(isRef=False, prefix=TEST)

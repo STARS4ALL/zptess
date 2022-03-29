@@ -211,7 +211,7 @@ class DatabaseService(Service):
     # OPERATIONAL API
     # ---------------
 
-    def setTestMode(test_mode):
+    def setTestMode(self, test_mode):
         self.test_mode   = test_mode
     
     def getInitialConfig(self, section):

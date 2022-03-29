@@ -59,6 +59,9 @@ class PhotometerInfoPanel(ttk.Frame):
         self._freq_offset = tk.DoubleVar()
         self.build()
 
+    def start(self):
+        pass
+
     def build(self):  
 
         widget = ttk.Label(self, text= _("Name"))
@@ -105,6 +108,9 @@ class PhotometerProgressPanel(ttk.Frame):
         self._end_t    = tk.StringVar()
         self._window   = tk.StringVar()
         self.build()
+
+    def start(self):
+        pass
 
     def build(self):  
 
@@ -157,13 +163,16 @@ class PhotometerStatsPanel(ttk.Frame):
         self._mag     = tk.DoubleVar()
         self.build()
 
+    def start(self):
+        pass
+
     def build(self):
         widget = ttk.Label(self, width=10, text= _("Freq. (Hz)"))
         widget.grid(row=0, column=0, padx=0, pady=2, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._freq, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=0, column=1, padx=0, pady=2, sticky=tk.W)
 
-        widget = ttk.Label(self, width=10, text= _("\u03C3. (Hz)"))
+        widget = ttk.Label(self, width=10, text= _("\u03C3 (Hz)"))
         widget.grid(row=1, column=0, padx=0, pady=2, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._stddev, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=1, column=1, padx=0, pady=2, sticky=tk.W)
@@ -195,6 +204,11 @@ class PhotometerPanel(ttk.LabelFrame):
         self._enable = tk.BooleanVar()
         self.build()
 
+    def start(self):
+        self.info.start()
+        self.progress.start()
+        self.stats.start()
+
     def build(self):
         self.info = PhotometerInfoPanel(self)
         self.info.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=2)
@@ -222,6 +236,9 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         self._update_phot = tk.BooleanVar()
         self._dry_run = tk.BooleanVar()
         self.build()
+
+    def start(self):
+        pub.sendMessage('load_calib_config_req')
 
     def invalid_zp_off(self):
         self._zp_offset.set(0)
@@ -257,7 +274,17 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         widget.grid(row=3, column=0, columnspan=3, padx=2, pady=4)
 
     def onClickButton(self):
-        pass
+        config = {
+            'author': self._author.get(),
+            'rounds': self._rounds.get(),
+            'offset': self._zp_offset.get(),
+        }
+        pub.sendMessage('save_calib_config_req', config=config)
+
+    def set(self, config):
+        self._author.set(config['author'])
+        self._rounds.set(config['rounds'])
+        self._zp_offset.set(config['offset'])
 
 class CalibrationStatePanel(ttk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
@@ -274,6 +301,9 @@ class CalibrationStatePanel(ttk.LabelFrame):
         self._zp_fict.set("@ 20.50")
         self.build()
 
+    def start(self):
+        pass
+
     def build(self):
         left_frame = ttk.LabelFrame(self,text= _("Round"))
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=2, pady=2, ipadx=0, ipady=0)
@@ -283,7 +313,7 @@ class CalibrationStatePanel(ttk.LabelFrame):
         widget = ttk.Label(left_frame, width=4, textvariable=self._round, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.W)
 
-        widget = ttk.Label(left_frame, width=6, text= _("\u0394. Mag."))
+        widget = ttk.Label(left_frame, width=6, text= _("\u0394 Mag."))
         widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
         widget = ttk.Label(left_frame, width=4, textvariable=self._magdif, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.W)
@@ -320,9 +350,12 @@ class CalibrationStatePanel(ttk.LabelFrame):
 
 class BatchManagemetPanel(ttk.LabelFrame): 
     def __init__(self, parent, *args, **kwargs):
-        super().__init__(parent, *args, text=_("Batches"), **kwargs)
+        super().__init__(parent, *args, text=_("Batches"), borderwidth=4, **kwargs)
         self._command = tk.StringVar()
         self.build()
+
+    def start(self):
+        pass
 
     def build(self):
         widget = ttk.Combobox(self, state='readonly', textvariable=self._command, values=("Open Batch","Close Batch","Purge Batch"))
@@ -339,19 +372,35 @@ class CalibrationPanel(ttk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, text="Fix me", borderwidth=4, **kwargs)
         self._enable = tk.BooleanVar()
+        self._text   = tk.StringVar()
         self.build()
+
+    def start(self):
+        self.settings.start()
 
     def build(self):
         self.settings = CalibrationSettingsPanel(self)
         self.settings.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
         self.state = CalibrationStatePanel(self)
-        self.state.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
-        self.batches = BatchManagemetPanel(self)
-        self.batches.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
+        self.state.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)        
         widget = ttk.Checkbutton(self, text= _("Calibration"), variable=self._enable, command=self.onEnablePanel)
         self.configure(labelwidget=widget)
+        self._text.set(_("Start"))
+        widget = ttk.Button(self, textvariable=self._text, command=self.onClickButton)
+        widget.pack(side=tk.TOP,  padx=10, pady=5)
+
+    def onClickButton(self):
+        if self._text.get() == ("Start"):
+            pub.sendMessage('start_calibration_req')
+            self._text.set(_("Stop"))
+        else:
+            pub.sendMessage('stop_calibration_req')
+            self._text.set(_("Start"))
 
     def onEnablePanel(self):
-        pub.sendMessage('start_calibration_req')
+        if self._enable.get():
+            pub.sendMessage('start_calibration_req')
+        else:
+            pub.sendMessage('stop_calibration_req')
 
 

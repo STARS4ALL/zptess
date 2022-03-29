@@ -136,7 +136,7 @@ class HTMLPhotometer:
         result['firmware'] = matchobj.groups(1)[0]
         firmware = result['firmware']
         if firmware in self.CONFLICTIVE_FIRMWARE:
-            pub.sendMessage('photometer_firmware', role='test', firmware=firmware) 
+            pub.sendMessage('phot_firmware', role='test', firmware=firmware) 
         return(result)
 
     def onPhotommeterInfoResponse(self, line, tstamp):

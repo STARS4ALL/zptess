@@ -72,7 +72,6 @@ class StatusBarController:
         self.view   = view
         setLogLevel(namespace=NAMESPACE, levelStr='info')
         pub.subscribe(self.onStatusBarRequest, 'status_bar_req')
-        reactor.callLater(0, pub.sendMessage, 'status_bar_req')
 
     # --------------
     # Event handlers

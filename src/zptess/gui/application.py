@@ -45,7 +45,7 @@ from zptess.logger import setLogLevel
 from zptess.gui import ABOUT_DESC_TXT, ABOUT_ACK_TXT, ABOUT_IMG, ABOUT_ICONS
 from zptess.gui.preferences import Preferences
 from zptess.gui.widgets.contrib import ToolTip
-from zptess.gui.widgets.photpanel import PhotometerPanel, CalibrationPanel
+from zptess.gui.widgets.photpanel import PhotometerPanel, CalibrationPanel, BatchManagemetPanel
 from zptess.gui.widgets.about import AboutDialog
 
 # ----------------
@@ -139,10 +139,11 @@ class MenuBar(ttk.Frame):
         self.preferences = None
 
     def start(self):
-        pub.sendMessage('observer_list_req')
-        pub.sendMessage('location_list_req')
-        pub.sendMessage('camera_list_req')
-        pub.sendMessage('roi_list_req')
+        pass
+        # pub.sendMessage('observer_list_req')
+        # pub.sendMessage('location_list_req')
+        # pub.sendMessage('camera_list_req')
+        # pub.sendMessage('roi_list_req')
 
     def build(self):
         menu_bar = tk.Menu(self.master)
@@ -218,8 +219,16 @@ class MainFrame(ttk.Frame):
         self.calibPanel = CalibrationPanel(right_panel)
         self.calibPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=0)
 
+        self.batchPanel = BatchManagemetPanel(right_panel)
+        self.batchPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
+
+      
     def start(self):
-        pass
+        self.testPanel.start()
+        self.refPanel.start()
+        self.calibPanel.start()
+        self.batchPanel.start()
+
 
     def build(self):
         pass
@@ -232,7 +241,7 @@ class StatusBar(ttk.Frame):
         self.build()
 
     def start(self):
-        pub.sendMessage('status_bar_req')
+        pub.sendMessage('status_bar_req') # This may be missed, we'll try later in the controller
 
     def build(self):
         # Process status items

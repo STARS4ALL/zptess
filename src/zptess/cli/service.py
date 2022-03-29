@@ -86,20 +86,20 @@ class CommandLineService(MultiService):
         self.dbaseServ = self.parent.getServiceNamed(DatabaseService.NAME)
         self.dbaseServ.setTestMode(options['test_mode'])
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
-        pub.subscribe(self.onCalibrationEnd, 'calibration_end')
-        pub.subscribe(self.onPhotometerOffline, 'photometer_off')
-        pub.subscribe(self.onPhotometerEnd, 'photometer_end')
-        pub.subscribe(self.onPhotometerFrimware, 'photometer_firmware')
+        pub.subscribe(self.onCalibrationEnd, 'calib_end')
+        pub.subscribe(self.onPhotometerOffline, 'phot_offline')
+        pub.subscribe(self.onPhotometerEnd, 'phot_end')
+        pub.subscribe(self.onPhotometerFrimware, 'phot_firmware')
         self.build()
         super().startService()
 
     def stopService(self):
         log.info("Stopping {name}", name=self.name)
         pub.unsubscribe(self.onPhotometerInfo, 'phot_info')
-        pub.unsubscribe(self.onCalibrationEnd, 'calibration_end')
-        pub.unsubscribe(self.onPhotometerOffline, 'photometer_off')
-        pub.unsubscribe(self.onPhotometerEnd, 'photometer_end')
-        pub.unsubscribe(self.onPhotometerFrimware, 'photometer_firmware')
+        pub.unsubscribe(self.onCalibrationEnd, 'calib_end')
+        pub.unsubscribe(self.onPhotometerOffline, 'phot_offline')
+        pub.unsubscribe(self.onPhotometerEnd, 'phot_end')
+        pub.unsubscribe(self.onPhotometerFrimware, 'phot_firmware')
         return super().stopService()
 
     # ---------------

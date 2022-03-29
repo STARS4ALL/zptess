@@ -147,10 +147,10 @@ class DatabaseService(Service):
             'test': {'info': None},
         }
         pub.subscribe(self.onPhotometerInfo,  'phot_info')
-        pub.subscribe(self.onRoundStatInfo,   'round_stats_info')
-        pub.subscribe(self.onSummaryStatInfo, 'summary_stats_info')
+        pub.subscribe(self.onRoundStatInfo,   'calib_round_info')
+        pub.subscribe(self.onSummaryStatInfo, 'calib_summary_info')
         pub.subscribe(self.onSampleReceived,  'phot_sample')
-        pub.subscribe(self.onCalibrationStart,'calibration_begin')
+        pub.subscribe(self.onCalibrationStart,'calib_begin')
 
         connection, new_database = create_database(self.path)
         if new_database:
@@ -190,10 +190,10 @@ class DatabaseService(Service):
     def stopService(self):
         log.info("Stopping {name}", name=self.name)
         pub.unsubscribe(self.onPhotometerInfo,  'phot_info')
-        pub.unsubscribe(self.onRoundStatInfo,   'round_stats_info')
-        pub.unsubscribe(self.onSummaryStatInfo, 'summary_stats_info')
+        pub.unsubscribe(self.onRoundStatInfo,   'calib_round_info')
+        pub.unsubscribe(self.onSummaryStatInfo, 'calib_summary_info')
         pub.unsubscribe(self.onSampleReceived,  'phot_sample')
-        pub.unsubscribe(self.onCalibrationStart,'calibration_begin')
+        pub.unsubscribe(self.onCalibrationStart,'calib_begin')
       
         self.session = None
         if self.test_mode:
@@ -225,7 +225,7 @@ class DatabaseService(Service):
     def onPhotometerInfo(self, role, info):
         self.phot[role]['info'] = info
 
-    def onRoundStatInfo(self, role, stats_info):
+    def onRoundStatInfo(self, role, round, stats_info):
         if self.session is None:    # Discard rounds info not bound to sessions
             return
         stats_info['mac']     = self.phot[role]['info']['mac']

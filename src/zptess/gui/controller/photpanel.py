@@ -60,7 +60,7 @@ log = Logger(namespace=NAMESPACE)
 # Module Classes
 # --------------
 
-class ApplicationController:
+class CalibrationSettingsController:
 
     NAME = NAMESPACE
 
@@ -68,35 +68,30 @@ class ApplicationController:
 
     def __init__(self, parent, view, model):
         self.parent = parent
-        self.model = model
+        self.config = model.config
         self.view = view
         setLogLevel(namespace=NAMESPACE, levelStr='info')
-        pub.subscribe(self.onDatabaseVersionReq, 'database_version_req')
-        pub.subscribe(self.onBootReq, 'bootstrap_req')
+        pub.subscribe(self.onSaveCalibConfigReq, 'save_calib_config_req')
+        pub.subscribe(self.onLoadCalibConfigReq,'load_calib_config_req')
 
     # --------------
     # Event handlers
     # --------------
-
-    def onDatabaseVersionReq(self):
-        try:
-            version = self.model.version
-            uuid = self.model.uuid
-            self.view.menuBar.doAbout(version, uuid)
-        except Exception as e:
-            log.failure('{e}',e=e)
-            pub.sendMessage('quit', exit_code = 1)
-
-
-    def onBootReq(self):
-        try:
-            log.info('starting Application Controller')
-            self.view.start()
-        except Exception as e:
-            log.failure('{e}',e=e)
-            pub.sendMessage('quit', exit_code = 1)
-
-       
-
-       
     
+    @inlineCallbacks
+    def onSaveCalibConfigReq(self, config):
+        try:
+            yield self.config.saveSection('calibration', config)
+        except Exception as e:
+            log.failure('{e}',e=e)
+            pub.sendMessage('quit', exit_code = 1)
+
+ 
+    @inlineCallbacks
+    def onLoadCalibConfigReq(self):
+        try:
+            result = yield self.config.loadSection('calibration')
+            self.view.mainArea.calibPanel.settings.set(result)
+        except Exception as e:
+            log.failure('{e}',e=e)
+            pub.sendMessage('quit', exit_code = 1)

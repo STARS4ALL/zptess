@@ -114,7 +114,7 @@ class CalibrationService(Service):
             'test': None 
         }
         self.session = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).strftime(TSTAMP_SESSION_FMT)
-        pub.sendMessage('calibration_begin', session=self.session)
+        pub.sendMessage('calib_begin', session=self.session)
         pub.subscribe(self.onPhotometerInfo,  'phot_info')
         pub.subscribe(self.onIndividualStats, 'stats_info')
         super().startService()
@@ -151,9 +151,9 @@ class CalibrationService(Service):
                 self.calibrate(stats_ref, stats_test)
         else:
             summary_ref, summary_test = self.summary()
-            pub.sendMessage('summary_stats_info', role='ref', stats_info=summary_ref)
-            pub.sendMessage('summary_stats_info', role='test',stats_info=summary_test)
-            pub.sendMessage('calibration_end')
+            pub.sendMessage('calib_summary_info', role='ref', stats_info=summary_ref)
+            pub.sendMessage('calib_summary_info', role='test',stats_info=summary_test)
+            pub.sendMessage('calib_end')
 
 
     
@@ -190,8 +190,10 @@ class CalibrationService(Service):
             self.best['test_freq'].append(stats_test['freq'])
             stats_ref['zero_point']  = None
             stats_test['zero_point'] = zp
-            pub.sendMessage('round_stats_info', role='ref',  stats_info=stats_ref)
-            pub.sendMessage('round_stats_info', role='test', stats_info=stats_test)
+            stats_ref['mag_diff']  = None
+            stats_test['mag_diff'] = magDiff
+            pub.sendMessage('calib_round_info', role='ref',  round=self.curRound, stats_info=stats_ref)
+            pub.sendMessage('calib_round_info', role='test', round=self.curRound, stats_info=stats_test)
             self.curRound += 1
         elif stats_ref['stddev'] == 0.0 and stats_test['stddev'] != 0.0:
             log.warn('FROZEN {lab}', lab=stats_ref['name'])
@@ -279,11 +281,11 @@ class CalibrationService(Service):
             yield self._accumulateRounds()
             summary_ref, summary_test = self._choose()
             if self.options['update']:
-                pub.sendMessage('update_zero_point', zero_point=summary_test['zero_point'])
+                pub.sendMessage('calib_flash_zp', zero_point=summary_test['zero_point'])
             else:
                 log.info("Not updating ZP to test photometer")
-            pub.sendMessage('summary_stats_info', role='ref', stats_info=summary_ref)
-            pub.sendMessage('summary_stats_info', role='test',stats_info=summary_test)
+            pub.sendMessage('calib_summary_info', role='ref', stats_info=summary_ref)
+            pub.sendMessage('calib_summary_info', role='test',stats_info=summary_test)
             reactor.callLater(0, self.parent.stopService)
    
 

@@ -138,7 +138,7 @@ class PhotometerService(ClientService):
         self.protocol  = None
         self.info      = None # Photometer info
         self.deduplicater = Deduplicater(self.role, self.log)
-        pub.subscribe(self.onUpdateZeroPoint, 'update_zero_point')
+        pub.subscribe(self.onUpdateZeroPoint, 'calib_flash_zp')
         # Async part form here ...
         try:
             self.info = None
@@ -146,18 +146,18 @@ class PhotometerService(ClientService):
             self.info = yield self.getPhotometerInfo()
         except DeferredTimeoutError as e:
             self.log.critical("{excp}",excp=e)
-            pub.sendMessage('photometer_off', role=self.role)
+            pub.sendMessage('phot_offline', role=self.role)
             return(None)
         except ConnectError as e:
             self.log.critical("{excp}",excp=e)
-            pub.sendMessage('photometer_off', role=self.role)
+            pub.sendMessage('phot_offline', role=self.role)
             return(None)
         except Exception as e:
             self.log.failure("{excp}",excp=e)
-            pub.sendMessage('photometer_off', role=self.role)
+            pub.sendMessage('phot_offline', role=self.role)
             return(None)
         if self.info is None:
-            pub.sendMessage('photometer_off', role=self.role)
+            pub.sendMessage('phot_offline', role=self.role)
             return(None)
         pub.sendMessage('phot_info', role=self.role, info=self.info)
         if self.isRef:
@@ -165,11 +165,11 @@ class PhotometerService(ClientService):
         # Now this is for the test photometer only
         if self.options['dry_run']:
             self.log.info('Dry run. Will stop here ...') 
-            pub.sendMessage('photometer_end')
+            pub.sendMessage('phot_end')
             return(None)
         if self.options['write_zero_point'] is not None:
             result = yield self.protocol.writeZeroPoint(self.options['write_zero_point'])
-            pub.sendMessage('photometer_end')
+            pub.sendMessage('phot_end')
         return(None)
 
 
@@ -182,7 +182,7 @@ class PhotometerService(ClientService):
                 self.log.info("Closing transport {e}", e=self.options['endpoint'])
                 self.protocol.transport.loseConnection()
             self.protocol = None
-            pub.unsubscribe(self.onUpdateZeroPoint, 'update_zero_point')
+            pub.unsubscribe(self.onUpdateZeroPoint, 'calib_flash_zp')
         return defer.succeed(None)
             
     # --------------

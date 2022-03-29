@@ -68,7 +68,7 @@ class PreferencesController:
 
     def __init__(self, parent, view, model):
         self.parent = parent
-        self.config = model
+        self.config = model.config
         self.view   = view
         setLogLevel(namespace=NAMESPACE, levelStr='info')
         pub.subscribe(self.onRefConfigLoadReq, 'ref_config_load_req')

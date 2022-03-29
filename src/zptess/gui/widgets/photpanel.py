@@ -159,24 +159,24 @@ class PhotometerStatsPanel(ttk.Frame):
 
     def build(self):
         widget = ttk.Label(self, width=10, text= _("Freq. (Hz)"))
-        widget.grid(row=0, column=0, padx=2, pady=2, sticky=tk.W)
+        widget.grid(row=0, column=0, padx=0, pady=2, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._freq, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
-        widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.W)
+        widget.grid(row=0, column=1, padx=0, pady=2, sticky=tk.W)
 
         widget = ttk.Label(self, width=10, text= _("\u03C3. (Hz)"))
-        widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
+        widget.grid(row=1, column=0, padx=0, pady=2, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._stddev, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
-        widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.W)
+        widget.grid(row=1, column=1, padx=0, pady=2, sticky=tk.W)
 
         widget = ttk.Label(self, width=6, text= _("Mag. "))
-        widget.grid(row=2, column=0, padx=2, pady=2, sticky=tk.W)
+        widget.grid(row=2, column=0, padx=0, pady=2, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._mag, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
-        widget.grid(row=2, column=1, padx=2, pady=2, sticky=tk.W)
+        widget.grid(row=2, column=1, padx=0, pady=2, sticky=tk.W)
 
         widget = ttk.Label(self, width=6, text= _("@ ZP. "))
-        widget.grid(row=2, column=0, padx=2, pady=2, sticky=tk.W)
+        widget.grid(row=2, column=0, padx=0, pady=2, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._zp_fict, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
-        widget.grid(row=2, column=1, padx=2, pady=2, sticky=tk.W)
+        widget.grid(row=2, column=1, padx=0, pady=2, sticky=tk.W)
 
 
     def setFull(self, stats_info):
@@ -205,12 +205,12 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         widget = ttk.Label(self, text= _("Author"))
         widget.grid(row=0, column=0, padx=10, pady=4, sticky=tk.W)
         widget = ttk.Entry(self, width=16, textvariable=self._author)
-        widget.grid(row=0, column=1, padx=4, pady=4, sticky=tk.E)
+        widget.grid(row=0, column=1, padx=4, pady=4, sticky=tk.W)
 
         widget = ttk.Label(self, text= _("Rounds"))
         widget.grid(row=1, column=0, padx=10, pady=4, sticky=tk.W)
         widget = ttk.Spinbox(self, textvariable=self._rounds, width=3, justify=tk.RIGHT, from_= 1, to=10)
-        widget.grid(row=1, column=1, padx=4, pady=4, sticky=tk.E)
+        widget.grid(row=1, column=1, padx=4, pady=4, sticky=tk.W)
         ToolTip(widget, _("Number for calibration rounds"))
 
         vcmd = (self.register(float_validator), '%P')
@@ -218,17 +218,23 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         widget = ttk.Label(self, text= _("ZP Offset"))
         widget.grid(row=2, column=0, padx=10, pady=4, sticky=tk.W)
         widget = ttk.Entry(self, width=6, textvariable=self._zp_offset, justify=tk.RIGHT, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
-        widget.grid(row=2, column=1, padx=4, pady=4, sticky=tk.E)
+        widget.grid(row=2, column=1, padx=4, pady=4, sticky=tk.W)
         ToolTip(widget, _("Additiona Zero Point offset to compensate for mechanical deficiencies in the integration sphere"))
 
-        widget = ttk.Checkbutton(self, text= _("Update Database"),  variable=self._update_db)
+        widget = ttk.Checkbutton(self, text= _("Update\nDatabase"), variable=self._update_db)
         widget.grid(row=0, column=2, padx=2, pady=4, sticky=tk.W)
-        widget = ttk.Checkbutton(self, text= _("Update Photometer"),  variable=self._update_phot)
-        widget.grid(row=1, column=2, padx=2, pady=4, sticky=tk.W)
+        widget = ttk.Checkbutton(self, text= _("Update\nPhotometer"), variable=self._update_phot)
+        widget.grid(row=1, column=2, padx=2, pady=4, sticky=tk.EW)
         widget = ttk.Checkbutton(self, text= _("Dry run"),  variable=self._dry_run)
         widget.grid(row=2, column=2, padx=2, pady=4, sticky=tk.W)
 
-class CalibrationStatusPanel(ttk.LabelFrame):
+        widget = ttk.Button(self, text=_("Save"), command=self.onClickButton)
+        widget.grid(row=3, column=0, columnspan=3, padx=2, pady=4)
+
+    def onClickButton(self):
+        pass
+
+class CalibrationStatePanel(ttk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, text=_("State"), **kwargs)
         self._round = tk.IntVar()
@@ -247,43 +253,43 @@ class CalibrationStatusPanel(ttk.LabelFrame):
         left_frame = ttk.LabelFrame(self,text= _("Round"))
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=2, pady=2, ipadx=0, ipady=0)
 
-        widget = ttk.Label(left_frame, width=10, text= _("Round #)"))
+        widget = ttk.Label(left_frame, width=7, text= _("Round #"))
         widget.grid(row=0, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(left_frame, width=3, textvariable=self._round, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(left_frame, width=4, textvariable=self._round, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.W)
 
-        widget = ttk.Label(left_frame, width=10, text= _("\u0394. Mag."))
+        widget = ttk.Label(left_frame, width=6, text= _("\u0394. Mag."))
         widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(left_frame, width=12, textvariable=self._magdif, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(left_frame, width=4, textvariable=self._magdif, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.W)
 
         widget = ttk.Label(left_frame, width=6, text= _("ZP "))
         widget.grid(row=2, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(left_frame, width=12, textvariable=self._zp, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(left_frame, width=4, textvariable=self._zp,  anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=1, padx=2, pady=2, sticky=tk.W)
 
         right_frame = ttk.LabelFrame(self,text= _("Summary"))
-        right_frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=0, pady=0, ipadx=0, ipady=0)
+        right_frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=2, pady=2, ipadx=0, ipady=0)
 
-        widget = ttk.Label(right_frame, width=15, text= _("Best freq. (Hz)"))
+        widget = ttk.Label(right_frame, width=10, text= _("Best freq."))
         widget.grid(row=0, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(right_frame, width=3, textvariable=self._best_freq, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(right_frame, width=6, textvariable=self._best_freq, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(right_frame, width=8, textvariable=self._freq_method, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(right_frame, width=8, textvariable=self._freq_method, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=0, column=2, padx=2, pady=2, sticky=tk.W)
 
         widget = ttk.Label(right_frame, width=10, text= _("Best ZP"))
         widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(right_frame, width=3, textvariable=self._best_zp, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(right_frame, width=6, textvariable=self._best_zp, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(right_frame, width=8, textvariable=self._zp_method, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(right_frame, width=8, textvariable=self._zp_method, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=1, column=2, padx=2, pady=2, sticky=tk.W)
 
         widget = ttk.Label(right_frame, width=10, text= _("Best mag."))
         widget.grid(row=2, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(right_frame, width=3, textvariable=self._best_mag, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(right_frame, width=6, textvariable=self._best_mag, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=1, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(right_frame, width=8, textvariable=self._zp_fict, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(right_frame, width=8, textvariable=self._zp_fict, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=2, padx=2, pady=2, sticky=tk.W)
 
 
@@ -312,7 +318,7 @@ class CalibrationPanel(ttk.LabelFrame):
     def build(self):
         self.settings = CalibrationSettingsPanel(self)
         self.settings.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
-        self.state = CalibrationStatusPanel(self)
+        self.state = CalibrationStatePanel(self)
         self.state.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
         self.batches = BatchManagemetPanel(self)
         self.batches.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)

@@ -186,6 +186,31 @@ class PhotometerStatsPanel(ttk.Frame):
         self._mag.set(stats_info['mag'])
         self._zp_fict.set(stats_info['zp_fict'])
 
+class PhotometerPanel(ttk.LabelFrame):
+
+    def __init__(self, parent, role, text, *args, **kwargs):
+        super().__init__(parent, *args, text="Fix me", borderwidth=4, **kwargs)
+        self._text = text
+        self._role = role
+        self._enable = tk.BooleanVar()
+        self.build()
+
+    def build(self):
+        self.info = PhotometerInfoPanel(self)
+        self.info.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=2)
+        self.progress = PhotometerProgressPanel(self)
+        self.progress.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=2)
+        self.stats = PhotometerStatsPanel(self)
+        self.stats.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=2)
+        widget = ttk.Checkbutton(self, text= self._text, variable=self._enable, command=self.onEnablePanel)
+        self.configure(labelwidget=widget) 
+
+    def onEnablePanel(self):
+        if self._enable.get():
+            pub.sendMessage('start_service_req', role=self._role)
+        else:
+            pub.sendMessage('stop_service_req', role=self._role)
+
 
 class CalibrationSettingsPanel(ttk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
@@ -312,7 +337,8 @@ class BatchManagemetPanel(ttk.LabelFrame):
 
 class CalibrationPanel(ttk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
-        super().__init__(parent, *args, text=_("Calibration"), borderwidth=4, **kwargs)
+        super().__init__(parent, *args, text="Fix me", borderwidth=4, **kwargs)
+        self._enable = tk.BooleanVar()
         self.build()
 
     def build(self):
@@ -322,25 +348,10 @@ class CalibrationPanel(ttk.LabelFrame):
         self.state.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
         self.batches = BatchManagemetPanel(self)
         self.batches.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
-
-
-class PhotometerPanel(ttk.LabelFrame):
-
-    def __init__(self, parent, text, *args, **kwargs):
-        super().__init__(parent, *args, text="Fix me", borderwidth=4, **kwargs)
-        self._text = text
-        self._enable = tk.BooleanVar()
-        self.build()
-
-    def build(self):
-        self.info = PhotometerInfoPanel(self)
-        self.info.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=2)
-        self.progress = PhotometerProgressPanel(self)
-        self.progress.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=2)
-        self.stats = PhotometerStatsPanel(self)
-        self.stats.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=2)
-        widget = ttk.Checkbutton(self, text= self._text, variable=self._enable, command=self.onEnablePanel)
-        self.configure(labelwidget=widget) 
+        widget = ttk.Checkbutton(self, text= _("Calibration"), variable=self._enable, command=self.onEnablePanel)
+        self.configure(labelwidget=widget)
 
     def onEnablePanel(self):
-        pass
+        pub.sendMessage('start_calibration_req')
+
+

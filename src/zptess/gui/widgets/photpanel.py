@@ -63,28 +63,28 @@ class PhotometerInfoPanel(ttk.Frame):
 
         widget = ttk.Label(self, text= _("Name"))
         widget.grid(row=1, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Label(self, width=16, textvariable=self._dev_name, justify=tk.LEFT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=16, textvariable=self._dev_name, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=1, column=1, padx=0, pady=0, sticky=tk.E)
 
         widget = ttk.Label(self, text= _("MAC Address"))
         widget.grid(row=2, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Label(self, width=16, textvariable=self._mac, justify=tk.LEFT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=16, textvariable=self._mac, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=1, padx=0, pady=0, sticky=tk.E)
 
         widget = ttk.Label(self, text= _("Firmware"))
         widget.grid(row=3, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Label(self, width=25, textvariable=self._firmware, justify=tk.LEFT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=25, textvariable=self._firmware, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=3, column=1, padx=0, pady=0, sticky=tk.E)
 
         widget = ttk.Label(self, text= _("Frequency Offset (Hz)"))
         widget.grid(row=4, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Label(self, width=6, textvariable=self._freq_offset, justify=tk.LEFT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=6, textvariable=self._freq_offset, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=4, column=1, padx=0, pady=0, sticky=tk.E)
         ToolTip(widget, _("Sensor frequency offset"))
 
         widget = ttk.Label(self, text= _("Zero Point"))
         widget.grid(row=5, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Label(self, width=6, textvariable=self._zp, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=6, textvariable=self._zp, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=5, column=1, padx=0, pady=0, sticky=tk.E)
         ToolTip(widget, _("ZP used in the firmware"))
 
@@ -160,22 +160,22 @@ class PhotometerStatsPanel(ttk.Frame):
     def build(self):
         widget = ttk.Label(self, width=10, text= _("Freq. (Hz)"))
         widget.grid(row=0, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(self, width=12, textvariable=self._freq, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=6, textvariable=self._freq, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.W)
 
         widget = ttk.Label(self, width=10, text= _("\u03C3. (Hz)"))
         widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(self, width=12, textvariable=self._stddev, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=6, textvariable=self._stddev, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.W)
 
         widget = ttk.Label(self, width=6, text= _("Mag. "))
         widget.grid(row=2, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(self, width=12, textvariable=self._mag, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=6, textvariable=self._mag, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=1, padx=2, pady=2, sticky=tk.W)
 
         widget = ttk.Label(self, width=6, text= _("@ ZP. "))
         widget.grid(row=2, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Label(self, width=12, textvariable=self._zp_fict, justify=tk.RIGHT, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=6, textvariable=self._zp_fict, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=1, padx=2, pady=2, sticky=tk.W)
 
 

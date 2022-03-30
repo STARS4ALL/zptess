@@ -24,7 +24,7 @@ from twisted.internet.serialport  import SerialPort
 from twisted.internet.protocol    import ClientFactory
 from twisted.protocols.basic      import LineOnlyReceiver
 from twisted.application.service  import Service
-from twisted.application.internet import ClientService, backoffPolicy, TCPClient
+from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet.endpoints   import clientFromString
 from twisted.internet.interfaces  import IPushProducer, IPullProducer, IConsumer
 from zope.interface               import implementer, implements
@@ -144,7 +144,7 @@ class PhotometerService(Service):
         # Async part form here ...
         try:
             self.info = None
-            self.connect()
+            yield self.connect()
             self.info = yield self.getPhotometerInfo()
         except DeferredTimeoutError as e:
             self.log.critical("{excp}",excp=e)
@@ -213,7 +213,7 @@ class PhotometerService(Service):
     # Helper methods
     # ---------------
 
-
+    @inlineCallbacks
     def connect(self):
         proto, addr, port = chop(self.options['endpoint'], sep=':')
         if proto == 'serial':
@@ -222,12 +222,11 @@ class PhotometerService(Service):
             self.gotProtocol(protocol)
             self.log.info("Using serial port {tty} at {baud} bps", tty=addr, baud=port)
         elif proto == 'tcp':
-            # ClientService.startService(self)
-            # protocol = yield self.whenConnected(failAfterFailures=1)
-            # self.gotProtocol(protocol)
-            # self.log.info("Using TCP endpoint {endpoint}", endpoint=self.options['endpoint'])
+            self.factory.tcp_deferred = defer.Deferred()
             conn = reactor.connectTCP(addr, int(port), self.factory)
-            #protocol = yield self.whenConnected(failAfterFailures=1)
+            protocol = yield self.factory.tcp_deferred
+            self.gotProtocol(protocol)
+            self.log.info("Connected to TCP endpoint {endpoint}", endpoint=self.options['endpoint'])
         else:
             protocol = self.factory.buildProtocol(addr)
             reactor.listenUDP(int(port), protocol)

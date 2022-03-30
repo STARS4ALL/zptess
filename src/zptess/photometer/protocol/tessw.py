@@ -15,8 +15,7 @@ import datetime
 # ---------------
 
 from twisted.logger               import Logger
-from twisted.internet             import reactor
-
+from twisted.internet             import reactor, defer
 from twisted.internet.address     import IPv4Address
 from twisted.internet.protocol    import DatagramProtocol, ClientFactory
 from twisted.protocols.basic      import LineOnlyReceiver
@@ -59,7 +58,7 @@ from zptess.photometer.protocol.photinfo  import HTMLPhotometer, DBasePhotometer
 
 class TESSProtocolFactory(ClientFactory):
 
-    def __init__(self, model, log, namespace, role, config_dao, old_payload, transport_method):
+    def __init__(self, model, log, namespace, role, config_dao, old_payload, transport_method, tcp_deferred = None):
         self.log_msg = Logger(namespace=namespace)
         self.log     = log
         self.model = model
@@ -67,19 +66,21 @@ class TESSProtocolFactory(ClientFactory):
         self.transport_method = transport_method
         self.config_dao = config_dao
         self.section = "ref-device" if role == 'ref' else 'test-device'
+        self.tcp_deferred = tcp_deferred # Handles notification of client TCP connections
 
     def startedConnecting(self, connector):
         self.log.debug('Factory: Started to connect.')
 
     def clientConnectionLost(self, connector, reason):
-        self.self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
+        self.log.debug('Factory: Lost connection. Reason: {reason}', reason=reason)
 
     def clientConnectionFailed(self, connector, reason):
-        self.self.log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
+        self.log.debug('Factory: Connection failed. Reason: {reason}', reason=reason)
 
     def buildProtocol(self, addr):
         if isinstance(addr, IPv4Address):
             addr = addr.host
+
         if self.transport_method == 'serial' and self.section == 'ref-device':
             photinfo_obj = DBasePhotometer(
                 config_dao = self.config_dao, 
@@ -148,6 +149,9 @@ class TESSStreamProtocol(LineOnlyReceiver):
 
     def connectionMade(self):
         self.log.debug("{who} connectionMade()", who=self.__class__.__name__)
+        if self.factory.tcp_deferred:
+            self.factory.tcp_deferred.callback(self)
+            self.factory.tcp_deferred = None
 
 
     def lineReceived(self, line):

@@ -75,7 +75,7 @@ class CommandLineService(MultiService):
         setLogLevel(namespace=NAMESPACE, levelStr='info')
         self._cmd_options = vars(options)
         self._test_transport_method = None
-        log.info("{o}",o=self._cmd_options)
+
     #------------
     # Service API
     # ------------
@@ -89,7 +89,9 @@ class CommandLineService(MultiService):
         pub.subscribe(self.onCalibrationEnd, 'calib_end')
         pub.subscribe(self.onPhotometerOffline, 'phot_offline')
         pub.subscribe(self.onPhotometerEnd, 'phot_end')
-        pub.subscribe(self.onPhotometerFrimware, 'phot_firmware')
+        pub.subscribe(self.onPhotometerFirmware, 'phot_firmware')
+        pub.subscribe(self.onStatisticsProgress, 'stats_progress')
+        pub.subscribe(self.onStatisticsInfo, 'stats_info')
         self.build()
         super().startService()
 
@@ -99,7 +101,9 @@ class CommandLineService(MultiService):
         pub.unsubscribe(self.onCalibrationEnd, 'calib_end')
         pub.unsubscribe(self.onPhotometerOffline, 'phot_offline')
         pub.unsubscribe(self.onPhotometerEnd, 'phot_end')
-        pub.unsubscribe(self.onPhotometerFrimware, 'phot_firmware')
+        pub.unsubscribe(self.onPhotometerFirmware, 'phot_firmware')
+        pub.unsubscribe(self.onStatisticsProgress, 'stats_progress')
+        pub.unsubscribe(self.onStatisticsInfo, 'stats_info')
         return super().stopService()
 
     # ---------------
@@ -115,7 +119,7 @@ class CommandLineService(MultiService):
         set_status_code(0)
         reactor.callLater(0, self.parent.stopService)
 
-    def onPhotometerFrimware(self, role, firmware):
+    def onPhotometerFirmware(self, role, firmware):
         label = TEST if role == 'test' else REF
         if self._test_transport_method == 'tcp':
             log.critical("[{label}] Conflictive firmware '{firmware}' for TCP comms. Use UDP instead", label=label, firmware=firmware)
@@ -128,6 +132,30 @@ class CommandLineService(MultiService):
     def onPhotometerOffline(self, role):
         set_status_code(1)
         reactor.callLater(1, self.parent.stopService)
+
+    def onStatisticsProgress(self, role, stats_info):
+        label = TEST if role == 'test' else REF
+        log.info('[{label:4s}] {name:8s} waiting for enough samples, {pend} remaining', 
+                label = label, 
+                name = stats_info['name'], 
+                pend = stats_info['nsamples'] - stats_info['current'],
+        )
+
+    def onStatisticsInfo(self, role, stats_info):
+        label = TEST if role == 'test' else REF
+        log.info("[{label:4s}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] {central:6s} f = {cFreq:0.3f} Hz, \u03C3 = {sFreq:0.3f} Hz, m = {cMag:0.2f} @ {zp:0.2f}",
+            label   = label, 
+            name    = stats_info['name'], 
+            start   = stats_info['begin_tstamp'].strftime("%H:%M:%S"),
+            end     = stats_info['end_tstamp'].strftime("%H:%M:%S"), 
+            sz      = stats_info['nsamples'],
+            zp      = stats_info['zp_fict'], 
+            central = stats_info['central'],
+            cFreq   = stats_info['freq'], 
+            cMag    = stats_info['mag'], 
+            sFreq   = stats_info['stddev'],
+            w       = stats_info['duration']
+        )
 
     def onPhotometerInfo(self, role, info):
         label = TEST if role == 'test' else REF

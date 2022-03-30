@@ -164,6 +164,8 @@ class StatisticsService(Service):
             self._role = 'test'
             self._label = TEST
         self.log = Logger(namespace=NAMESPACE)
+        self.statTask = task.LoopingCall(self._compute)
+        self.progressTask = task.LoopingCall(self._progress)
         
     # -----------
     # Service API
@@ -195,10 +197,13 @@ class StatisticsService(Service):
         )
         pub.subscribe(self.onSampleReceived, 'phot_sample')
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
-        self.statTask = task.LoopingCall(self._compute)
-        self.progressTask = task.LoopingCall(self._progress)
         t = random.uniform(0, self.T/2)
         reactor.callLater(t, self.progressTask.start, self.T, now=False)
+        self.log.info("[{label:4s}] {name:8s} Starting buffer fill monitoring task",
+            label   = self._label,
+            name    = '?????' if self._dev_name is None else self._dev_name
+        )
+        
 
     def stopService(self):
         self.log.info("[{label:4s}] {name:8s} Stopping {service}",
@@ -209,8 +214,16 @@ class StatisticsService(Service):
         pub.unsubscribe(self.onSampleReceived, 'phot_sample')
         pub.unsubscribe(self.onPhotometerInfo, 'phot_info')
         if self.progressTask.running:
+            self.log.info("[{label:4s}] {name:8s} Stopping buffer fill monitoring task",
+                label   = self._label,
+                name    = '?????' if self._dev_name is None else self._dev_name
+            )
             self.progressTask.stop()
         if self.statTask.running:
+            self.log.info("[{label:4s}] {name:8s} Stopping statistics task",
+                label   = self._label,
+                name    = '?????' if self._dev_name is None else self._dev_name
+            )
             self.statTask.stop()
         return defer.succeed(None)
             
@@ -244,17 +257,20 @@ class StatisticsService(Service):
     def _progress(self):
         '''Progress task'''
         if self._buffer.isFull() and self.progressTask.running:
+            self.log.info("[{label:4s}] {name:8s} Stopping buffer fill monitoring task",
+                label   = self._label,
+                name    = '?????' if self._dev_name is None else self._dev_name
+            )
             self.progressTask.stop() # Self stop this task
+            self.log.info("[{label:4s}] {name:8s} Starting statistics task",
+                label   = self._label,
+                name    = '?????' if self._dev_name is None else self._dev_name
+            )
             self.statTask.start(self._period, now=True)
             return
         stats_info = self._buffer.getProgressInfo()
         stats_info['name'] = '?????' if not self._dev_name else self._dev_name
         stats_info['role'] = self._role
-        self.log.info('[{label:4s}] {name:8s} waiting for enough samples, {pend} remaining', 
-                label = self._label, 
-                name = stats_info['name'], 
-                pend = stats_info['nsamples'] - stats_info['current'],
-        )
         pub.sendMessage('stats_progress', role=self._role, stats_info=stats_info)
         
 
@@ -267,19 +283,6 @@ class StatisticsService(Service):
         stats_info['name'] = self._dev_name
         stats_info['role'] = self._role
         stats_info['zp_fict'] = self._zp_fict
-        self.log.info("[{label:4s}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] {central:6s} f = {cFreq:0.3f} Hz, \u03C3 = {sFreq:0.3f} Hz, m = {cMag:0.2f} @ {zp:0.2f}",
-            label   = self._label, 
-            name    = stats_info['name'], 
-            start   = stats_info['begin_tstamp'].strftime("%H:%M:%S"),
-            end     = stats_info['end_tstamp'].strftime("%H:%M:%S"), 
-            sz      = stats_info['nsamples'],
-            zp      = stats_info['zp_fict'], 
-            central = stats_info['central'],
-            cFreq   = stats_info['freq'], 
-            cMag    = stats_info['mag'], 
-            sFreq   = stats_info['stddev'],
-            w       = stats_info['duration']
-        )
         pub.sendMessage('stats_info', role=self._role, stats_info=stats_info)
 
 

@@ -40,7 +40,7 @@ from zptess.gui.application import Application
 from zptess.gui.controller.application import ApplicationController
 from zptess.gui.controller.preferences import PreferencesController
 from zptess.gui.controller.statusbar import StatusBarController
-from zptess.gui.controller.mainpanel import CalibrationSettingsController
+from zptess.gui.controller.mainpanel import CalibrationSettingsController, PhotometerPanelController
 
 
 # ----------------
@@ -104,6 +104,11 @@ class GraphicalService(Service):
                 model   = self.dbaseService.dao,
             ),
             CalibrationSettingsController(
+                parent  = self, 
+                view    = self.application, 
+                model   = self.dbaseService.dao,
+            ),
+            PhotometerPanelController(
                 parent  = self, 
                 view    = self.application, 
                 model   = self.dbaseService.dao,

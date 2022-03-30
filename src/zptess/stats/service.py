@@ -203,13 +203,14 @@ class StatisticsService(Service):
             label   = self._label,
             name    = '?????' if self._dev_name is None else self._dev_name
         )
+        super().startService()
         
 
     def stopService(self):
         self.log.info("[{label:4s}] {name:8s} Stopping {service}",
             label   = self._label,
             name    = '????'if self._dev_name is None else self._dev_name,
-            service = self.NAME,
+            service = self.name,
         )
         pub.unsubscribe(self.onSampleReceived, 'phot_sample')
         pub.unsubscribe(self.onPhotometerInfo, 'phot_info')

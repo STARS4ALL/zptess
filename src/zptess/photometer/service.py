@@ -139,6 +139,7 @@ class PhotometerService(ClientService):
         self.info      = None # Photometer info
         self.deduplicater = Deduplicater(self.role, self.log)
         pub.subscribe(self.onUpdateZeroPoint, 'calib_flash_zp')
+        super().startService()
         # Async part form here ...
         try:
             self.info = None
@@ -183,7 +184,7 @@ class PhotometerService(ClientService):
                 self.protocol.transport.loseConnection()
             self.protocol = None
             pub.unsubscribe(self.onUpdateZeroPoint, 'calib_flash_zp')
-        return defer.succeed(None)
+        return super().stopService()
             
     # --------------
     # Photometer API 

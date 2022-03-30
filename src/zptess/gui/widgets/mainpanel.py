@@ -221,9 +221,9 @@ class PhotometerPanel(ttk.LabelFrame):
 
     def onEnablePanel(self):
         if self._enable.get():
-            pub.sendMessage('start_service_req', role=self._role)
+            pub.sendMessage('start_photometer_req', role=self._role)
         else:
-            pub.sendMessage('stop_service_req', role=self._role)
+            pub.sendMessage('stop_photometer_req', role=self._role)
 
 
 class CalibrationSettingsPanel(ttk.LabelFrame):

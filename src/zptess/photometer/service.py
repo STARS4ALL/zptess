@@ -120,10 +120,6 @@ class PhotometerService(Service):
         self.log = Logger(namespace=self.label)
         proto, addr, port = chop(self.options['endpoint'], sep=':')
         self.factory   = self.buildFactory(options['old_proto'], proto)
-        # if proto == 'tcp':
-        #     endpoint = clientFromString(reactor, options['endpoint'])
-        #     ClientService.__init__(self, endpoint, self.factory,
-        #          retryPolicy=backoffPolicy(initialDelay=0.5, factor=3.0))
            
     @inlineCallbacks
     def startService(self):
@@ -139,7 +135,6 @@ class PhotometerService(Service):
         self.info      = None # Photometer info
         self.deduplicater = Deduplicater(self.role, self.log)
         pub.subscribe(self.onUpdateZeroPoint, 'calib_flash_zp')
-        
         super().startService() # se we can handle the 'running' attribute
         # Async part form here ...
         try:

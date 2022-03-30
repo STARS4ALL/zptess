@@ -119,7 +119,6 @@ class CommandLineService(MultiService):
     def onCalibrationEnd(self, session):
         set_status_code(0)
         yield self.dbaseServ.flush()
-        #reactor.callLater(0, self.parent.stopService)
         yield self.parent.stopService()
 
     def onPhotometerFirmware(self, role, firmware):

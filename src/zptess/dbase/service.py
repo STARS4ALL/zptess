@@ -150,6 +150,7 @@ class DatabaseService(Service):
         pub.subscribe(self.onSummaryStatInfo, 'calib_summary_info')
         pub.subscribe(self.onSampleReceived,  'phot_sample')
         pub.subscribe(self.onCalibrationStart,'calib_begin')
+        pub.subscribe(self.onCalibrationEnd,  'calib_end')
 
         connection, new_database = create_database(self.path)
         if new_database:
@@ -193,12 +194,13 @@ class DatabaseService(Service):
         pub.unsubscribe(self.onSummaryStatInfo, 'calib_summary_info')
         pub.unsubscribe(self.onSampleReceived,  'phot_sample')
         pub.unsubscribe(self.onCalibrationStart,'calib_begin')
+        pub.unsubscribe(self.onCalibrationEnd,  'calib_end')
       
         self.session = None
         if self.test_mode:
             log.warn("Test mode: Database is not being updated")
         else:
-            yield self._flush()
+            yield self.flush()
         self.closePool()
         try:
             reactor.stop()
@@ -210,6 +212,37 @@ class DatabaseService(Service):
     # OPERATIONAL API
     # ---------------
 
+    @inlineCallbacks
+    def flush(self):
+        '''Flushes samples to database'''
+        if self.testSamples:
+            n1 = len(self.testSamples)
+            samples  = self._purge('test', self.testRounds, self.testSamples)
+            n2 = len(samples)
+            log.info("From {n1} test initial samples, saving {n2} samples only", n1=n1, n2=n2)
+            yield self.dao.samples.savemany(samples)
+        if self.refSamples:
+            n1 = len(self.refSamples)
+            samples  = self._purge('ref', self.refRounds, self.refSamples)
+            n2 = len(samples)
+            log.info("From {n1} ref. initial samples, saving {n2} samples only", n1=n1, n2=n2)
+            yield self.dao.samples.savemany(samples)
+        if self.refRounds:
+            log.info("Saving {n} ref. rounds stats records", n=len(self.refRounds))
+            yield self.dao.rounds.savemany(self.refRounds)
+        if self.testRounds:
+            log.info("Saving {n} test rounds stats records", n=len(self.testRounds))
+            yield self.dao.rounds.savemany(self.testRounds)
+        if self.summary_stats:
+            log.info("Saving {n} summary stats records", n=len(self.summary_stats))
+            yield self.dao.summary.savemany(self.summary_stats)
+        self.session       = None
+        self.refSamples    = list()
+        self.testSamples   = list()
+        self.refRounds     = list()
+        self.testRounds    = list()
+        self.summary_stats = list()
+
     def setTestMode(self, test_mode):
         self.test_mode   = test_mode
     
@@ -218,8 +251,16 @@ class DatabaseService(Service):
         g = filter(lambda i: True if i[0] == section else False, self._initial_config)
         return dict(map(lambda i: (i[1], i[2]) ,g))
 
+    # --------------
+    # Event handlers
+    # --------------
+
     def onCalibrationStart(self, session):
         self.session = session
+
+    @inlineCallbacks
+    def onCalibrationEnd(self, session):
+        yield self.flush()
 
     def onPhotometerInfo(self, role, info):
         self.phot[role]['info'] = info
@@ -246,35 +287,27 @@ class DatabaseService(Service):
         stats_info['session']  = self.session
         self.summary_stats.append(stats_info)
 
+
+    def onSampleReceived(self, role, sample):
+        '''Get new sample from photometers'''
+        if self.session is None:    # Discard samples not bound to sessions
+            return
+        data = {
+            'tstamp'  : sample['tstamp'],   # native datetime object
+            'session' : self.session,
+            'role'    : role,
+            'seq'     : sample.get('udp', None),    # Only exists in JSON based messages
+            'freq'    : sample['freq'],
+            'temp_box': sample.get('tamb', None),   # Only exists in JSON based messages
+        }
+        if role == 'ref':
+            self.refSamples.append(data)
+        else:
+            self.testSamples.append(data)
+
     # -------------
     # Helper methods
     # --------------
-
-    @inlineCallbacks
-    def _flush(self):
-        '''Flushes samples to database'''
-        if self.testSamples:
-            n1 = len(self.testSamples)
-            samples  = self._purge('test', self.testRounds, self.testSamples)
-            n2 = len(samples)
-            log.info("From {n1} test initial samples, saving {n2} samples only", n1=n1, n2=n2)
-            yield self.dao.samples.savemany(samples)
-        if self.refSamples:
-            n1 = len(self.refSamples)
-            samples  = self._purge('ref', self.refRounds, self.refSamples)
-            n2 = len(samples)
-            log.info("From {n1} ref. initial samples, saving {n2} samples only", n1=n1, n2=n2)
-            yield self.dao.samples.savemany(samples)
-        if self.refRounds:
-            log.info("Saving {n} ref. rounds stats records", n=len(self.refRounds))
-            yield self.dao.rounds.savemany(self.refRounds)
-        if self.testRounds:
-            log.info("Saving {n} test rounds stats records", n=len(self.testRounds))
-            yield self.dao.rounds.savemany(self.testRounds)
-        if self.summary_stats:
-            log.info("Saving {n} summary stats records", n=len(self.summary_stats))
-            yield self.dao.summary.savemany(self.summary_stats)
-
 
     def _purge(self, role, rounds, samples):
         indexes = list()
@@ -314,22 +347,7 @@ class DatabaseService(Service):
 
 
 
-    def onSampleReceived(self, role, sample):
-        '''Get new sample from photometers'''
-        if self.session is None:    # Discard samples not bound to sessions
-            return
-        data = {
-            'tstamp'  : sample['tstamp'],   # native datetime object
-            'session' : self.session,
-            'role'    : role,
-            'seq'     : sample.get('udp', None),    # Only exists in JSON based messages
-            'freq'    : sample['freq'],
-            'temp_box': sample.get('tamb', None),   # Only exists in JSON based messages
-        }
-        if role == 'ref':
-            self.refSamples.append(data)
-        else:
-            self.testSamples.append(data)
+    
 
 
     # =============

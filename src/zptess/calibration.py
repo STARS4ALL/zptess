@@ -153,7 +153,7 @@ class CalibrationService(Service):
             summary_ref, summary_test = self.summary()
             pub.sendMessage('calib_summary_info', role='ref', stats_info=summary_ref)
             pub.sendMessage('calib_summary_info', role='test',stats_info=summary_test)
-            pub.sendMessage('calib_end')
+            pub.sendMessage('calib_end', self.session)
 
 
     

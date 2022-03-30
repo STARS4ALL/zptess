@@ -134,7 +134,7 @@ class TESSOldProtocol(LineOnlyReceiver):
 
 
     def connectionMade(self):
-        self.log.debug("{who} connectionMade()", who=self.__class__.__name__)
+        self.log.info("{who} connectionMade()", who=self.__class__.__name__)
 
 
     def lineReceived(self, line):

@@ -24,7 +24,7 @@ from twisted.internet.serialport  import SerialPort
 from twisted.internet.protocol    import ClientFactory
 from twisted.protocols.basic      import LineOnlyReceiver
 from twisted.application.service  import Service
-from twisted.application.internet import ClientService, backoffPolicy
+from twisted.application.internet import ClientService, backoffPolicy, TCPClient
 from twisted.internet.endpoints   import clientFromString
 from twisted.internet.interfaces  import IPushProducer, IPullProducer, IConsumer
 from zope.interface               import implementer, implements
@@ -101,7 +101,7 @@ class Deduplicater:
 # ------------------------------------------------------------------------------
 
 
-class PhotometerService(ClientService):
+class PhotometerService(Service):
 
     NAME = "Photometer Service"
 
@@ -120,12 +120,11 @@ class PhotometerService(ClientService):
         self.log = Logger(namespace=self.label)
         proto, addr, port = chop(self.options['endpoint'], sep=':')
         self.factory   = self.buildFactory(options['old_proto'], proto)
-        if proto == 'tcp':
-            endpoint = clientFromString(reactor, options['endpoint'])
-            # ClientService.__init__(self, endpoint, self.factory,
-            #      retryPolicy=backoffPolicy(initialDelay=0.5, factor=3.0))
-            ClientService.__init__(self, endpoint, self.factory,retryPolicy=None)
-    
+        # if proto == 'tcp':
+        #     endpoint = clientFromString(reactor, options['endpoint'])
+        #     ClientService.__init__(self, endpoint, self.factory,
+        #          retryPolicy=backoffPolicy(initialDelay=0.5, factor=3.0))
+           
     @inlineCallbacks
     def startService(self):
         '''
@@ -145,7 +144,7 @@ class PhotometerService(ClientService):
         # Async part form here ...
         try:
             self.info = None
-            yield self.connect()
+            self.connect()
             self.info = yield self.getPhotometerInfo()
         except DeferredTimeoutError as e:
             self.log.critical("{excp}",excp=e)
@@ -214,7 +213,7 @@ class PhotometerService(ClientService):
     # Helper methods
     # ---------------
 
-    @inlineCallbacks
+
     def connect(self):
         proto, addr, port = chop(self.options['endpoint'], sep=':')
         if proto == 'serial':
@@ -223,10 +222,12 @@ class PhotometerService(ClientService):
             self.gotProtocol(protocol)
             self.log.info("Using serial port {tty} at {baud} bps", tty=addr, baud=port)
         elif proto == 'tcp':
-            ClientService.startService(self)
-            protocol = yield self.whenConnected(failAfterFailures=1)
-            self.gotProtocol(protocol)
-            self.log.info("Using TCP endpoint {endpoint}", endpoint=self.options['endpoint'])
+            # ClientService.startService(self)
+            # protocol = yield self.whenConnected(failAfterFailures=1)
+            # self.gotProtocol(protocol)
+            # self.log.info("Using TCP endpoint {endpoint}", endpoint=self.options['endpoint'])
+            conn = reactor.connectTCP(addr, int(port), self.factory)
+            #protocol = yield self.whenConnected(failAfterFailures=1)
         else:
             protocol = self.factory.buildProtocol(addr)
             reactor.listenUDP(int(port), protocol)

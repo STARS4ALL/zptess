@@ -123,7 +123,7 @@ class GraphicalService(Service):
     def stopService(self):
         log.info('Stopping Graphical User Interface Service')
         #self.task.stop()
-        return super().stopService()
+        return super().stopService() # se we can handle the 'running' attribute
 
     def quit(self, exit_code):
         set_status_code(exit_code)

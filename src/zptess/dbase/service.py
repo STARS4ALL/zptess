@@ -172,7 +172,7 @@ class DatabaseService(Service):
         )
     
         # Remainder Service initialization
-        super().startService()
+        super().startService() # se we can handle the 'running' attribute
         self._initial_config = read_configuration(connection)
         connection.commit()
         connection.close()
@@ -199,7 +199,7 @@ class DatabaseService(Service):
         except Exception as e:
             log.failure("{e}",e=e)
         finally:
-            yield super().stopService()
+            yield super().stopService() # se we can handle the 'running' attribute
 
 
     # ---------------

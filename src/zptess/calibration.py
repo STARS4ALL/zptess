@@ -117,14 +117,14 @@ class CalibrationService(Service):
         pub.sendMessage('calib_begin', session=self.session)
         pub.subscribe(self.onPhotometerInfo,  'phot_info')
         pub.subscribe(self.onIndividualStats, 'stats_info')
-        super().startService()
+        super().startService() # se we can handle the 'running' attribute
 
        
     def stopService(self):
         log.info("Stopping {name}", name=self.name)
         pub.unsubscribe(self.onPhotometerInfo,  'phot_info')
         pub.unsubscribe(self.onIndividualStats, 'stats_info')
-        return super().stopService()
+        return super().stopService() # se we can handle the 'running' attribute
     
     # ---------------
     # OPERATIONAL API

@@ -203,7 +203,7 @@ class StatisticsService(Service):
             label   = self._label,
             name    = '?????' if self._dev_name is None else self._dev_name
         )
-        super().startService()
+        super().startService() # se we can handle the 'running' attribute
         
 
     def stopService(self):
@@ -226,7 +226,7 @@ class StatisticsService(Service):
                 name    = '?????' if self._dev_name is None else self._dev_name
             )
             self.statTask.stop()
-        return defer.succeed(None)
+        return super().stopService() # se we can handle the 'running' attribute
             
     # --------------
     # Statistics API 

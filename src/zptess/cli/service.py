@@ -93,7 +93,7 @@ class CommandLineService(MultiService):
         pub.subscribe(self.onStatisticsProgress, 'stats_progress')
         pub.subscribe(self.onStatisticsInfo, 'stats_info')
         self.build()
-        super().startService()
+        super().startService() # se we can handle the 'running' attribute
 
     def stopService(self):
         log.info("Stopping {name}", name=self.name)
@@ -104,7 +104,7 @@ class CommandLineService(MultiService):
         pub.unsubscribe(self.onPhotometerFirmware, 'phot_firmware')
         pub.unsubscribe(self.onStatisticsProgress, 'stats_progress')
         pub.unsubscribe(self.onStatisticsInfo, 'stats_info')
-        return super().stopService()
+        return super().stopService() # se we can handle the 'running' attribute
 
     # ---------------
     # OPERATIONAL API

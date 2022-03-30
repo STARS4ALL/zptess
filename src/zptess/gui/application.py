@@ -45,7 +45,7 @@ from zptess.logger import setLogLevel
 from zptess.gui import ABOUT_DESC_TXT, ABOUT_ACK_TXT, ABOUT_IMG, ABOUT_ICONS
 from zptess.gui.preferences import Preferences
 from zptess.gui.widgets.contrib import ToolTip
-from zptess.gui.widgets.photpanel import PhotometerPanel, CalibrationPanel, BatchManagemetPanel
+from zptess.gui.widgets.mainpanel import PhotometerPanel, CalibrationPanel, BatchManagemetPanel
 from zptess.gui.widgets.about import AboutDialog
 
 # ----------------

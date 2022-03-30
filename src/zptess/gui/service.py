@@ -40,7 +40,7 @@ from zptess.gui.application import Application
 from zptess.gui.controller.application import ApplicationController
 from zptess.gui.controller.preferences import PreferencesController
 from zptess.gui.controller.statusbar import StatusBarController
-from zptess.gui.controller.photpanel import CalibrationSettingsController
+from zptess.gui.controller.mainpanel import CalibrationSettingsController
 
 
 # ----------------

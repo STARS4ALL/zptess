@@ -110,10 +110,11 @@ class CommandLineService(MultiService):
     # OPERATIONAL API
     # ---------------
 
+    @inlineCallbacks
     def quit(self, exit_code = 0):
         '''Gracefully exit Twisted program'''
         set_status_code(exit_code)
-        reactor.callLater(0, self.parent.stopService)
+        yield self.parent.stopService()
 
     @inlineCallbacks
     def onCalibrationEnd(self, session):
@@ -121,15 +122,17 @@ class CommandLineService(MultiService):
         yield self.dbaseServ.flush()
         yield self.parent.stopService()
 
+    @inlineCallbacks
     def onPhotometerFirmware(self, role, firmware):
         label = TEST if role == 'test' else REF
         if self._test_transport_method == 'tcp':
             log.critical("[{label}] Conflictive firmware '{firmware}' for TCP comms. Use UDP instead", label=label, firmware=firmware)
-            reactor.callLater(0, self.parent.stopService)
+            yield self.parent.stopService()
 
+    @inlineCallbacks
     def onPhotometerEnd(self):
         set_status_code(0)
-        reactor.callLater(0, self.parent.stopService)
+        yield self.parent.stopService()
 
     def onPhotometerOffline(self, role):
         set_status_code(1)

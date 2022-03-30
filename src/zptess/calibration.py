@@ -100,7 +100,7 @@ class CalibrationService(Service):
         self.nrounds  = self.options['rounds']
         self.curRound = 1
         self.best = {
-            'zp'       : list(),
+            'zp'        : list(),
             'ref_freq'  : list(),
             'test_freq' : list(),
         }
@@ -153,7 +153,7 @@ class CalibrationService(Service):
             summary_ref, summary_test = self.summary()
             pub.sendMessage('calib_summary_info', role='ref', stats_info=summary_ref)
             pub.sendMessage('calib_summary_info', role='test',stats_info=summary_test)
-            pub.sendMessage('calib_end', self.session)
+            pub.sendMessage('calib_end', session=self.session)
 
 
     
@@ -262,96 +262,6 @@ class CalibrationService(Service):
         summary_ref['offset']    = 0
         summary_ref['nrounds']   = self.nrounds
         summary_ref['author']    = self.options['author']
-        return summary_ref, summary_test
-
-
-    
- 
-    # --------------------
-    # Scheduler Activities
-    # --------------------
-
-    @inlineCallbacks
-    def _schedule(self):  
-        if self.curRound > self.nrounds:
-            log.info("Finished readings")
-            return(None)
-
-        if self.curRound == self.nrounds:
-            yield self._accumulateRounds()
-            summary_ref, summary_test = self._choose()
-            if self.options['update']:
-                pub.sendMessage('calib_flash_zp', zero_point=summary_test['zero_point'])
-            else:
-                log.info("Not updating ZP to test photometer")
-            pub.sendMessage('calib_summary_info', role='ref', stats_info=summary_ref)
-            pub.sendMessage('calib_summary_info', role='test',stats_info=summary_test)
-            reactor.callLater(0, self.parent.stopService)
-   
-
-    
-
-    def _choose(self):
-        '''Choose the best statistics at the end of the round'''
-        refLabel  = self.phot['ref']['info']['label']
-        testLabel = self.phot['test']['info']['label']
-        log.info("#"*72)
-        log.info("Session = {session}",session=self.session)
-        log.info("Best ZP        list is {bzp}",bzp=self.best['zp'])
-        log.info("Best {rLab} Freq list is {brf}",brf=self.best['ref_freq'],  rLab=refLabel)
-        log.info("Best {tLab} Freq list is {btf}",btf=self.best['test_freq'], tLab=testLabel)
-        summary_ref = dict(); summary_test = dict()
-        try:
-            summary_ref['zero_point_method']  = None    # Not choosen, so no selection method
-            summary_test['zero_point_method'] = 'mode'
-            best_zp                      = mode(self.best['zp'])
-        except statistics.StatisticsError as e:
-            log.error("Error choosing best zp using mode, selecting median instead")
-            summary_test['zero_point_method'] = 'median'
-            best_zp              = statistics.median(self.best['zp'])
-        try:
-            summary_ref['freq_method']   = 'mode'
-            summary_ref['freq']   = mode(self.best['ref_freq'])
-        except statistics.StatisticsError as e:
-            log.error("Error choosing best Ref. Freq. using mode, selecting median instead")
-            summary_ref['freq_method']   = 'median'
-            summary_ref['freq']  = statistics.median(self.best['ref_freq'])
-        try:
-            summary_test['freq_method']   = 'mode'
-            summary_test['freq']  = mode(self.best['test_freq'])
-        except statistics.StatisticsError as e:
-            log.error("Error choosing best Test Freq. using mode, selecting median instead")
-            summary_test['freq_method']   = 'median'
-            summary_test['freq'] = statistics.median(self.best['test_freq'])
-        
-        offset   = self.options['offset']
-        final_zp = best_zp + offset
-        log.info("Final ZP ({fzp:0.2f}) = Best ZP ({bzp:0.2f}) + offset ({o:0.2f})",fzp=final_zp, bzp=best_zp,o=offset )
-        summary_test['zero_point'] = final_zp
-        summary_ref['zero_point']  = float(self.phot['ref']['info']['zp']) # Always the same, not choosen
-        summary_test['mag']  = self.zp_fict - 2.5*math.log10(summary_test['freq'])
-        summary_ref['mag']   = self.zp_fict - 2.5*math.log10(summary_ref['freq'])
-        summary_test['mag_offset'] = -2.5*math.log10(summary_ref['freq']/summary_test['freq'])
-        summary_ref['mag_offset']  = 0
-
-        # prev_zp is the ZP we have read from the photometer when we contacted it.
-        summary_test['prev_zp'] = float(self.phot['test']['info']['zp'])                
-        summary_ref['prev_zp']  = float(self.phot['ref']['info']['zp']) # Always the same, not choosen
-        log.info("{rLab} Freq. = {rF:0.3f} Hz , {tLab} Freq. = {tF:0.3f}, {rLab} Mag. = {rM:0.2f}, {tLab} Mag. = {tM:0.2f}, Diff {d:0.2f}", 
-                rF= summary_ref['freq'], tF=summary_test['freq'], 
-                rM=summary_ref['mag'],   tM=summary_test['mag'], d=summary_test['mag_offset'],
-                rLab=refLabel, tLab=testLabel)
-        log.info("OLD {tLab} ZP = {old_zp:0.2f}, NEW {tLab} ZP = {new_zp:0.2f}", 
-            old_zp=summary_test['prev_zp'], new_zp=summary_test['zero_point'], tLab=testLabel)
-        log.info("#"*72)
-        # Additional metadata
-        summary_test['upd_flag'] = 1 if self.options['update'] else 0
-        summary_test['offset']   = self.options['offset']
-        summary_test['nrounds']  = self.nrounds
-        summary_ref['upd_flag']  = 0
-        summary_ref['offset']    = 0
-        summary_ref['nrounds']   = self.nrounds
-        
         return summary_ref, summary_test
 
 

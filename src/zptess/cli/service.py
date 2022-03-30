@@ -115,9 +115,12 @@ class CommandLineService(MultiService):
         set_status_code(exit_code)
         reactor.callLater(0, self.parent.stopService)
 
-    def onCalibrationEnd(self):
+    @inlineCallbacks
+    def onCalibrationEnd(self, session):
         set_status_code(0)
-        reactor.callLater(0, self.parent.stopService)
+        yield self.dbaseServ.flush()
+        #reactor.callLater(0, self.parent.stopService)
+        yield self.parent.stopService()
 
     def onPhotometerFirmware(self, role, firmware):
         label = TEST if role == 'test' else REF

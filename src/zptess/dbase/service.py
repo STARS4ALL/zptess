@@ -150,7 +150,6 @@ class DatabaseService(Service):
         pub.subscribe(self.onSummaryStatInfo, 'calib_summary_info')
         pub.subscribe(self.onSampleReceived,  'phot_sample')
         pub.subscribe(self.onCalibrationStart,'calib_begin')
-        pub.subscribe(self.onCalibrationEnd,  'calib_end')
 
         connection, new_database = create_database(self.path)
         if new_database:
@@ -194,18 +193,13 @@ class DatabaseService(Service):
         pub.unsubscribe(self.onSummaryStatInfo, 'calib_summary_info')
         pub.unsubscribe(self.onSampleReceived,  'phot_sample')
         pub.unsubscribe(self.onCalibrationStart,'calib_begin')
-        pub.unsubscribe(self.onCalibrationEnd,  'calib_end')
-      
-        self.session = None
-        if self.test_mode:
-            log.warn("Test mode: Database is not being updated")
-        else:
-            yield self.flush()
         self.closePool()
         try:
             reactor.stop()
         except Exception as e:
-            pass
+            log.failure("{e}",e=e)
+        finally:
+            yield super().stopService()
 
 
     # ---------------
@@ -215,6 +209,11 @@ class DatabaseService(Service):
     @inlineCallbacks
     def flush(self):
         '''Flushes samples to database'''
+        if self.test_mode:
+            log.warn("Test mode: Database not being updated")
+            self._clearBuffers()
+            return
+       
         if self.testSamples:
             n1 = len(self.testSamples)
             samples  = self._purge('test', self.testRounds, self.testSamples)
@@ -236,12 +235,8 @@ class DatabaseService(Service):
         if self.summary_stats:
             log.info("Saving {n} summary stats records", n=len(self.summary_stats))
             yield self.dao.summary.savemany(self.summary_stats)
-        self.session       = None
-        self.refSamples    = list()
-        self.testSamples   = list()
-        self.refRounds     = list()
-        self.testRounds    = list()
-        self.summary_stats = list()
+        self._clearBuffers()
+       
 
     def setTestMode(self, test_mode):
         self.test_mode   = test_mode
@@ -257,11 +252,7 @@ class DatabaseService(Service):
 
     def onCalibrationStart(self, session):
         self.session = session
-
-    @inlineCallbacks
-    def onCalibrationEnd(self, session):
-        yield self.flush()
-
+    
     def onPhotometerInfo(self, role, info):
         self.phot[role]['info'] = info
 
@@ -308,6 +299,15 @@ class DatabaseService(Service):
     # -------------
     # Helper methods
     # --------------
+
+    def _clearBuffers(self):
+        self.session       = None
+        self.refSamples    = list()
+        self.testSamples   = list()
+        self.refRounds     = list()
+        self.testRounds    = list()
+        self.summary_stats = list()
+
 
     def _purge(self, role, rounds, samples):
         indexes = list()

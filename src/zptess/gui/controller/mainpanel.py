@@ -167,41 +167,17 @@ class PhotometerPanelController:
         reactor.callLater(1, self.parent.parent.stopService)
 
     def onStatisticsProgress(self, role, stats_info):
-        label = TEST if role == 'test' else REF
-        log.info('[{label:4s}] {name:8s} waiting for enough samples, {pend} remaining', 
-                label = label, 
-                name = stats_info['name'], 
-                pend = stats_info['nsamples'] - stats_info['current'],
-        )
+        self.view.mainArea.updatePhotStats(role, stats_info)
 
     def onStatisticsInfo(self, role, stats_info):
-        label = TEST if role == 'test' else REF
-        log.info("[{label:4s}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] {central:6s} f = {cFreq:0.3f} Hz, \u03C3 = {sFreq:0.3f} Hz, m = {cMag:0.2f} @ {zp:0.2f}",
-            label   = label, 
-            name    = stats_info['name'], 
-            start   = stats_info['begin_tstamp'].strftime("%H:%M:%S"),
-            end     = stats_info['end_tstamp'].strftime("%H:%M:%S"), 
-            sz      = stats_info['nsamples'],
-            zp      = stats_info['zp_fict'], 
-            central = stats_info['central'],
-            cFreq   = stats_info['freq'], 
-            cMag    = stats_info['mag'], 
-            sFreq   = stats_info['stddev'],
-            w       = stats_info['duration']
-        )
+        self.view.mainArea.updatePhotStats(role, stats_info)
 
     def onPhotometerInfo(self, role, info):
         label = TEST if role == 'test' else REF
         if info is None:
             log.warn("[{label}] No photometer info available. Is it Connected?", label=label)
         else:
-            log.info("[{label}] Role         : {value}", label=label, value=info['role'])
-            log.info("[{label}] Model        : {value}", label=label, value=info['model'])
-            log.info("[{label}] Name         : {value}", label=label, value=info['name'])
-            log.info("[{label}] MAC          : {value}", label=label, value=info['mac'])
-            log.info("[{label}] Zero Point   : {value:.02f} (old)", label=label, value=info['zp'])
-            log.info("[{label}] Offset Freq. : {value}", label=label, value=info['freq_offset'])
-            log.info("[{label}] Firmware     : {value}", label=label, value=info['firmware'])
+            self.view.mainArea.updatePhotInfo(role, info)
       
 
     @inlineCallbacks
@@ -219,6 +195,7 @@ class PhotometerPanelController:
         try:
             log.info("onStopPhotometerReq({role})", role=role)
             yield self._stopChain(role)
+            self.view.mainArea.clearPhotPanel(role)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)

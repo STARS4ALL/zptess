@@ -66,17 +66,17 @@ class PhotometerInfoPanel(ttk.Frame):
 
         widget = ttk.Label(self, text= _("Name"))
         widget.grid(row=1, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Label(self, width=16, textvariable=self._dev_name, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=16, textvariable=self._dev_name, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=1, column=1, padx=0, pady=0, sticky=tk.E)
 
         widget = ttk.Label(self, text= _("MAC Address"))
         widget.grid(row=2, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Label(self, width=16, textvariable=self._mac, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=16, textvariable=self._mac, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=1, padx=0, pady=0, sticky=tk.E)
 
         widget = ttk.Label(self, text= _("Firmware"))
         widget.grid(row=3, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Label(self, width=25, textvariable=self._firmware, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(self, width=18, textvariable=self._firmware, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=3, column=1, padx=0, pady=0, sticky=tk.E)
 
         widget = ttk.Label(self, text= _("Frequency Offset (Hz)"))
@@ -97,6 +97,14 @@ class PhotometerInfoPanel(ttk.Frame):
         self._zp.set(values['zp'])
         self._firmware.set(values['firmware'])
         self._freq_offset.set(values['freq_offset'])
+
+    def clear(self):
+        self._dev_name.set('')
+        self._mac.set('')
+        self._zp.set(0)
+        self._firmware.set('')
+        self._freq_offset.set(0)
+
 
 
 class PhotometerProgressPanel(ttk.Frame):
@@ -134,23 +142,29 @@ class PhotometerProgressPanel(ttk.Frame):
         lower_pannel.pack(side=tk.TOP, fill=tk.X, padx=2, pady=2)
         widget = ttk.Label(lower_pannel, width=9, textvariable=self._start_t, justify=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(lower_pannel, width=10, textvariable=self._start_t, justify=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(lower_pannel, width=10, textvariable=self._window, justify=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
         widget = ttk.Label(lower_pannel, width=9, textvariable=self._end_t, justify=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
      
 
-    def setPending(self, stats_info):
-        percent = int(100 * stats_info['current']//stats_info['size'],0)
+    def set(self, stats_info):
+        self._dev_name.set(stats_info['name'])
+        self._start_t.set(stats_info['begin_tstamp'].strftime("%H:%M:%S"))
+        self._end_t.set(stats_info['end_tstamp'].strftime("%H:%M:%S"))
+        self._window.set( f"{round(stats_info['duration'],1)} sec.")
+
+        percent = int(100 * stats_info['current']//stats_info['nsamples'])
         self._dev_name.set(stats_info['name'])
         self._progress.set(percent)
 
-            
-    def setFull(self, stats_info):
-        self._dev_name.set(stats_info['name'])
-        self._start_t,set(stats_info['begin_tstamp'].strftime("%H:%M:%S"))
-        self._end_t,set(stats_info['end_tstamp'].strftime("%H:%M:%S"))
-        self._window.set( f"{stats_info['duration']} sec.")
+    def clear(self):
+        self._progress.set(0)
+        self._dev_name.set('')
+        self._start_t.set('')
+        self._end_t.set('')
+        self._window.set('')
+
 
 
 class PhotometerStatsPanel(ttk.Frame):
@@ -188,12 +202,22 @@ class PhotometerStatsPanel(ttk.Frame):
         widget.grid(row=2, column=1, padx=0, pady=2, sticky=tk.W)
 
 
-    def setFull(self, stats_info):
-        self._freq.set(stats_info['freq'])
-        self._stddev,set(stats_info['stddev'])
-        self._central,set(stats_info['central'])
-        self._mag.set(stats_info['mag'])
-        self._zp_fict.set(stats_info['zp_fict'])
+    def set(self, stats_info):
+        if 'freq' in stats_info.keys():
+            self._freq.set(stats_info['freq'])
+            self._stddev.set(round(stats_info['stddev'],3))
+            self._central,set(stats_info['central'])
+            self._mag.set(stats_info['mag'])
+            self._zp_fict.set(stats_info['zp_fict'])
+    
+    def clear(self):
+        self._freq.set(0)
+        self._stddev.set(0)
+        self._central.set('')
+        self._mag.set(0)
+        self._zp_fict.set(0)
+
+
 
 class PhotometerPanel(ttk.LabelFrame):
 
@@ -218,6 +242,20 @@ class PhotometerPanel(ttk.LabelFrame):
         self.stats.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=2)
         widget = ttk.Checkbutton(self, text= self._text, variable=self._enable, command=self.onEnablePanel)
         self.configure(labelwidget=widget) 
+
+    def clear(self):
+        self.info.clear()
+        self.progress.clear()
+        self.stats.clear()
+
+    def updatePhotInfo(self, phot_info):
+        self.info.set(phot_info)
+
+    def updatePhotStats(self, stats_info):
+        self.progress.set(stats_info)
+        self.stats.set(stats_info)
+
+
 
     def onEnablePanel(self):
         if self._enable.get():
@@ -283,6 +321,8 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         self._author.set(config['author'])
         self._rounds.set(config['rounds'])
         self._zp_offset.set(config['offset'])
+
+
 
 class CalibrationStatePanel(ttk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):

@@ -222,12 +222,27 @@ class MainFrame(ttk.Frame):
         self.batchPanel = BatchManagemetPanel(right_panel)
         self.batchPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
 
+        self.photPanel = {
+            'ref': self.refPanel,
+            'test': self.testPanel,
+        }
+
       
     def start(self):
         self.testPanel.start()
         self.refPanel.start()
         self.calibPanel.start()
         self.batchPanel.start()
+
+    def clearPhotPanel(self, role):
+        self.photPanel[role].clear()
+        
+    def updatePhotInfo(self, role, phot_info):
+        self.photPanel[role].updatePhotInfo(phot_info)
+
+    def updatePhotStats(self, role, stats_info):
+        self.photPanel[role].updatePhotStats(stats_info)
+    
 
 
     def build(self):

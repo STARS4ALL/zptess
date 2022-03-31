@@ -142,7 +142,7 @@ class PhotometerService(Service):
             yield self.connect()
             self.info = yield self.getPhotometerInfo()
         except DeferredTimeoutError as e:
-            self.log.critical("{excp}",excp=e)
+            self.log.critical("Timeout {excp}",excp=e)
             pub.sendMessage('phot_offline', role=self.role)
             return(None)
         except ConnectError as e:
@@ -208,6 +208,7 @@ class PhotometerService(Service):
             self.log.info("Using serial port {tty} at {baud} bps", tty=addr, baud=port)
         elif proto == 'tcp':
             self.factory.tcp_deferred = defer.Deferred()
+            self.factory.tcp_deferred.addTimeout(2, reactor)
             conn = reactor.connectTCP(addr, int(port), self.factory)
             protocol = yield self.factory.tcp_deferred
             self.gotProtocol(protocol)

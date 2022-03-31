@@ -223,7 +223,7 @@ class MainFrame(ttk.Frame):
         self.batchPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
 
         self.photPanel = {
-            'ref': self.refPanel,
+            'ref':  self.refPanel,
             'test': self.testPanel,
         }
 
@@ -236,7 +236,7 @@ class MainFrame(ttk.Frame):
 
     def clearPhotPanel(self, role):
         self.photPanel[role].clear()
-        
+
     def updatePhotInfo(self, role, phot_info):
         self.photPanel[role].updatePhotInfo(phot_info)
 

@@ -125,7 +125,7 @@ class PhotometerProgressPanel(ttk.Frame):
         # Upper sub-pabnel
         upper_panel  = ttk.Frame(self)
         upper_panel.pack(side=tk.TOP, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(upper_panel, width=16, textvariable=self._dev_name, sticky=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(upper_panel, width=16, textvariable=self._dev_name, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.TOP, fill=tk.X, padx=2, pady=2)
         widget = ttk.Progressbar(upper_panel, 
             variable = self._progress,
@@ -140,22 +140,22 @@ class PhotometerProgressPanel(ttk.Frame):
         # Lower sub-panel
         lower_pannel = ttk.Frame(self)
         lower_pannel.pack(side=tk.TOP, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(lower_pannel, width=9, textvariable=self._start_t, sticky=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(lower_pannel, width=9, textvariable=self._start_t, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(lower_pannel, width=10, textvariable=self._window, sticky=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(lower_pannel, width=10, textvariable=self._window, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(lower_pannel, width=9, textvariable=self._end_t, sticky=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(lower_pannel, width=9, textvariable=self._end_t, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
      
 
     def set(self, stats_info):
+        begin_tstamp = stats_info['begin_tstamp']
+        end_tstamp   = stats_info['end_tstamp']
         self._dev_name.set(stats_info['name'])
-        self._start_t.set(stats_info['begin_tstamp'].strftime("%H:%M:%S"))
-        self._end_t.set(stats_info['end_tstamp'].strftime("%H:%M:%S"))
+        self._start_t.set(begin_tstamp.strftime("%H:%M:%S") if begin_tstamp else '')
+        self._end_t.set(end_tstamp.strftime("%H:%M:%S") if end_tstamp else '')
         self._window.set( f"{round(stats_info['duration'],1)} sec.")
-
         percent = int(100 * stats_info['current']//stats_info['nsamples'])
-        self._dev_name.set(stats_info['name'])
         self._progress.set(percent)
 
     def clear(self):
@@ -168,6 +168,9 @@ class PhotometerProgressPanel(ttk.Frame):
 
 
 class PhotometerStatsPanel(ttk.Frame):
+
+    T = 50 # millieseconds for the animated progress bar
+
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self._freq    = tk.DoubleVar()
@@ -175,6 +178,8 @@ class PhotometerStatsPanel(ttk.Frame):
         self._central = tk.StringVar()
         self._zp_fict = tk.DoubleVar()
         self._mag     = tk.DoubleVar()
+        self._progress = tk.DoubleVar()
+        self._first_event = True
         self.build()
 
     def start(self):
@@ -201,9 +206,22 @@ class PhotometerStatsPanel(ttk.Frame):
         widget = ttk.Label(self, width=6, textvariable=self._zp_fict, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=1, padx=0, pady=2, sticky=tk.W)
 
+        self._progressW = ttk.Progressbar(self, 
+            variable = self._progress,
+            maximum  = 100,  # device period in milliseconds / self.T
+            length   = 130, 
+            mode     = 'indeterminate', 
+            orient   = tk.HORIZONTAL, 
+            value    = 0,
+        )
+        self._progressW.grid(row=3, column=0, columnspan=2, padx=0, pady=2, sticky=tk.W)
+
 
     def set(self, stats_info):
         if 'freq' in stats_info.keys():
+            if self._first_event:
+                self._first_event = False
+                self._progressW.start(self.T)
             self._freq.set(stats_info['freq'])
             self._stddev.set(round(stats_info['stddev'],3))
             self._central,set(stats_info['central'])
@@ -216,6 +234,9 @@ class PhotometerStatsPanel(ttk.Frame):
         self._central.set('')
         self._mag.set(0)
         self._zp_fict.set(0)
+        self._progress.set(0)
+        self._progressW.stop()
+        self._first_event = True
 
 
 

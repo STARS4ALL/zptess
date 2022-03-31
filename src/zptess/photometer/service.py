@@ -157,16 +157,6 @@ class PhotometerService(Service):
             pub.sendMessage('phot_offline', role=self.role)
             return(None)
         pub.sendMessage('phot_info', role=self.role, info=self.info)
-        if self.isRef:
-           return(None)
-        # Now this is for the test photometer only
-        if self.options['dry_run']:
-            self.log.info('Dry run. Will stop here ...') 
-            pub.sendMessage('phot_end')
-            return(None)
-        if self.options['write_zero_point'] is not None:
-            result = yield self.protocol.writeZeroPoint(self.options['write_zero_point'])
-            pub.sendMessage('phot_end')
         return(None)
 
 

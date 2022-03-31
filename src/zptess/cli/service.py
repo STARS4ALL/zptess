@@ -88,7 +88,6 @@ class CommandLineService(MultiService):
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
         pub.subscribe(self.onCalibrationEnd, 'calib_end')
         pub.subscribe(self.onPhotometerOffline, 'phot_offline')
-        pub.subscribe(self.onPhotometerEnd, 'phot_end')
         pub.subscribe(self.onPhotometerFirmware, 'phot_firmware')
         pub.subscribe(self.onStatisticsProgress, 'stats_progress')
         pub.subscribe(self.onStatisticsInfo, 'stats_info')
@@ -100,7 +99,6 @@ class CommandLineService(MultiService):
         pub.unsubscribe(self.onPhotometerInfo, 'phot_info')
         pub.unsubscribe(self.onCalibrationEnd, 'calib_end')
         pub.unsubscribe(self.onPhotometerOffline, 'phot_offline')
-        pub.unsubscribe(self.onPhotometerEnd, 'phot_end')
         pub.unsubscribe(self.onPhotometerFirmware, 'phot_firmware')
         pub.unsubscribe(self.onStatisticsProgress, 'stats_progress')
         pub.unsubscribe(self.onStatisticsInfo, 'stats_info')
@@ -128,11 +126,6 @@ class CommandLineService(MultiService):
         if self._test_transport_method == 'tcp':
             log.critical("[{label}] Conflictive firmware '{firmware}' for TCP comms. Use UDP instead", label=label, firmware=firmware)
             yield self.parent.stopService()
-
-    @inlineCallbacks
-    def onPhotometerEnd(self):
-        set_status_code(0)
-        yield self.parent.stopService()
 
     def onPhotometerOffline(self, role):
         set_status_code(1)
@@ -162,6 +155,7 @@ class CommandLineService(MultiService):
             w       = stats_info['duration']
         )
 
+    @inlineCallbacks
     def onPhotometerInfo(self, role, info):
         label = TEST if role == 'test' else REF
         if info is None:
@@ -174,27 +168,40 @@ class CommandLineService(MultiService):
             log.info("[{label}] Zero Point   : {value:.02f} (old)", label=label, value=info['zp'])
             log.info("[{label}] Offset Freq. : {value}", label=label, value=info['freq_offset'])
             log.info("[{label}] Firmware     : {value}", label=label, value=info['firmware'])
-      
+        if role == 'test' and self._cmd_options['dry_run']:
+            log.info('Dry run. Will stop here ...') 
+            set_status_code(0)
+            yield self.parent.stopService()
+        elif role == 'test' and self._cmd_options['write_zero_point'] is not None:
+            result = yield self.testPhotometer.writeZeroPoint(self._cmd_options['write_zero_point'])
+            set_status_code(0)
+            yield self.parent.stopService()
+
     # ==============
     # Helper methods
     # ==============
 
-
     def buildChain(self, isRef, prefix, alone):
-        self.buildStatistics(isRef, prefix, alone)
-        self.buildPhotometer(isRef, prefix)
+        phot  = self.buildStatistics(isRef, prefix, alone)
+        stats = self.buildPhotometer(isRef, prefix)
+        if isRef:
+            self.refStatistics = stats
+            self.refPhotometer = phot
+        else:
+            self.testStatistics = stats
+            self.testPhotometer = phot
 
     def buildBoth(self):
-        self.buildStatistics(isRef=True, prefix=REF,   alone=False)
-        self.buildStatistics(isRef=False, prefix=TEST, alone=False)
-        self.buildPhotometer(isRef=True, prefix=REF)
-        self.buildPhotometer(isRef=False, prefix=TEST)
+        self.refStatistics  = self.buildStatistics(isRef=True, prefix=REF,   alone=False)
+        self.testStatistics  = self.buildStatistics(isRef=False, prefix=TEST, alone=False)
+        self.refPhotometer  = self.buildPhotometer(isRef=True, prefix=REF)
+        self.testPhotometer = self.buildPhotometer(isRef=False, prefix=TEST)
 
     def build(self):
         if self._cmd_options['dry_run']:
-            self.buildPhotometer(isRef=False, prefix=TEST)
+            self.testPhotometer = self.buildPhotometer(isRef=False, prefix=TEST)
         elif self._cmd_options['write_zero_point']:
-            self.buildPhotometer(isRef=False, prefix=TEST)
+            self.testPhotometer = self.buildPhotometer(isRef=False, prefix=TEST)
         elif self._cmd_options['read'] == "ref":
             self.buildChain(isRef=True,  prefix=REF, alone=True)
         elif self._cmd_options['read'] == "test":
@@ -202,7 +209,7 @@ class CommandLineService(MultiService):
         elif self._cmd_options['read'] == "both":
             self.buildBoth()
         else:
-            self.buildCalibration()
+            self.calib = self.buildCalibration()
             self.buildBoth()
             
 
@@ -217,6 +224,7 @@ class CommandLineService(MultiService):
         service = CalibrationService(options)
         service.setName(CalibrationService.NAME)
         service.setServiceParent(self)
+        return service
 
 
     def buildStatistics(self, isRef, prefix, alone):
@@ -229,6 +237,7 @@ class CommandLineService(MultiService):
         service = StatisticsService(options, isRef, alone)
         service.setName(prefix + ' ' + StatisticsService.NAME)
         service.setServiceParent(self)
+        return service
 
     def buildPhotometer(self, isRef, prefix):
         if isRef:
@@ -265,4 +274,5 @@ class CommandLineService(MultiService):
         service = PhotometerService(options, isRef)
         service.setName(prefix + ' ' + PhotometerService.NAME)
         service.setServiceParent(self)
+        return service
     

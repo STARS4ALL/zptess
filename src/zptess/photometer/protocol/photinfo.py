@@ -89,6 +89,7 @@ class HTMLPhotometer:
         Writes Zero Point to the device. 
         Asynchronous operation
         '''
+        label = self.label
         result = {}
         result['tstamp'] = datetime.datetime.now(datetime.timezone.utc)
         url = self._make_save_url()
@@ -149,7 +150,7 @@ class HTMLPhotometer:
     def _make_state_url(self):
         return f"http://{self.addr}/config"
 
-    def _make_save_urlself(self):
+    def _make_save_url(self):
         return f"http://{self.addr}/setconst"
 
 

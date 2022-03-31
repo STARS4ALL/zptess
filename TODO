@@ -10,6 +10,8 @@ Ahora los ZP se calculan o bien con el ZP en el dispositivo o bien con un fictic
 que se lee de la BBDD en la seccion de calibración. 
 En el modo command line, cuando se da --read, se usa el individual de cada dispositivo
 
+Hay que ir eliminando el rastro de zp_abs (puede que en la BD no, lo mismo tengo que hacer una migracion ...)
+
 * Tabla config_t
  - Borrar propiedad (ref-device, zp_abs)
  - (ref-device, zp) = 20.44

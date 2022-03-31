@@ -163,10 +163,10 @@ class PhotometerPanelController:
         reactor.callLater(1, self.parent.parent.stopService)
 
     def onStatisticsProgress(self, role, stats_info):
-        log.info("onStatisticsProgress(role={role},stats_info={stats_info})", role=role, stats_info=stats_info)
         self.view.mainArea.updatePhotStats(role, stats_info)
 
     def onStatisticsInfo(self, role, stats_info):
+        log.info("onStatisticsProgress(role={role},stats_info={stats_info})", role=role, stats_info=stats_info)
         self.view.mainArea.updatePhotStats(role, stats_info)
 
     def onPhotometerInfo(self, role, info):
@@ -184,6 +184,10 @@ class PhotometerPanelController:
                 self.stats[role] = yield self._buildStatistics(role, alone)
             if not self.phot[role]:
                 self.phot[role] = yield self._buildPhotometer(role)
+            if alone:
+                self.stats[role].useOwnZP()
+            else:
+                self.stats[role].useFictZP()
             yield self._startChain(role)
         except Exception as e:
             log.failure('{e}',e=e)
@@ -274,10 +278,12 @@ class PhotometerPanelController:
             prefix    = TEST
             isRef     = False
         options = yield self.model.config.loadSection(section)
+        zp_fict =  yield self.model.config.load('calibration','zp_fict')
         options['samples'] = int(options['samples'])
         options['period']  = float(options['period'])
+        options['zp_fict']  = float(zp_fict['zp_fict'])
         options['log_level'] = 'info' # A capón de momento
-        service = StatisticsService(options, isRef, alone=alone)
+        service = StatisticsService(options, isRef, use_fict_zp= not alone)
         service.setName(prefix + ' ' + StatisticsService.NAME)
         return service
 

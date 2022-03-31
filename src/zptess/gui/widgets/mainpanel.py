@@ -147,6 +147,7 @@ class PhotometerProgressPanel(ttk.Frame):
         widget = ttk.Label(lower_pannel, width=9, textvariable=self._end_t, anchor=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
      
+      
 
     def set(self, stats_info):
         begin_tstamp = stats_info['begin_tstamp']
@@ -203,9 +204,9 @@ class PhotometerStatsPanel(ttk.Frame):
         widget.grid(row=2, column=1, padx=0, pady=2, sticky=tk.W)
 
         widget = ttk.Label(self, width=6, text= _("@ ZP. "))
-        widget.grid(row=2, column=0, padx=0, pady=2, sticky=tk.W)
+        widget.grid(row=3, column=0, padx=0, pady=2, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._zp_fict, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
-        widget.grid(row=2, column=1, padx=0, pady=2, sticky=tk.W)
+        widget.grid(row=3, column=1, padx=0, pady=2, sticky=tk.W)
 
         self._progressW = ttk.Progressbar(self, 
             variable = self._progress,
@@ -215,7 +216,7 @@ class PhotometerStatsPanel(ttk.Frame):
             orient   = tk.HORIZONTAL, 
             value    = 0,
         )
-        self._progressW.grid(row=3, column=0, columnspan=2, padx=0, pady=2, sticky=tk.W)
+        self._progressW.grid(row=4, column=0, columnspan=2, padx=0, pady=2, sticky=tk.W)
 
 
     def set(self, stats_info):
@@ -248,6 +249,7 @@ class PhotometerPanel(ttk.LabelFrame):
         self._text = text
         self._role = role
         self._enable = tk.BooleanVar()
+        self._own_zp   = tk.BooleanVar()
         self.build()
 
     def start(self):
@@ -256,6 +258,8 @@ class PhotometerPanel(ttk.LabelFrame):
         self.stats.start()
 
     def build(self):
+        widget = ttk.Checkbutton(self, text= _("Use device's stored zero point for magnitude display"),  variable=self._own_zp)
+        widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=22, pady=2)
         self.info = PhotometerInfoPanel(self)
         self.info.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=2)
         self.progress = PhotometerProgressPanel(self)
@@ -263,12 +267,14 @@ class PhotometerPanel(ttk.LabelFrame):
         self.stats = PhotometerStatsPanel(self)
         self.stats.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=2)
         widget = ttk.Checkbutton(self, text= self._text, variable=self._enable, command=self.onEnablePanel)
-        self.configure(labelwidget=widget) 
+        self.configure(labelwidget=widget)
+       
 
     def clear(self):
         self.info.clear()
         self.progress.clear()
         self.stats.clear()
+        self._own_zp.set(False)
 
     def updatePhotInfo(self, phot_info):
         self.info.set(phot_info)
@@ -279,7 +285,7 @@ class PhotometerPanel(ttk.LabelFrame):
 
     def onEnablePanel(self):
         if self._enable.get():
-            pub.sendMessage('start_photometer_req', role=self._role, alone=True)
+            pub.sendMessage('start_photometer_req', role=self._role, alone=self._own_zp.get())
         else:
             pub.sendMessage('stop_photometer_req', role=self._role)
 
@@ -290,6 +296,7 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         self._author = tk.StringVar()
         self._rounds = tk.IntVar()
         self._zp_offset = tk.DoubleVar()
+        self._zp_fict = tk.DoubleVar()
         self._update_db = tk.BooleanVar()
         self._update_phot = tk.BooleanVar()
         self._dry_run = tk.BooleanVar()
@@ -300,6 +307,9 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
 
     def invalid_zp_off(self):
         self._zp_offset.set(0)
+
+    def invalid_zp_fict(self):
+        self._zp_fict.set(20.50)
 
     def build(self):
         widget = ttk.Label(self, text= _("Author"))
@@ -321,19 +331,27 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         widget.grid(row=2, column=1, padx=4, pady=4, sticky=tk.W)
         ToolTip(widget, _("Additiona Zero Point offset to compensate for mechanical deficiencies in the integration sphere"))
 
+        ivcmd = (self.register(self.invalid_zp_fict),)
+        widget = ttk.Label(self, text= _("Ficticious ZP"))
+        widget.grid(row=3, column=0, padx=10, pady=4, sticky=tk.W)
+        widget = ttk.Entry(self, width=6, textvariable=self._zp_fict, justify=tk.RIGHT, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
+        widget.grid(row=3, column=1, padx=4, pady=4, sticky=tk.W)
+        ToolTip(widget, _("Ficticious, common zero point when performing calibrations"))
+
         widget = ttk.Checkbutton(self, text= _("Update\nDatabase"), variable=self._update_db)
         widget.grid(row=0, column=2, padx=2, pady=4, sticky=tk.W)
         widget = ttk.Checkbutton(self, text= _("Update\nPhotometer"), variable=self._update_phot)
         widget.grid(row=1, column=2, padx=2, pady=4, sticky=tk.EW)
        
         widget = ttk.Button(self, text=_("Save"), command=self.onClickButton)
-        widget.grid(row=3, column=0, columnspan=3, padx=2, pady=4)
+        widget.grid(row=4, column=0, columnspan=3, padx=2, pady=4)
 
     def onClickButton(self):
         config = {
             'author': self._author.get(),
             'rounds': self._rounds.get(),
             'offset': self._zp_offset.get(),
+            'zp_fict': self._zp_fict.get(),
         }
         pub.sendMessage('save_calib_config_req', config=config)
 
@@ -341,6 +359,7 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         self._author.set(config['author'])
         self._rounds.set(config['rounds'])
         self._zp_offset.set(config['offset'])
+        self._zp_fict.set(config['zp_fict'])
 
 
 

@@ -1,27 +1,25 @@
 SHORT TERM
 ==========
 
+* bugs
+ Hay un lio con el nombre y el ZP en el stats service, cuando se activa prinero stars3 y lueho stars488
+ Se mezcaln los nomnbres y el zp. talvez tiene que ver con el flag alone, que se envía a True en ambos casos
+
+YA ESTOY DESHACEINDO EL LIO EN LA RAMA fix/zpmess
+Ahora los ZP se calculan o bien con el ZP en el dispositivo o bien con un ficticio común 
+que se lee de la BBDD en la seccion de calibración. 
+En el modo command line, cuando se da --read, se usa el individual de cada dispositivo
+
+* Tabla config_t
+ - Borrar propiedad (ref-device, zp_abs)
+ - (ref-device, zp) = 20.44
+ - Insertar propiedad (calibration, zp_fict) = 20.50
+
 * GUI
 
-- PhotometerPanel como composited de PhotmeterInfoPanel, PhotometerStatusPanel y PhotometerStatsPanel
-
-
-- Preferences:
-  *. lectira inicial y mapeos
 - DAO de ssioness de batch_t
   y el controlador que tenga openSession(), closeSession() y PurgeSession()
-- MAin  Screen
-  - Menu Bar
-  - Main Panel:
-    - panel superior con test photometer
-      - izda photometer info, medio progress y right medidas
-    - panel inferior con reference photometer
-      - izda photometer info, medio progress y right medidas
-    - panel lateral izdo con la calibración
-      - arriba estado de calibracion
-      - medio opciones de calibración
-      - abajo con gestion del batch (combo box con acciones abrir, cerrar, exportar y purgar)
-   - Status bar: con el estado del batch (fechas, y emailed flags)
+
 
 * Implementar en el GUI habliltar y desabilitar TCP/UDP opciones cuando
 el modelo de TESSW es TAS o TESS-P. para loas ttk hay que hacerlo a través de los estilos

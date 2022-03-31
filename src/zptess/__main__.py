@@ -86,6 +86,7 @@ def createParser():
     parser_cli.add_argument('-S', '--samples', type=int,   default=None, help='# samples in each round')
     parser_cli.add_argument('-C', '--central', type=str,   default=None, choices=[MEDIAN,MEAN,MODE], metavar='<estimator>', help='central tendency estimator')
     parser_cli.add_argument('-P', '--period',  type=float, default=None, action='store', metavar='<float>', help='Wait period between statistics')
+    parser_cli.add_argument('-z', '--zp-fict', type=float, default=None, action='store', metavar='<float>', help='Alternate ZP to use for both photometers')
 
     # generic options
     parser_cli.add_argument('-m','--messages', type=str, choices=["ref","test","both"], default=None, help='log photometer messages')

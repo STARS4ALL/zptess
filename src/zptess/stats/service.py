@@ -61,11 +61,11 @@ NAMESPACE = 'stats'
 
 class CircularBuffer(object):
 
-    def __init__(self, size, central, log):
+    def __init__(self, size, central, zp, log):
         self.log          = log
         self._nsamples    = size
         self._buffer      = deque([], size)
-        self._zp_fict     = None
+        self._zp          = zp
         self._freq_offset = None
         self._central = central
         if central == "mean":
@@ -80,7 +80,7 @@ class CircularBuffer(object):
     # -------------------
 
     def fixZeroPoint(self, zp):
-        self._zp_fict = zp
+        self._zp = zp
 
     def fixFreqOffset(self, freq_offset):
         self._freq_offset = freq_offset
@@ -104,13 +104,13 @@ class CircularBuffer(object):
             'current' : len(self._buffer),
             'begin_tstamp': begin_tstamp,
             'end_tstamp'  : end_tstamp,
-            'duration': (end_tstamp - begin_tstamp).total_seconds() if begin_tstamp is not None else None
+            'duration': (end_tstamp - begin_tstamp).total_seconds() if begin_tstamp is not None else None,
         }
 
     def getStats(self):
         ring        = self._buffer
         N           = len(self._buffer)
-        zp_fict     = self._zp_fict
+        zp          = self._zp
         central     = self._central
         freq_offset = self._freq_offset
         begin_tstamp= ring[0]['tstamp']
@@ -121,7 +121,7 @@ class CircularBuffer(object):
             self.log.debug("ring = {q}", q=frequencies)
             cFreq  = self._central_func(frequencies)
             sFreq  = statistics.stdev(frequencies, cFreq)
-            cMag   = zp_fict - 2.5*math.log10(cFreq - freq_offset)
+            cMag   = zp - 2.5*math.log10(cFreq - freq_offset)
         except statistics.StatisticsError as e:
             self.log.error("Statistics error: {e}", e=e)
             return None
@@ -133,7 +133,7 @@ class CircularBuffer(object):
                 'nsamples'    : self._nsamples,
                 'current'     : N,
                 'central'     : central,
-                'zp_fict'     : zp_fict,
+                'zp_fict'     : zp,
                 'begin_tstamp': begin_tstamp, # native datetime object
                 'end_tstamp'  : end_tstamp,   # native datetime object
                 'freq'        : cFreq,
@@ -154,15 +154,17 @@ class StatisticsService(Service):
     NAME    = 'Statistics Service'
     T       = 1.50    # Progress task period
 
-    def __init__(self, options, isRef, alone):
+    def __init__(self, options, isRef, use_fict_zp):
         self.options = options
-        self._alone   = alone
+        self._use_fict_zp = use_fict_zp
         if isRef:
             self._role = 'ref'
             self._label = REF
         else:
             self._role = 'test'
             self._label = TEST
+        self._freq_offset = None # Not known yet, must come from photometer Info
+        self._dev_name    = None # Not known yet, must come from photometer Info
         self.log = Logger(namespace=NAMESPACE)
         self.statTask = task.LoopingCall(self._compute)
         self.progressTask = task.LoopingCall(self._progress)
@@ -178,21 +180,21 @@ class StatisticsService(Service):
         with inline callbacks
         '''
         setLogLevel(namespace=NAMESPACE, levelStr=self.options['log_level'])
-        self._samples     = self.options['samples']
-        self._central     = self.options['central']
-        self._period      = self.options['period']
         self._freq_offset = None # Not known yet, must come from photometer Info
         self._dev_name    = None # Not known yet, must come from photometer Info
-        self._zp_fict     = None # Not known yet, must come from Ref photometer Info
-        self.log.info("[{label:4s}] {name:8s} Starting {service} (T = {T} secs.)",
+
+        self.log.info("[{label:4s}] {name:8s} Starting {service} (T = {T} secs.), (fict zp = {zp}, usage = {usage})",
             label   = self._label,
             name    = '?????' if self._dev_name is None else self._dev_name,
             service = self.name,
-            T       = self._period,
+            T       = self.options['period'],
+            zp      = self.options['zp_fict'],
+            usage   = self._use_fict_zp
         )
         self._buffer = CircularBuffer(
-            size        = self._samples,
-            central     = self._central,
+            size        = self.options['samples'],
+            central     = self.options['central'],
+            zp          = self.options['zp_fict'],
             log         = self.log
         )
         pub.subscribe(self.onSampleReceived, 'phot_sample')
@@ -232,24 +234,34 @@ class StatisticsService(Service):
     # Statistics API 
     # --------------
 
+    def useFictZP(self):
+        self.log.info("[{label:4s}] {name:8s} Using ficticious ZP {zp}",
+            label   = self._label,
+            name    = '?????' if self._dev_name is None else self._dev_name,
+            zp      = self.options['zp_fict']
+        )
+        self._use_fict_zp = True
+
+    def useOwnZP(self):
+        self.log.info("[{label:4s}] {name:8s} Using ZP stored in photometer",
+            label   = self._label,
+            name    = '?????' if self._dev_name is None else self._dev_name,
+        )
+        self._use_fict_zp = False
+
     def onPhotometerInfo(self, role, info):
-        if self._alone:
-            self._dev_name    = info['name']    # Only changes its own device
-            self._freq_offset = info['freq_offset']
-            self._buffer.fixFreqOffset(info['freq_offset'])
-            self._zp_fict = info['zp']
-            self._buffer.fixZeroPoint(info['zp']) 
-            return
         if role == self._role:
             self._dev_name    = info['name']    # Only changes its own device
             self._freq_offset = info['freq_offset']
-            self._buffer.fixFreqOffset(info['freq_offset'])    
+            self._buffer.fixFreqOffset(info['freq_offset'])
+            if not self._use_fict_zp:
+                self.log.info("[{label:4s}] {name:8s} Changing ZP to device ZP ({zp})",
+                    label   = self._label,
+                    name    = '?????' if self._dev_name is None else self._dev_name,
+                    zp      = info['zp']
+                 )
+                self._buffer.fixZeroPoint(info['zp']) 
         
-        if  role == 'ref': # Fixes both Statistcs Services
-            self._zp_abs  = info['zp_abs']           
-            self._zp_fict = info['zp']
-            self._buffer.fixZeroPoint(info['zp'])
-
     def onSampleReceived(self, role, sample):
         if role == self._role:
             self._buffer.write(sample) # Stores samples from its own device
@@ -267,7 +279,7 @@ class StatisticsService(Service):
                 label   = self._label,
                 name    = '?????' if self._dev_name is None else self._dev_name
             )
-            self.statTask.start(self._period, now=True)
+            self.statTask.start(self.options['period'], now=True)
             return
         stats_info = self._buffer.getProgressInfo()
         stats_info['name'] = '?????' if not self._dev_name else self._dev_name
@@ -283,7 +295,6 @@ class StatisticsService(Service):
             return
         stats_info['name'] = self._dev_name
         stats_info['role'] = self._role
-        stats_info['zp_fict'] = self._zp_fict
         pub.sendMessage('stats_info', role=self._role, stats_info=stats_info)
 
 

@@ -210,7 +210,6 @@ class MainFrame(ttk.Frame):
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, pady=0, ipadx=0, ipady=0)
         right_panel = ttk.Frame(self)
         right_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, pady=0, ipadx=0, ipady=0)
-
         self.photPanel = {
             'ref':  PhotometerPanel(left_panel, role='ref', text= _("Reference Photometer")),
             'test': PhotometerPanel(left_panel, role='test', text= _("Test Photometer")),
@@ -222,9 +221,6 @@ class MainFrame(ttk.Frame):
         self.batchPanel = BatchManagemetPanel(right_panel)
         self.batchPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
 
-        
-
-      
     def start(self):
         self.photPanel['test'].start()
         self.photPanel['ref'].start()

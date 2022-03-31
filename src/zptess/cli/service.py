@@ -280,11 +280,14 @@ class CommandLineService(MultiService):
     def buildStatistics(self, isRef, prefix, alone):
         section = 'ref-stats' if isRef else 'test-stats'
         options = self.dbaseServ.getInitialConfig(section)
+        cal_options =  self.dbaseServ.getInitialConfig('calibration')
+        zp_fict = cal_options['zp_fict']
         options['samples'] = self._cmd_options['samples'] or int(options['samples'])
         options['central'] = self._cmd_options['central'] or options['central']
         options['period']  = self._cmd_options['period']  or float(options['period'])
+        options['zp_fict'] = self._cmd_options['zp_fict'] or float(zp_fict)
         options['log_level'] = 'info' # A capón de momento
-        service = StatisticsService(options, isRef, alone)
+        service = StatisticsService(options, isRef, use_fict_zp=not alone)
         service.setName(prefix + ' ' + StatisticsService.NAME)
         service.setServiceParent(self)
         return service

@@ -151,6 +151,7 @@ class CalibrationService(Service):
                 self.calibrate(stats_ref, stats_test)
         else:
             summary_ref, summary_test = self.summary()
+            pub.sendMessage('calib_summary_lists', session=self.session, zp_list=self.best['zp'], ref_freqs=self.best['ref_freq'], test_freqs=self.best['test_freq'])
             pub.sendMessage('calib_summary_info', role='ref', stats_info=summary_ref)
             pub.sendMessage('calib_summary_info', role='test',stats_info=summary_test)
             pub.sendMessage('calib_end', session=self.session)
@@ -178,22 +179,20 @@ class CalibrationService(Service):
         magDiff = -2.5*math.log10(stats_ref['freq']/stats_test['freq'])
         zp = round(self.zp_abs + magDiff,2)
         if stats_ref['stddev'] != 0.0 and stats_test['stddev'] != 0.0:
-            log.info('ROUND       {i:02d}: (ref-test) \u0394 Mag = {magDiff:0.2f}, ZP Fict = {zp_fict:0.2f}, ZP Abs = {zp_abs:0.2f}, ZP = {zp:0.2f}',
-                    i        = self.curRound, 
-                    magDiff = magDiff, 
-                    zp_fict  = self.zp_fict, 
-                    zp_abs   = self.zp_abs,
-                    zp       = zp,
-            )
             self.best['zp'].append(zp)          # Collect this info whether we need it or not
             self.best['ref_freq'].append(stats_ref['freq'])
             self.best['test_freq'].append(stats_test['freq'])
             stats_ref['zero_point']  = None
             stats_test['zero_point'] = zp
+            # All of this oiis for display purposes
             stats_ref['mag_diff']  = None
             stats_test['mag_diff'] = magDiff
-            pub.sendMessage('calib_round_info', role='ref',  round=self.curRound, stats_info=stats_ref)
-            pub.sendMessage('calib_round_info', role='test', round=self.curRound, stats_info=stats_test)
+            stats_ref['zp_fict']  = self.zp_fict
+            stats_test['zp_fict'] = self.zp_fict
+            stats_ref['zp_abs']   = self.zp_abs
+            stats_test['zp_abs']  = self.zp_abs
+            pub.sendMessage('calib_round_info', role='ref',  count=self.curRound, stats_info=stats_ref)
+            pub.sendMessage('calib_round_info', role='test', count=self.curRound, stats_info=stats_test)
             self.curRound += 1
         elif stats_ref['stddev'] == 0.0 and stats_test['stddev'] != 0.0:
             log.warn('FROZEN {lab}', lab=stats_ref['name'])
@@ -201,15 +200,9 @@ class CalibrationService(Service):
             log.warn('FROZEN {lab}', lab=stats_test['name'])
         else:
             log.warn('FROZEN {rLab} and {tLab}', rLab=stats_ref['name'], tLab=stats_test['name'])
-        log.info("="*72)
 
 
     def summary(self):
-        log.info("#"*72)
-        log.info("Session = {session}",session=self.session)
-        log.info("Best ZP        list is {bzp}",  bzp=self.best['zp'])
-        log.info("Best {rLab} Freq list is {brf}",brf=self.best['ref_freq'],  rLab=REF)
-        log.info("Best {tLab} Freq list is {btf}",btf=self.best['test_freq'], tLab=TEST)
         summary_ref  = dict()
         summary_test = dict()
         try:
@@ -236,23 +229,15 @@ class CalibrationService(Service):
             summary_test['freq'] = statistics.median(self.best['test_freq'])
         offset   = self.options['offset']
         final_zp = best_zp + offset
-        log.info("Final ZP ({fzp:0.2f}) = Best ZP ({bzp:0.2f}) + offset ({o:0.2f})",fzp=final_zp, bzp=best_zp,o=offset )
         summary_test['zero_point'] = final_zp
         summary_ref['zero_point']  = float(self.phot['ref']['zp']) # Always the same, not choosen
         summary_test['mag']  = self.zp_fict - 2.5*math.log10(summary_test['freq'])
         summary_ref['mag']   = self.zp_fict - 2.5*math.log10(summary_ref['freq'])
         summary_test['mag_offset'] = -2.5*math.log10(summary_ref['freq']/summary_test['freq'])
-        summary_ref['mag_offset']  = 0
+        summary_ref['mag_offset']  = 0.0
         # prev_zp is the ZP we have read from the photometer when we contacted it.
         summary_test['prev_zp'] = float(self.phot['test']['zp'])                
         summary_ref['prev_zp']  = float(self.phot['ref']['zp']) # Always the same, not choosen
-        log.info("{rLab} Freq. = {rF:0.3f} Hz , {tLab} Freq. = {tF:0.3f}, {rLab} Mag. = {rM:0.2f}, {tLab} Mag. = {tM:0.2f}, Diff {d:0.2f}", 
-                rF= summary_ref['freq'], tF=summary_test['freq'], 
-                rM=summary_ref['mag'],   tM=summary_test['mag'], d=summary_test['mag_offset'],
-                rLab=REF, tLab=TEST)
-        log.info("OLD {tLab} ZP = {old_zp:0.2f}, NEW {tLab} ZP = {new_zp:0.2f}", 
-            old_zp=summary_test['prev_zp'], new_zp=summary_test['zero_point'], tLab=TEST)
-        log.info("#"*72)
         # Additional metadata
         summary_test['upd_flag'] = 1 if self.options['update'] else 0
         summary_test['offset']   = self.options['offset']

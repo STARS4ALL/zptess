@@ -17,6 +17,7 @@
 'calib_summary_info'.  info: role and summary dict.
 'calib_round_info'.    Info role and same statistics dict as 'stats_info' plus calculated ZP, round # and magnitude differential.
 'calib_flash_zp'       Info: new zp to flash.
+'calib_summary_lists'  >Info: lists of best ZPs, Ref Freqs and Test Freqs
 
 # GUI events
 

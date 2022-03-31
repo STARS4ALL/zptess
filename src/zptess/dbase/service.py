@@ -256,7 +256,7 @@ class DatabaseService(Service):
     def onPhotometerInfo(self, role, info):
         self.phot[role]['info'] = info
 
-    def onRoundStatInfo(self, role, round, stats_info):
+    def onRoundStatInfo(self, role, count, stats_info):
         if self.session is None:    # Discard rounds info not bound to sessions
             return
         stats_info['mac']     = self.phot[role]['info']['mac']

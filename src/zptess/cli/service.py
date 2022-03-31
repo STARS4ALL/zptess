@@ -87,6 +87,9 @@ class CommandLineService(MultiService):
         self.dbaseServ.setTestMode(self._cmd_options['test'])
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
         pub.subscribe(self.onCalibrationEnd, 'calib_end')
+        pub.subscribe(self.onCalibrationRoundInfo, 'calib_round_info')
+        pub.subscribe(self.onCalibrationLists, 'calib_summary_lists')
+        pub.subscribe(self.onCalibrationSummary, 'calib_summary_info')
         pub.subscribe(self.onPhotometerOffline, 'phot_offline')
         pub.subscribe(self.onPhotometerFirmware, 'phot_firmware')
         pub.subscribe(self.onStatisticsProgress, 'stats_progress')
@@ -98,6 +101,9 @@ class CommandLineService(MultiService):
         log.info("Stopping {name}", name=self.name)
         pub.unsubscribe(self.onPhotometerInfo, 'phot_info')
         pub.unsubscribe(self.onCalibrationEnd, 'calib_end')
+        pub.unsubscribe(self.onCalibrationRoundInfo, 'calib_round_info')
+        pub.unsubscribe(self.onCalibrationLists, 'calib_summary_lists')
+        pub.unsubscribe(self.onCalibrationSummary, 'calib_summary_info')
         pub.unsubscribe(self.onPhotometerOffline, 'phot_offline')
         pub.unsubscribe(self.onPhotometerFirmware, 'phot_firmware')
         pub.unsubscribe(self.onStatisticsProgress, 'stats_progress')
@@ -154,6 +160,50 @@ class CommandLineService(MultiService):
             sFreq   = stats_info['stddev'],
             w       = stats_info['duration']
         )
+
+    def onCalibrationRoundInfo(self, role, count, stats_info):
+        label = TEST if role == 'test' else REF
+        if role == 'test':
+            log.info('ROUND       {i:02d}: (ref-test) \u0394 Mag = {magDiff:0.2f} @ ZP Fict = {zp_fict:0.2f}, ZP Abs = {zp_abs:0.2f}, ZP = {zp:0.2f}',
+                i        = count ,
+                magDiff  = stats_info['mag_diff'], 
+                zp_fict  = stats_info['zp_fict'], 
+                zp_abs   = stats_info['zp_abs'],
+                zp       = stats_info['zero_point'],
+            )
+            log.info("="*72)
+
+
+    def onCalibrationLists(self, session, zp_list, ref_freqs, test_freqs):
+        log.info("#"*72)
+        log.info("Session = {session}",session=session)
+        log.info("Best ZP        list is {bzp}",  bzp=zp_list)
+        log.info("Best {rLab} Freq list is {brf}",brf=ref_freqs,  rLab=REF)
+        log.info("Best {tLab} Freq list is {btf}",btf=test_freqs, tLab=TEST)
+
+
+    def onCalibrationSummary(self, role, stats_info):
+        label = TEST if role == 'test' else REF
+        log.info("{label} Best Freq. = {freq:0.3f} Hz, Mag. = {mag:0.2f}, Diff {diff:0.2f}", 
+                freq= stats_info['freq'],
+                mag=stats_info['mag'],  
+                diff=stats_info['mag_offset'],
+                label=label
+        )
+        if role == 'test':
+            final_zp = stats_info['zero_point']
+            offset   = stats_info['offset']
+            best_zp  = final_zp - offset
+            log.info("Final {label} ZP ({fzp:0.2f}) = Best ZP ({bzp:0.2f}) + offset ({o:0.2f})",fzp=final_zp, bzp=best_zp, o=offset, label=label)
+            log.info("Old {label} ZP = {old_zp:0.2f}, NEW {label} ZP = {new_zp:0.2f}", 
+                old_zp=stats_info['prev_zp'], new_zp=final_zp, label=label)
+            log.info("#"*72)
+
+        # log.info("{rLab} Freq. = {rF:0.3f} Hz , {tLab} Freq. = {tF:0.3f}, {rLab} Mag. = {rM:0.2f}, {tLab} Mag. = {tM:0.2f}, Diff {d:0.2f}", 
+        #         rF= summary_ref['freq'], tF=summary_test['freq'], 
+        #         rM=summary_ref['mag'],   tM=summary_test['mag'], d=summary_test['mag_offset'],
+        #         rLab=REF, tLab=TEST)
+
 
     @inlineCallbacks
     def onPhotometerInfo(self, role, info):

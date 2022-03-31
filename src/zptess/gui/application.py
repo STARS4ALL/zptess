@@ -211,26 +211,23 @@ class MainFrame(ttk.Frame):
         right_panel = ttk.Frame(self)
         right_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, pady=0, ipadx=0, ipady=0)
 
-        self.testPanel = PhotometerPanel(left_panel, role='test', text= _("Test Photometer"))
-        self.testPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=10, ipadx=5, ipady=5)
-        self.refPanel = PhotometerPanel(left_panel, role='ref', text= _("Reference Photometer"))
-        self.refPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=10)
-
+        self.photPanel = {
+            'ref':  PhotometerPanel(left_panel, role='ref', text= _("Reference Photometer")),
+            'test': PhotometerPanel(left_panel, role='test', text= _("Test Photometer")),
+        }
+        self.photPanel['test'].pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=10, ipadx=5, ipady=5)
+        self.photPanel['ref'].pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=10)
         self.calibPanel = CalibrationPanel(right_panel)
         self.calibPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=0, pady=0)
-
         self.batchPanel = BatchManagemetPanel(right_panel)
         self.batchPanel.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
 
-        self.photPanel = {
-            'ref':  self.refPanel,
-            'test': self.testPanel,
-        }
+        
 
       
     def start(self):
-        self.testPanel.start()
-        self.refPanel.start()
+        self.photPanel['test'].start()
+        self.photPanel['ref'].start()
         self.calibPanel.start()
         self.batchPanel.start()
 

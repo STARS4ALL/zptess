@@ -41,7 +41,7 @@ from zptess.logger             import setLogLevel
 from zptess.dbase.service      import DatabaseService
 from zptess.stats.service      import StatisticsService
 from zptess.photometer.service import PhotometerService
-from zptess.calibration        import CalibrationService
+from zptess.calibration.service        import CalibrationService
 
 
 # ----------------

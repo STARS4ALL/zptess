@@ -40,7 +40,7 @@ from zptess                    import set_status_code, REF, TEST
 from zptess.utils              import chop
 from zptess.stats.service      import StatisticsService
 from zptess.photometer.service import PhotometerService
-from zptess.calibration        import CalibrationService
+from zptess.calibration.service        import CalibrationService
 
 # ----------------
 # Module constants
@@ -207,15 +207,7 @@ class PhotometerPanelController:
     def onStartPhotometerReq(self, role):
         try:
             log.info("onStartPhotometerReq({role})", role=role)
-            if not self.stats[role].running:
-                yield maybeDeferred(self.stats[role].startService)
-            else:
-                log.warn("{name} already running",name=self.stats[role].name)
-            if not self.phot[role].running:
-                yield maybeDeferred(self.phot[role].startService)
-            else:
-                log.warn("{name} already running",name=self.phot[role].name)
-           
+            yield self.startChain(role)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -225,14 +217,7 @@ class PhotometerPanelController:
     def onStopPhotometerReq(self, role):
         try:
             log.info("onStopPhotometerReq({role})", role=role)
-            if not self.stats[role].running:
-                log.warn("{name} was not not running",name=self.stats[role].name)
-            else:
-                yield self.stats[role].stopService()
-            if not self.phot[role].running:
-                log.warn("{name} was not not running",name=self.phot[role].name)
-            else:
-                yield self.phot[role].stopService()
+            yield self.stopChain(role)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -240,6 +225,44 @@ class PhotometerPanelController:
     # ----------------
     # Auxiliar methods
     # ----------------
+
+    @inlineCallbacks
+    def startChain(self, role):
+        if not self.stats[role].running:
+            self.stats[role].startService()
+        else:
+            log.warn("{name} already running",name=self.stats[role].name)
+        if not self.phot[role].running:
+            yield self.phot[role].startService()
+        else:
+            log.warn("{name} already running",name=self.phot[role].name)
+      
+
+    @inlineCallbacks
+    def stopChain(self, role):
+        if not self.stats[role].running:
+            log.warn("{name} was not not running",name=self.stats[role].name)
+        else:
+            yield self.stats[role].stopService()
+        if not self.phot[role].running:
+            log.warn("{name} was not not running",name=self.phot[role].name)
+        else:
+            yield self.phot[role].stopService()
+
+    @inlineCallbacks
+    def startCalibration(self, role):
+       if not self.calib.running:
+            self.calib.startService()
+        else:
+            log.warn("{name} already running",name=self.calib.name)
+
+    @inlineCallbacks
+    def stopCalibration(self, role):
+        if not self.calib.running:
+            log.warn("{name} was not not running",name=self.calib.name)
+        else:
+            yield self.calib.stopService()
+       
 
     @inlineCallbacks
     def _buildPhotometer(self, isRef):
@@ -252,7 +275,6 @@ class PhotometerPanelController:
         options = yield self.model.config.loadSection(section)
         options['model']        = options['model'].upper()
         options['log_level']    = 'info' # A capón de momento
-        options['dry_run']      = None # A capón de momento
         options['write_zero_point'] = None # A capón de momento
         options['log_messages'] = 'warn'  # A capón de momento
         options['config_dao']   = self.model.config

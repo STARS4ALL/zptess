@@ -135,6 +135,7 @@ class PhotometerPanelController:
         phot2  = yield self._buildPhotometer(False)
         stats1 = yield self._buildStatistics(True)
         stats2 = yield self._buildStatistics(False)
+        self.calib = yield self._buildCalibration()
         self.phot = {
             'ref':  phot1,
             'test': phot2,
@@ -207,7 +208,7 @@ class PhotometerPanelController:
     def onStartPhotometerReq(self, role):
         try:
             log.info("onStartPhotometerReq({role})", role=role)
-            yield self.startChain(role)
+            yield self._startChain(role)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -217,7 +218,7 @@ class PhotometerPanelController:
     def onStopPhotometerReq(self, role):
         try:
             log.info("onStopPhotometerReq({role})", role=role)
-            yield self.stopChain(role)
+            yield self._stopChain(role)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -227,7 +228,7 @@ class PhotometerPanelController:
     # ----------------
 
     @inlineCallbacks
-    def startChain(self, role):
+    def _startChain(self, role):
         if not self.stats[role].running:
             self.stats[role].startService()
         else:
@@ -239,7 +240,7 @@ class PhotometerPanelController:
       
 
     @inlineCallbacks
-    def stopChain(self, role):
+    def _stopChain(self, role):
         if not self.stats[role].running:
             log.warn("{name} was not not running",name=self.stats[role].name)
         else:
@@ -250,14 +251,14 @@ class PhotometerPanelController:
             yield self.phot[role].stopService()
 
     @inlineCallbacks
-    def startCalibration(self, role):
-       if not self.calib.running:
+    def _startCalibration(self, role):
+        if not self.calib.running:
             self.calib.startService()
         else:
             log.warn("{name} already running",name=self.calib.name)
 
     @inlineCallbacks
-    def stopCalibration(self, role):
+    def _stopCalibration(self, role):
         if not self.calib.running:
             log.warn("{name} was not not running",name=self.calib.name)
         else:
@@ -298,4 +299,14 @@ class PhotometerPanelController:
         options['log_level'] = 'info' # A capón de momento
         service = StatisticsService(options, isRef, alone=alone)
         service.setName(prefix + ' ' + StatisticsService.NAME)
+        return service
+
+    @inlineCallbacks
+    def _buildCalibration(self):
+        section = 'calibration'
+        options = yield self.model.config.loadSection(section)
+        options['update']    = False  # A capón de momento
+        options['log_level'] = 'info' # A capón de momento
+        service = CalibrationService(options)
+        service.setName(CalibrationService.NAME)
         return service

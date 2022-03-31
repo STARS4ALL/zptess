@@ -229,13 +229,6 @@ class PhotometerService(Service):
         info['label'] = self.label
         info['role']  = self.role
         return(info)
-       
-
-    def isLimitedStart(self):
-        '''Detects the case where only the Test photometer service is started'''
-        if self.isRef:
-            return False
-        return (self.options['dry_run'] or self.options['write_zero_point'] is not None) 
 
     
     def buildFactory(self, old_payload, proto):
@@ -270,8 +263,6 @@ class PhotometerService(Service):
     def gotProtocol(self, protocol):
         self.log.debug("got protocol")
         self.deduplicater.registerProducer(protocol, True)
-        if self.isLimitedStart():
-            protocol.stopProducing()    # We don need to feed messages to the buffer
         self.protocol  = protocol
 
 

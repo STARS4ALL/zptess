@@ -125,7 +125,7 @@ class PhotometerProgressPanel(ttk.Frame):
         # Upper sub-pabnel
         upper_panel  = ttk.Frame(self)
         upper_panel.pack(side=tk.TOP, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(upper_panel, width=16, textvariable=self._dev_name, justify=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(upper_panel, width=16, textvariable=self._dev_name, sticky=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.TOP, fill=tk.X, padx=2, pady=2)
         widget = ttk.Progressbar(upper_panel, 
             variable = self._progress,
@@ -140,11 +140,11 @@ class PhotometerProgressPanel(ttk.Frame):
         # Lower sub-panel
         lower_pannel = ttk.Frame(self)
         lower_pannel.pack(side=tk.TOP, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(lower_pannel, width=9, textvariable=self._start_t, justify=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(lower_pannel, width=9, textvariable=self._start_t, sticky=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(lower_pannel, width=10, textvariable=self._window, justify=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(lower_pannel, width=10, textvariable=self._window, sticky=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
-        widget = ttk.Label(lower_pannel, width=9, textvariable=self._end_t, justify=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
+        widget = ttk.Label(lower_pannel, width=9, textvariable=self._end_t, sticky=tk.CENTER, borderwidth=1, relief=tk.SUNKEN)
         widget.pack(side=tk.LEFT, fill=tk.X, padx=2, pady=2)
      
 

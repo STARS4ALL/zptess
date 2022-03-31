@@ -267,9 +267,7 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         widget.grid(row=0, column=2, padx=2, pady=4, sticky=tk.W)
         widget = ttk.Checkbutton(self, text= _("Update\nPhotometer"), variable=self._update_phot)
         widget.grid(row=1, column=2, padx=2, pady=4, sticky=tk.EW)
-        widget = ttk.Checkbutton(self, text= _("Dry run"),  variable=self._dry_run)
-        widget.grid(row=2, column=2, padx=2, pady=4, sticky=tk.W)
-
+       
         widget = ttk.Button(self, text=_("Save"), command=self.onClickButton)
         widget.grid(row=3, column=0, columnspan=3, padx=2, pady=4)
 

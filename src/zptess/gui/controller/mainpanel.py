@@ -131,18 +131,14 @@ class PhotometerPanelController:
         pub.subscribe(self.onStatisticsProgress, 'stats_progress')
         pub.subscribe(self.onStatisticsInfo, 'stats_info')
 
-        phot1  = yield self._buildPhotometer(True)
-        phot2  = yield self._buildPhotometer(False)
-        stats1 = yield self._buildStatistics(True)
-        stats2 = yield self._buildStatistics(False)
         self.calib = yield self._buildCalibration()
         self.phot = {
-            'ref':  phot1,
-            'test': phot2,
+            'ref':  None,
+            'test': None,
         }
         self.stats = {
-            'ref':  stats1,
-            'test': stats2,
+            'ref':  None,
+            'test': None,
         }
 
 
@@ -167,6 +163,7 @@ class PhotometerPanelController:
         reactor.callLater(1, self.parent.parent.stopService)
 
     def onStatisticsProgress(self, role, stats_info):
+        log.info("onStatisticsProgress(role={role},stats_info={stats_info})", role=role, stats_info=stats_info)
         self.view.mainArea.updatePhotStats(role, stats_info)
 
     def onStatisticsInfo(self, role, stats_info):
@@ -179,11 +176,14 @@ class PhotometerPanelController:
         else:
             self.view.mainArea.updatePhotInfo(role, info)
       
-
     @inlineCallbacks
-    def onStartPhotometerReq(self, role):
+    def onStartPhotometerReq(self, role, alone):
         try:
-            log.info("onStartPhotometerReq({role})", role=role)
+           
+            if not self.stats[role]:
+                self.stats[role] = yield self._buildStatistics(role, alone)
+            if not self.phot[role]:
+                self.phot[role] = yield self._buildPhotometer(role)
             yield self._startChain(role)
         except Exception as e:
             log.failure('{e}',e=e)
@@ -193,7 +193,6 @@ class PhotometerPanelController:
     @inlineCallbacks
     def onStopPhotometerReq(self, role):
         try:
-            log.info("onStopPhotometerReq({role})", role=role)
             yield self._stopChain(role)
             self.view.mainArea.clearPhotPanel(role)
         except Exception as e:
@@ -243,13 +242,15 @@ class PhotometerPanelController:
        
 
     @inlineCallbacks
-    def _buildPhotometer(self, isRef):
-        if isRef:
+    def _buildPhotometer(self, role):
+        if role == 'ref':
             section   = 'ref-device'
             prefix    = REF
+            isRef     = True
         else:
             section   = 'test-device'
             prefix    = TEST
+            isRef     = False
         options = yield self.model.config.loadSection(section)
         options['model']        = options['model'].upper()
         options['log_level']    = 'info' # A capón de momento
@@ -263,13 +264,15 @@ class PhotometerPanelController:
         return service
 
     @inlineCallbacks
-    def _buildStatistics(self, isRef, alone=True):
-        if isRef:
+    def _buildStatistics(self, role, alone):
+        if role == 'ref':
             section   = 'ref-stats'
             prefix    = REF
+            isRef     = True
         else:
             section   = 'test-stats'
             prefix    = TEST
+            isRef     = False
         options = yield self.model.config.loadSection(section)
         options['samples'] = int(options['samples'])
         options['period']  = float(options['period'])
@@ -282,7 +285,7 @@ class PhotometerPanelController:
     def _buildCalibration(self):
         section = 'calibration'
         options = yield self.model.config.loadSection(section)
-        options['update']    = False  # A capón de momento
+        options['update']    = False  # A capón de momento, pero se necesita para el uupdate flag de la bbdd
         options['log_level'] = 'info' # A capón de momento
         service = CalibrationService(options)
         service.setName(CalibrationService.NAME)

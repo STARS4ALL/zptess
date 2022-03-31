@@ -151,10 +151,11 @@ class PhotometerProgressPanel(ttk.Frame):
     def set(self, stats_info):
         begin_tstamp = stats_info['begin_tstamp']
         end_tstamp   = stats_info['end_tstamp']
+        duration     = str(round(stats_info['duration'],1)) if stats_info['duration'] else ''
         self._dev_name.set(stats_info['name'])
         self._start_t.set(begin_tstamp.strftime("%H:%M:%S") if begin_tstamp else '')
         self._end_t.set(end_tstamp.strftime("%H:%M:%S") if end_tstamp else '')
-        self._window.set( f"{round(stats_info['duration'],1)} sec.")
+        self._window.set( f"{duration} sec.")
         percent = int(100 * stats_info['current']//stats_info['nsamples'])
         self._progress.set(percent)
 
@@ -276,11 +277,9 @@ class PhotometerPanel(ttk.LabelFrame):
         self.progress.set(stats_info)
         self.stats.set(stats_info)
 
-
-
     def onEnablePanel(self):
         if self._enable.get():
-            pub.sendMessage('start_photometer_req', role=self._role)
+            pub.sendMessage('start_photometer_req', role=self._role, alone=True)
         else:
             pub.sendMessage('stop_photometer_req', role=self._role)
 

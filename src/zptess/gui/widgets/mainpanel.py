@@ -227,7 +227,7 @@ class PhotometerStatsPanel(ttk.Frame):
             self._freq.set(stats_info['freq'])
             self._stddev.set(round(stats_info['stddev'],3))
             self._central,set(stats_info['central'])
-            self._mag.set(stats_info['mag'])
+            self._mag.set(round(stats_info['mag'],2))
             self._zp_fict.set(stats_info['zp_fict'])
     
     def clear(self):
@@ -239,7 +239,6 @@ class PhotometerStatsPanel(ttk.Frame):
         self._progress.set(0)
         self._progressW.stop()
         self._first_event = True
-
 
 
 class PhotometerPanel(ttk.LabelFrame):
@@ -269,7 +268,6 @@ class PhotometerPanel(ttk.LabelFrame):
         widget = ttk.Checkbutton(self, text= self._text, variable=self._enable, command=self.onEnablePanel)
         self.configure(labelwidget=widget)
        
-
     def clear(self):
         self.info.clear()
         self.progress.clear()
@@ -288,6 +286,16 @@ class PhotometerPanel(ttk.LabelFrame):
             pub.sendMessage('start_photometer_req', role=self._role, alone=self._own_zp.get())
         else:
             pub.sendMessage('stop_photometer_req', role=self._role)
+
+    def startCalibration(self):
+        self._enable.set(True)
+        self._own_zp.set(False)
+
+    def stopCalibration(self):
+        self._enable.set(False)
+        self.clear()
+
+
 
 
 class CalibrationSettingsPanel(ttk.LabelFrame):
@@ -424,6 +432,33 @@ class CalibrationStatePanel(ttk.LabelFrame):
         widget = ttk.Label(right_frame, width=8, textvariable=self._zp_fict, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=2, padx=2, pady=2, sticky=tk.W)
 
+    def updateCalibration(self, count, stats_info):
+        self._round.set(count)
+        self._magdif.set(stats_info['mag_diff'])
+        self._zp.set(stats_info['zero_point'])
+
+    def updateSummary(self, summary_info):
+        self._best_freq.set(summary_info['freq'])
+        self._best_zp.set(summary_info['zero_point'])
+        self._best_mag.set(f"{summary_info['mag']} @ 20.xx")
+        self._freq_method .set(summary_info['freq_method'])
+        self._zp_method.set(summary_info['zero_point_method'])
+
+    def clear(self):
+        self._round.set(0)
+        self._magdif.set(0)
+        self._zp.set(0)
+        self._best_freq.set(0)
+        self._best_zp.set(0)
+        self._best_mag.set(0)
+        self._zp_fict.set(0)
+        self._freq_method.set('')
+        self._zp_method.set('')
+        self._zp_fict.set("@ 20.50")
+
+
+
+
 
 class BatchManagemetPanel(ttk.LabelFrame): 
     def __init__(self, parent, *args, **kwargs):
@@ -462,22 +497,26 @@ class CalibrationPanel(ttk.LabelFrame):
         self.state.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)        
         widget = ttk.Checkbutton(self, text= _("Calibration"), variable=self._enable, command=self.onEnablePanel)
         self.configure(labelwidget=widget)
-        self._text.set(_("Start"))
-        widget = ttk.Button(self, textvariable=self._text, command=self.onClickButton)
-        widget.pack(side=tk.TOP,  padx=10, pady=5)
 
-    def onClickButton(self):
-        if self._text.get() == ("Start"):
-            pub.sendMessage('start_calibration_req')
-            self._text.set(_("Stop"))
-        else:
-            pub.sendMessage('stop_calibration_req')
-            self._text.set(_("Start"))
 
     def onEnablePanel(self):
         if self._enable.get():
+            self.state.clear()
             pub.sendMessage('start_calibration_req')
         else:
             pub.sendMessage('stop_calibration_req')
+
+    def updateCalibration(self, count, stats_info):
+        self.state.updateCalibration(count, stats_info)
+
+    def updateSummary(self, summary_info):
+        self.state.updateSummary(summary_info)
+
+    def stopCalibration(self):
+        self._enable.set(False)
+
+
+
+
 
 

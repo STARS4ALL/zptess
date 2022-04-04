@@ -235,6 +235,21 @@ class MainFrame(ttk.Frame):
 
     def updatePhotStats(self, role, stats_info):
         self.photPanel[role].updatePhotStats(stats_info)
+
+    def startCalibration(self):
+        self.photPanel['test'].startCalibration()
+        self.photPanel['ref'].startCalibration()
+
+    def stopCalibration(self):
+        self.photPanel['test'].stopCalibration()
+        self.photPanel['ref'].stopCalibration()
+        self.calibPanel.stopCalibration()
+
+    def updateCalibration(self, count, stats_info):
+        self.calibPanel.updateCalibration(count, stats_info)
+
+    def updateSummary(self, summary_info):
+        self.calibPanel.updateSummary(summary_info)
     
 
 

@@ -123,6 +123,9 @@ class PhotometerPanelController:
         log.info("Building underlaying service objects")
         pub.subscribe(self.onStartPhotometerReq, 'start_photometer_req')
         pub.subscribe(self.onStopPhotometerReq, 'stop_photometer_req')
+        pub.subscribe(self.onStartCalibrationReq, 'start_calibration_req')
+        pub.subscribe(self.onStopCalibrationReq, 'stop_calibration_req')
+
         # Events coming from services
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
         pub.subscribe(self.onPhotometerOffline, 'phot_firmware')
@@ -130,6 +133,9 @@ class PhotometerPanelController:
         pub.subscribe(self.onPhotometerEnd, 'phot_end')
         pub.subscribe(self.onStatisticsProgress, 'stats_progress')
         pub.subscribe(self.onStatisticsInfo, 'stats_info')
+        pub.subscribe(self.onCalibrationRound, 'calib_round_info')
+        pub.subscribe(self.onCalibrationSummary, 'calib_summary_info')
+        pub.subscribe(self.onCalibrationEnd, 'calib_end')
 
         self.calib = yield self._buildCalibration()
         self.phot = {
@@ -137,6 +143,10 @@ class PhotometerPanelController:
             'test': None,
         }
         self.stats = {
+            'ref':  None,
+            'test': None,
+        }
+        self.photinfo = {
             'ref':  None,
             'test': None,
         }
@@ -166,11 +176,12 @@ class PhotometerPanelController:
         self.view.mainArea.updatePhotStats(role, stats_info)
 
     def onStatisticsInfo(self, role, stats_info):
-        log.info("onStatisticsProgress(role={role},stats_info={stats_info})", role=role, stats_info=stats_info)
+        #log.info("onStatisticsProgress(role={role},stats_info={stats_info})", role=role, stats_info=stats_info)
         self.view.mainArea.updatePhotStats(role, stats_info)
 
     def onPhotometerInfo(self, role, info):
         label = TEST if role == 'test' else REF
+        self.photinfo[role] = info
         if info is None:
             log.warn("[{label}] No photometer info available. Is it Connected?", label=label)
         else:
@@ -179,7 +190,7 @@ class PhotometerPanelController:
     @inlineCallbacks
     def onStartPhotometerReq(self, role, alone):
         try:
-           
+            self.photinfo[role] = None
             if not self.stats[role]:
                 self.stats[role] = yield self._buildStatistics(role, alone)
             if not self.phot[role]:
@@ -202,6 +213,49 @@ class PhotometerPanelController:
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
+
+    def onCalibrationRound(self, role, count, stats_info):
+        #log.info("onCalibrationRound(stats_info={stats_info})", role=role, stats_info=stats_info)
+        if role == 'test':
+            self.view.mainArea.updateCalibration(count, stats_info)
+
+    def onCalibrationSummary(self, role, stats_info):
+        #log.info("onCalibrationSummary(stats_info={stats_info})", role=role, stats_info=stats_info)
+        if role == 'test':
+            self.view.mainArea.updateSummary(stats_info)
+
+    @inlineCallbacks
+    def onStartCalibrationReq(self):
+        if not self.calib.running:
+            self.calib.startService()
+
+        yield self.onStartPhotometerReq('test', alone=False)
+        yield self.onStartPhotometerReq('ref', alone=False)
+        if self.phot['ref'].running:
+            self.calib.onPhotometerInfo('regf', self.phot['ref'])
+       
+        self.view.mainArea.startCalibration()
+
+
+    @inlineCallbacks
+    def onStopCalibrationReq(self):
+        if not self.calib.running:
+            log.warn("{name} was not not running",name=self.calib.name)
+        else:
+            yield self.calib.stopService()
+            yield self._stopChain('test')
+            yield self._stopChain('ref')
+        self.view.mainArea.stopCalibration()
+
+    @inlineCallbacks
+    def onCalibrationEnd(self, session):
+        yield self.calib.stopService()
+        yield self._stopChain('test')
+        yield self._stopChain('ref')
+        self.view.mainArea.stopCalibration()
+
+       
+
 
     # ----------------
     # Auxiliar methods
@@ -230,20 +284,7 @@ class PhotometerPanelController:
         else:
             yield self.phot[role].stopService()
 
-    @inlineCallbacks
-    def _startCalibration(self, role):
-        if not self.calib.running:
-            self.calib.startService()
-        else:
-            log.warn("{name} already running",name=self.calib.name)
-
-    @inlineCallbacks
-    def _stopCalibration(self, role):
-        if not self.calib.running:
-            log.warn("{name} was not not running",name=self.calib.name)
-        else:
-            yield self.calib.stopService()
-       
+    
 
     @inlineCallbacks
     def _buildPhotometer(self, role):
@@ -291,7 +332,9 @@ class PhotometerPanelController:
     def _buildCalibration(self):
         section = 'calibration'
         options = yield self.model.config.loadSection(section)
-        options['update']    = False  # A capón de momento, pero se necesita para el uupdate flag de la bbdd
+        options['rounds'] = int(options['rounds'])
+        options['offset'] = float(options['offset'])
+        options['update'] = False  # A capón de momento, pero se necesita para el uupdate flag de la bbdd
         options['log_level'] = 'info' # A capón de momento
         service = CalibrationService(options)
         service.setName(CalibrationService.NAME)

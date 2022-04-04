@@ -253,6 +253,10 @@ class PhotometerPanelController:
         yield self._stopChain('test')
         yield self._stopChain('ref')
         self.view.mainArea.stopCalibration()
+        self.view.messageBoxInfo(
+            title = _("Calibration"),
+            message = _("Calibration process finsihed.")
+        )
 
        
 

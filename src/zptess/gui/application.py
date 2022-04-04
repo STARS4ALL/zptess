@@ -97,17 +97,17 @@ class Application(tk.Tk):
     # Error conditions
     # ----------------
 
-    def messageBoxInfo(self, who, message):
-        tk.messagebox.showinfo(message=message, title=who)
+    def messageBoxInfo(self, title, message):
+        tk.messagebox.showinfo(message=message, title=title)
 
-    def messageBoxError(self, who, message):
-        tk.messagebox.showerror(message=message, title=who)
+    def messageBoxError(self, title, message):
+        tk.messagebox.showerror(message=message, title=title)
 
-    def messageBoxWarn(self, who, message):
-        tk.messagebox.showwarning(message=message, title=who)
+    def messageBoxWarn(self, title, message):
+        tk.messagebox.showwarning(message=message, title=title)
 
-    def messageBoxAcceptCancel(self, who, message):
-        return tk.messagebox.askokcancel(message=message, title=who)
+    def messageBoxAcceptCancel(self, title, message):
+        return tk.messagebox.askokcancel(message=message, title=title)
 
     def openDirectoryDialog(self):
         return tk.filedialog.askdirectory()

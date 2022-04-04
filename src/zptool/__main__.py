@@ -136,8 +136,7 @@ def createParser():
 	reup.add_argument('--name',     type=str, default=None, help='Ref. photometer name')
 	reup.add_argument('--mac',      type=str, default=None, help='Ref. photometer MAC address')
 	reup.add_argument('--firmware', type=str, default=None, help='Ref. photometer firmware revision')
-	reup.add_argument('--zp',       type=str, default=None, help='Ref. photometer Zero Point')
-	reup.add_argument('--zp-abs',   type=str, default=None, help='Ref. photometer absolute Zero Point (calibrated against SQM)')
+	reup.add_argument('--zp',       type=str, default=None, help='Ref. photometer absolute Zero Point (calibrated against SQM)')
 
 	# -----------------------------------------
 	# Create second level parsers for 'summary'

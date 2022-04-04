@@ -319,7 +319,6 @@ class DBasePhotometer:
         self.log.info("<== {label:6s} [SQL] returns {result}", label=label, result=result)
         result['tstamp'] = datetime.datetime.now(datetime.timezone.utc)
         result['zp']    = float(result['zp'])
-        result['zp_abs'] = float(result['zp_abs'])
         result['freq_offset'] = float(result['freq_offset'])
         result['old_proto'] = int(result['old_proto'])
         return(result)

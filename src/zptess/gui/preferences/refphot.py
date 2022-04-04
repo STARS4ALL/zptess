@@ -64,7 +64,6 @@ class DeviceInfoWidget(ttk.LabelFrame):
         self._dev_name = tk.StringVar()
         self._mac   = tk.StringVar()
         self._zp    = tk.DoubleVar()
-        self._zp_abs = tk.DoubleVar()
         self._firmware = tk.StringVar()
         self._freq_offset = tk.DoubleVar()
         self.build()
@@ -106,13 +105,6 @@ class DeviceInfoWidget(ttk.LabelFrame):
         widget.grid(row=5, column=0, padx=0, pady=0, sticky=tk.W)
         widget = ttk.Entry(self, width=6, textvariable=self._zp, justify=tk.RIGHT, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
         widget.grid(row=5, column=1, padx=0, pady=0, sticky=tk.E)
-        ToolTip(widget, _("ZP used in the firmware"))
-
-        ivcmd = (self.register(self.invalid_zp_abs),)
-        widget = ttk.Label(self, text= _("Absolute Zero Point"))
-        widget.grid(row=6, column=0, padx=0, pady=0, sticky=tk.W)
-        widget = ttk.Entry(self, width=6, textvariable=self._zp_abs, justify=tk.RIGHT, validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
-        widget.grid(row=6, column=1, padx=0, pady=0, sticky=tk.E)
         ToolTip(widget, _("Determined calibrated against a SQM photometer"))
 
 
@@ -125,14 +117,10 @@ class DeviceInfoWidget(ttk.LabelFrame):
     def invalid_freq_off(self):
         self._freq_offset.set(0)
 
-    def invalid_zp_abs(self):
-        self._zp_abs.set(0)
-
     def set(self, values):
         self._dev_name.set(values['name'])
         self._mac.set(values['mac'])
         self._zp.set(values['zp'])
-        self._zp_abs.set(values['zp_abs'])
         self._firmware.set(values['firmware'])
         self._freq_offset.set(values['freq_offset'])
 
@@ -141,7 +129,6 @@ class DeviceInfoWidget(ttk.LabelFrame):
             'name': self._dev_name.get(),
             'mac': self._mac.get(),
             'zp': self._zp.get(),
-            'zp_abs': self._zp_abs.get(),
             'firmware': self._firmware.get(),
             'freq_offset': self._freq_offset.get()
         }

@@ -164,11 +164,10 @@ class CommandLineService(MultiService):
     def onCalibrationRoundInfo(self, role, count, stats_info):
         label = TEST if role == 'test' else REF
         if role == 'test':
-            log.info('ROUND       {i:02d}: (ref-test) \u0394 Mag = {magDiff:0.2f} @ ZP Fict = {zp_fict:0.2f}, ZP Abs = {zp_abs:0.2f}, ZP = {zp:0.2f}',
+            log.info('ROUND       {i:02d}: New ZP = {zp:0.2f} = \u0394(ref-test) Mag ({magDiff:0.2f}) + ZP Abs ({zp_fict:0.2f})',
                 i        = count ,
                 magDiff  = stats_info['mag_diff'], 
                 zp_fict  = stats_info['zp_fict'], 
-                zp_abs   = stats_info['zp_abs'],
                 zp       = stats_info['zero_point'],
             )
             log.info("="*72)
@@ -194,7 +193,7 @@ class CommandLineService(MultiService):
             final_zp = stats_info['zero_point']
             offset   = stats_info['offset']
             best_zp  = final_zp - offset
-            log.info("Final {label} ZP ({fzp:0.2f}) = Best ZP ({bzp:0.2f}) + offset ({o:0.2f})",fzp=final_zp, bzp=best_zp, o=offset, label=label)
+            log.info("Final {label} ZP ({fzp:0.2f}) = Best ZP ({bzp:0.2f}) + ZP offset ({o:0.2f})",fzp=final_zp, bzp=best_zp, o=offset, label=label)
             log.info("Old {label} ZP = {old_zp:0.2f}, NEW {label} ZP = {new_zp:0.2f}", 
                 old_zp=stats_info['prev_zp'], new_zp=final_zp, label=label)
             log.info("#"*72)

@@ -223,8 +223,6 @@ class PhotometerService(Service):
     @inlineCallbacks
     def getPhotometerInfo(self):
         info = yield self.protocol.getPhotometerInfo()
-        if self.isRef:
-            info['zp_abs'] = float(self.options['zp_abs'])
         info['model'] = self.options['model']
         info['label'] = self.label
         info['role']  = self.role

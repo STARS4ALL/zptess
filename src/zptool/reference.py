@@ -40,13 +40,10 @@ def update(connection, options):
         update_property(connection,'reference','firmware',options.firmware)
     if options.zp is not None:
         update_property(connection,'reference','zp',options.zp)
-    if options.zp_abs is not None:
-        update_property(connection,'reference','zp_abs',options.zp_abs)
     view(connection, options)
 
 
 def view(connection, options):
     '''View reference section in config database'''
     cursor = section_read(connection, 'reference')
-    kk = cursor.fetchall()
-    section_display(kk)
+    section_display(cursor.fetchall())

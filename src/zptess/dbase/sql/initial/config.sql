@@ -33,9 +33,7 @@ VALUES ('ref-device', 'mac', '18:FE:34:CF:E9:A3');
 INSERT INTO config_t(section, property, value) 
 VALUES ('ref-device', 'firmware', '');
 INSERT INTO config_t(section, property, value) 
-VALUES ('ref-device', 'zp', '20.50');
-INSERT INTO config_t(section, property, value) 
-VALUES ('ref-device', 'zp_abs', '20.44');
+VALUES ('ref-device', 'zp', '20.44');
 INSERT INTO config_t(section, property, value) 
 VALUES ('ref-device', 'freq_offset', '0.0');
 

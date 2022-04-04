@@ -134,11 +134,14 @@ class CalibrationService(Service):
     def onPhotometerInfo(self, role, info):
         self.phot[role] = info
         if role == 'ref':
-            self.zp_abs  = info['zp_abs']
+            self.zp_abs  = info['zp']
             self.zp_fict = info['zp']
 
 
     def onIndividualStats(self, role, stats_info):
+        if self.phot[role] is None:
+            log.warn("Missing {role} photometer info. Ignoring individual statitics",role=role)
+            return
         stats_info['session'] = self.session
         self._stats[role] = stats_info
         if (self._stats['ref'] is None) or (self._stats['test'] is None):
@@ -189,8 +192,6 @@ class CalibrationService(Service):
             stats_test['mag_diff'] = magDiff
             stats_ref['zp_fict']  = self.zp_fict
             stats_test['zp_fict'] = self.zp_fict
-            stats_ref['zp_abs']   = self.zp_abs
-            stats_test['zp_abs']  = self.zp_abs
             pub.sendMessage('calib_round_info', role='ref',  count=self.curRound, stats_info=stats_ref)
             pub.sendMessage('calib_round_info', role='test', count=self.curRound, stats_info=stats_test)
             self.curRound += 1
@@ -208,18 +209,18 @@ class CalibrationService(Service):
         try:
             summary_ref['zero_point_method']  = None    # Not choosen, so no selection method
             summary_test['zero_point_method'] = 'mode'
-            best_zp                      = mode(self.best['zp'])
+            best_zp = mode(self.best['zp'])
         except statistics.StatisticsError as e:
             log.error("Error choosing best zp using mode, selecting median instead")
             summary_test['zero_point_method'] = 'median'
-            best_zp              = statistics.median(self.best['zp'])
+            best_zp = statistics.median(self.best['zp'])
         try:
             summary_ref['freq_method']   = 'mode'
-            summary_ref['freq']   = mode(self.best['ref_freq'])
+            summary_ref['freq'] = mode(self.best['ref_freq'])
         except statistics.StatisticsError as e:
             log.error("Error choosing best Ref. Freq. using mode, selecting median instead")
             summary_ref['freq_method']   = 'median'
-            summary_ref['freq']  = statistics.median(self.best['ref_freq'])
+            summary_ref['freq'] = statistics.median(self.best['ref_freq'])
         try:
             summary_test['freq_method']   = 'mode'
             summary_test['freq']  = mode(self.best['test_freq'])
@@ -230,14 +231,14 @@ class CalibrationService(Service):
         offset   = self.options['offset']
         final_zp = best_zp + offset
         summary_test['zero_point'] = final_zp
-        summary_ref['zero_point']  = float(self.phot['ref']['zp']) # Always the same, not choosen
+        summary_ref['zero_point']  = self.zp_abs # Always the same, not choosen
         summary_test['mag']  = self.zp_fict - 2.5*math.log10(summary_test['freq'])
         summary_ref['mag']   = self.zp_fict - 2.5*math.log10(summary_ref['freq'])
         summary_test['mag_offset'] = -2.5*math.log10(summary_ref['freq']/summary_test['freq'])
         summary_ref['mag_offset']  = 0.0
         # prev_zp is the ZP we have read from the photometer when we contacted it.
         summary_test['prev_zp'] = float(self.phot['test']['zp'])                
-        summary_ref['prev_zp']  = float(self.phot['ref']['zp']) # Always the same, not choosen
+        summary_ref['prev_zp']  = self.zp_abs # Always the same, not choosen
         # Additional metadata
         summary_test['upd_flag'] = 1 if self.options['update'] else 0
         summary_test['offset']   = self.options['offset']

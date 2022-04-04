@@ -1,16 +1,12 @@
 SHORT TERM
 ==========
+* Comporbar que si calib.running, el hacer start_rervice de los checkbutton es dummy
+y des-pulsar el checkbox . haha
+
+* dialog cuando las muestras sessiones y summary se han escrito a la BBDD
 
 * bugs
- Hay un lio con el nombre y el ZP en el stats service, cuando se activa prinero stars3 y lueho stars488
- Se mezcaln los nomnbres y el zp. talvez tiene que ver con el flag alone, que se envía a True en ambos casos
 
-YA ESTOY DESHACEINDO EL LIO EN LA RAMA fix/zpmess
-Ahora los ZP se calculan o bien con el ZP en el dispositivo o bien con un ficticio común 
-que se lee de la BBDD en la seccion de calibración. 
-En el modo command line, cuando se da --read, se usa el individual de cada dispositivo
-
-Hay que ir eliminando el rastro de zp_abs (puede que en la BD no, lo mismo tengo que hacer una migracion ...)
 
 * Tabla config_t
  - Borrar propiedad (ref-device, zp_abs)

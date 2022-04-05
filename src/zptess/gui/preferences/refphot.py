@@ -70,6 +70,7 @@ class DeviceInfoWidget(ttk.LabelFrame):
 
     def build(self):
         
+
         # widget = ttk.Label(self, text= _("Model"))
         # widget.grid(row=0, column=0, padx=2, pady=0, sticky=tk.W)
         # widget = ttk.Entry(self, width=10, textvariable=self._model)
@@ -151,6 +152,7 @@ class RefPhotometerFrame(BasePreferencesFrame):
 
     def build(self):
         super().build()
+        self._control['model'].config(values="TESS-W")
         container = self._container
         self.stats = StatisticsWidget(container)
         self.stats.pack(side=tk.TOP, fill=tk.BOTH, expand=False, padx=2, pady=2)

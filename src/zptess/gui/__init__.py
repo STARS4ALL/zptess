@@ -35,6 +35,13 @@ ABOUT_ICONS = (
 	('ACTION PROJECT EU', resource_filename(__name__, os.path.join('resources', 'about', 'action64.png'))),
 )
 
+# Default falues for communication widgets
+
+DEF_REF_TESSW_ENDPOINT  = "serial:/dev/ttyUSB0:9600"
+DEF_TEST_TESSW_ENDPOINT = "udp:192.168.4.1:2255"
+DEF_TEST_TESSP_ENDPOINT = "serial:/dev/ttyUSB1:9600"
+DEF_TEST_TAS_ENDPOINT   = "serial:/dev/ttyUSB1:9600"
+
 
 # -----------------------
 # Module global variables

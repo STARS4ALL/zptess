@@ -176,7 +176,7 @@ class CommunicationsWidget(ttk.LabelFrame):
 
 class BasePreferencesFrame(ttk.Frame):
 
-    def __init__(self, parent, label, initial_event, save_event, cancel_event, **kwargs):
+    def __init__(self, parent, label, initial_event, save_event, cancel_event, model_event, **kwargs):
         super().__init__(parent, **kwargs)
         self._input   = {}
         self._control = {}
@@ -184,6 +184,7 @@ class BasePreferencesFrame(ttk.Frame):
         self._initial_event = initial_event
         self._save_event    = save_event
         self._cancel_event  = cancel_event
+        self._model_event   = model_event
         self._model = tk.StringVar()
         self.build()
         
@@ -192,10 +193,13 @@ class BasePreferencesFrame(ttk.Frame):
 
     def build(self):
 
+        vcmd  = (self.register(self.onModelChange), '%P')
         widget = ttk.Label(self, text= _("Model"))
         widget.pack(side=tk.TOP, fill=tk.X, expand=False,  padx=10, pady=1)
-        widget = ttk.Combobox(self, state='readonly', textvariable=self._model, values=("TESS-W","TESS-P","TAS"))
+        widget = ttk.Combobox(self, state='readonly', textvariable=self._model, 
+            values=("TESS-W","TESS-P","TAS"), validate='focusin', validatecommand=vcmd) # 'focusin' is essential
         widget.pack(side=tk.TOP, fill=tk.X, expand=False,  padx=10, pady=1)
+        self._control['model'] = widget
 
         # Where to really put the children  widgets
         container_frame = ttk.Frame(self)
@@ -214,18 +218,23 @@ class BasePreferencesFrame(ttk.Frame):
         button.pack(side=tk.RIGHT,fill=tk.X, expand=True, padx=10, pady=5)
         self._control['cancel'] = button
 
+    def onModelChange(self, value):
+        '''When changing TESS model'''
+        pub.sendMessage(self._model_event, model=value)
+        return True
+
     # ------------
     # Save Control
     # ------------
     
-    # When pressing the save button
+    # To be subclassed
     def onSaveButton(self):
-        '''To be subclassed'''
+        '''When pressing the save button'''
         raise NotImplementedError()
 
-    # response from controller to save button
+    # May be be subclassed
     def saveOkResp(self):
-        '''May be subclassed'''
+        '''response from controller to save button'''
         pub.sendMessage('gui_preferences_close')
 
 
@@ -233,8 +242,8 @@ class BasePreferencesFrame(ttk.Frame):
     # Cancel Control
     # --------------
 
-    # When pressing the delete button
     def onCancelButton(self):
-       pub.sendMessage('gui_preferences_close')
+        '''When pressing the cancel button'''
+        pub.sendMessage('gui_preferences_close')
 
  

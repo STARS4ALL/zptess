@@ -86,6 +86,7 @@ class Preferences(tk.Toplevel):
             initial_event = "test_config_load_req",
             save_event    = "test_config_save_req",
             cancel_event  = None,
+            model_event   = 'test_model_change_req',
         )
         test_frame.pack(fill='both', expand=True)
         notebook.add(test_frame, text= _("Test Photometer"))
@@ -95,6 +96,7 @@ class Preferences(tk.Toplevel):
             initial_event = "ref_config_load_req",
             save_event    = "ref_config_save_req",
             cancel_event  = None,
+            model_event   = 'ref_model_change_req',
         )
         ref_frame.pack(fill='both', expand=True)
         notebook.add(ref_frame, text= _("Reference Photometer"))

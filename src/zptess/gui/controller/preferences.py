@@ -33,7 +33,8 @@ from pubsub import pub
 # local imports
 # -------------
 
-from zptess import __version__
+from zptess import __version__, TESSW, TAS, TESSP
+from zptess.gui import DEF_REF_TESSW_ENDPOINT, DEF_TEST_TESSW_ENDPOINT, DEF_TEST_TESSP_ENDPOINT, DEF_TEST_TAS_ENDPOINT
 from zptess.logger  import startLogging, setLogLevel
 
 # ----------------
@@ -75,10 +76,30 @@ class PreferencesController:
         pub.subscribe(self.onTestConfigLoadReq, 'test_config_load_req')
         pub.subscribe(self.onRefConfigSaveReq, 'ref_config_save_req')
         pub.subscribe(self.onTestConfigSaveReq, 'test_config_save_req')
+        pub.subscribe(self.onRefModelChangeReq, 'ref_model_change_req')
+        pub.subscribe(self.onTestModelChangeReq, 'test_model_change_req')
 
     # --------------
     # Event handlers
     # --------------
+
+    def onRefModelChangeReq(self, model):
+        pass    # By design decission, we do not force values here.
+
+    def onTestModelChangeReq(self, model):
+        '''Present some reasonable defaults that can be changed and stored as preferfences'''
+        try:
+            log.info("Test photometer model changed to {model}",model=model)
+            if model == TAS:
+                value = {'endpoint': DEF_TEST_TAS_ENDPOINT, 'old_proto': 0}
+            elif model == TESSP:
+                value = {'endpoint': DEF_TEST_TESSP_ENDPOINT, 'old_proto': 0}
+            else:
+                value = {'endpoint': DEF_TEST_TESSW_ENDPOINT, 'old_proto': 0}
+            self.view.menuBar.preferences.testFrame.comms.set(value)
+        except Exception as e:
+            log.failure('{e}',e=e)
+            pub.sendMessage('quit', exit_code = 1)
     
     @inlineCallbacks
     def onRefConfigLoadReq(self):

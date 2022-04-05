@@ -5,9 +5,7 @@ y des-pulsar el checkbox . haha
 
 * dialog cuando las muestras sessiones y summary se han escrito a la BBDD
 
-* Modo TASS y Modo TESS P en la configuracion furrrzan a seleccionar puerto serie a 9600.
-  - Constantes DEF_TAS_BAUD, DEF_TESSW_PORT, DEF_TAS_METHOD, DEF_TESSW_METHOD
-* bugs
+* implementar los checkbox de calibracion
 
 
 * MIGRACION 
@@ -24,10 +22,6 @@ Tabla config_t
 - DAO de ssioness de batch_t
   y el controlador que tenga openSession(), closeSession() y PurgeSession()
 
-
-* Implementar en el GUI habliltar y desabilitar TCP/UDP opciones cuando
-el modelo de TESSW es TAS o TESS-P. para loas ttk hay que hacerlo a través de los estilos
-poque no tiene la opcion de 'state'
 
 * Pending bug fixes:
   zptool.utils.paging() no funciona en estos caso:

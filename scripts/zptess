@@ -4,4 +4,4 @@
 #
 # See the LICENSE file for details
 # ----------------------------------------------------------------------
-python -m zptess -c -d $HOME/zptess/zptess.db -l $HOME/zptess/zptess.log cli $*
+python -m zptess -c -d $HOME/zptess/zptess.db -l $HOME/zptess/zptess.log gui $*

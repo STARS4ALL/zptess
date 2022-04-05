@@ -10,7 +10,11 @@ y des-pulsar el checkbox . haha
 * bugs
 
 
-* MIGRACION Tabla config_t
+* MIGRACION 
+===========
+ESTO PRA ACUANDO LO VAYA A  INSTALAR EN EL PC DESTINO
+
+Tabla config_t
  - Borrar propiedad (ref-device, zp_abs)
  - Modificar (ref-device, zp) => 20.44
  - Insertar propiedad (calibration, zp_fict) = 20.50

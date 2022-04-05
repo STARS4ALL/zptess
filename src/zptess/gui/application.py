@@ -47,6 +47,7 @@ from zptess.gui.preferences import Preferences
 from zptess.gui.widgets.contrib import ToolTip
 from zptess.gui.widgets.mainpanel import PhotometerPanel, CalibrationPanel, BatchManagemetPanel
 from zptess.gui.widgets.about import AboutDialog
+from zptess.gui.widgets.writezp import WriteZeroPointDialog
 
 # ----------------
 # Module constants
@@ -162,7 +163,12 @@ class MenuBar(ttk.Frame):
         file_menu.add_command(label=_("Preferences..."), command=self.onMenuPreferences)
         file_menu.add_command(label=_("Quit"), command=self.quit)
         menu_bar.add_cascade(label=_("File"), menu=file_menu)
-       
+
+        # Tools submenu
+        file_menu = tk.Menu(menu_bar, tearoff=False)
+        file_menu.add_separator()
+        file_menu.add_command(label=_("Tools..."), command=self.onMenuTools)
+      
         # About submenu
         about_menu = tk.Menu(menu_bar, tearoff=False)
         about_menu.add_command(label=_("Version"), command=self.onMenuAboutVersion)
@@ -189,6 +195,9 @@ class MenuBar(ttk.Frame):
             logos_list = ABOUT_ICONS,
         )
 
+    def doWriteZeroPoint(self):
+        writezp = WriteZeroPointDialog()
+
 
     def onMenuAboutVersion(self):
         pub.sendMessage('database_version_req')
@@ -198,6 +207,9 @@ class MenuBar(ttk.Frame):
         preferences = Preferences(self)
         self.preferences = preferences
         preferences.start()
+
+    def onMenuTools(self):
+        pass
 
 
     

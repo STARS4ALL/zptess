@@ -260,8 +260,9 @@ class PhotometerPanel(ttk.LabelFrame):
         super().__init__(parent, *args, text="Fix me", borderwidth=4, **kwargs)
         self._text = text
         self._role = role
-        self._enable = tk.BooleanVar()
-        self._own_zp   = tk.BooleanVar()
+        self._enable  = tk.BooleanVar()
+        self._own_zp  = tk.BooleanVar()
+        self._endpoint = tk.StringVar()
         self.build()
 
     def start(self):
@@ -270,13 +271,24 @@ class PhotometerPanel(ttk.LabelFrame):
         self.stats.start()
 
     def build(self):
-        widget = ttk.Checkbutton(self, text= _("Use device's stored zero point for magnitude display"),  variable=self._own_zp)
-        widget.pack(side=tk.TOP,fill=tk.BOTH,  padx=22, pady=2)
-        self.info = PhotometerInfoPanel(self)
-        self.info.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=2, ipadx=5, ipady=5,)
-        self.progress = PhotometerProgressPanel(self)
+        upper_frame = ttk.Frame(self)
+        upper_frame.pack(side=tk.TOP, fill=tk.X, padx=0, pady=0, ipadx=0, ipady=0,)
+        lower_frame = ttk.Frame(self)
+        lower_frame.pack(side=tk.TOP, fill=tk.X, padx=0, pady=0, ipadx=0, ipady=0,)
+
+        widget = ttk.Checkbutton(upper_frame, text= _("Use device's stored zero point\nfor magnitude display"),  variable=self._own_zp)
+        widget.pack(side=tk.LEFT,fill=tk.BOTH,  padx=22, pady=2)
+        
+        minipanel = ttk.LabelFrame(upper_frame, text=_("Communicates via"))
+        minipanel.pack(side=tk.LEFT,fill=tk.BOTH,  padx=2, pady=2, ipadx=5, ipady=5)
+        widget = ttk.Label(minipanel, width=25, textvariable=self._endpoint)
+        widget.pack(side=tk.TOP, fill=tk.BOTH,  anchor=tk.E, padx=12, pady=2)
+
+        self.info = PhotometerInfoPanel(lower_frame)
+        self.info.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=2, ipadx=0, ipady=5,)
+        self.progress = PhotometerProgressPanel(lower_frame)
         self.progress.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=2, ipadx=5, ipady=5,)
-        self.stats = PhotometerStatsPanel(self)
+        self.stats = PhotometerStatsPanel(lower_frame)
         self.stats.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=2, ipadx=5, ipady=5,)
         widget = ttk.Checkbutton(self, text= self._text, variable=self._enable, command=self.onEnablePanel)
         self.configure(labelwidget=widget)
@@ -293,6 +305,15 @@ class PhotometerPanel(ttk.LabelFrame):
     def updatePhotStats(self, stats_info):
         self.progress.set(stats_info)
         self.stats.set(stats_info)
+
+    def notEnabled(self):
+        self._enable.set(False)
+
+    def notDisabled(self):
+        self._enable.set(True)
+
+    def setEndpoint(self, endpoint):
+        self._endpoint.set(endpoint)
 
     def onEnablePanel(self):
         if self._enable.get():

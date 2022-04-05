@@ -120,7 +120,6 @@ class PhotometerPanelController:
     @inlineCallbacks
     def start(self):
         # events coming from GUI
-        log.info("Building underlaying service objects")
         pub.subscribe(self.onStartPhotometerReq, 'start_photometer_req')
         pub.subscribe(self.onStopPhotometerReq, 'stop_photometer_req')
         pub.subscribe(self.onStartCalibrationReq, 'start_calibration_req')
@@ -150,7 +149,10 @@ class PhotometerPanelController:
             'ref':  None,
             'test': None,
         }
-
+        result = yield self.model.config.load('test-device','endpoint')
+        self.view.mainArea.photPanel['test'].setEndpoint(result['endpoint'])
+        result = yield self.model.config.load('ref-device','endpoint')
+        self.view.mainArea.photPanel['ref'].setEndpoint(result['endpoint'])
 
     # --------------
     # Event handlers
@@ -208,8 +210,11 @@ class PhotometerPanelController:
     @inlineCallbacks
     def onStopPhotometerReq(self, role):
         try:
-            yield self._stopChain(role)
-            self.view.mainArea.clearPhotPanel(role)
+            if self.calib.running:
+                self.view.mainArea.photPanel[role].notDisabled()
+            else:
+                yield self._stopChain(role)
+                self.view.mainArea.clearPhotPanel(role)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -228,7 +233,6 @@ class PhotometerPanelController:
     def onStartCalibrationReq(self):
         if not self.calib.running:
             self.calib.startService()
-
         yield self.onStartPhotometerReq('test', alone=False)
         yield self.onStartPhotometerReq('ref', alone=False)
         if self.phot['ref'].running:

@@ -5,12 +5,14 @@ y des-pulsar el checkbox . haha
 
 * dialog cuando las muestras sessiones y summary se han escrito a la BBDD
 
+* Modo TASS y Modo TESS P en la configuracion furrrzan a seleccionar puerto serie a 9600.
+  - Constantes DEF_TAS_BAUD, DEF_TESSW_PORT, DEF_TAS_METHOD, DEF_TESSW_METHOD
 * bugs
 
 
-* Tabla config_t
+* MIGRACION Tabla config_t
  - Borrar propiedad (ref-device, zp_abs)
- - (ref-device, zp) = 20.44
+ - Modificar (ref-device, zp) => 20.44
  - Insertar propiedad (calibration, zp_fict) = 20.50
 
 * GUI

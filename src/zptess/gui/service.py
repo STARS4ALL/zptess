@@ -73,7 +73,8 @@ class GraphicalService(Service):
     # Default subscription QoS
     
 
-    def __init__(self, **kargs):
+    def __init__(self, options, **kargs):
+        self.options = options
         setLogLevel(namespace=NAMESPACE, levelStr='info')
         #self.task    = task.LoopingCall(self.heartBeat)
         pub.subscribe(self.quit,  'quit')
@@ -112,6 +113,7 @@ class GraphicalService(Service):
                 parent  = self, 
                 view    = self.application, 
                 model   = self.dbaseService.dao,
+                messages= self.options.messages
             )
         )
 

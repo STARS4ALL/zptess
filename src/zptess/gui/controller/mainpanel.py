@@ -110,10 +110,11 @@ class PhotometerPanelController:
 
     NAME = NAMESPACE
 
-    def __init__(self, parent, view, model):
+    def __init__(self, parent, view, model, messages):
         self.parent = parent
         self.model = model
         self.view = view
+        self.messages = messages
         setLogLevel(namespace=NAMESPACE, levelStr='info')
         reactor.callLater(0, self.start)
 
@@ -192,7 +193,7 @@ class PhotometerPanelController:
     @inlineCallbacks
     def onStartPhotometerReq(self, role, alone):
         try:
-            self.photinfo[role] = None
+            #self.photinfo[role] = None
             if not self.stats[role]:
                 self.stats[role] = yield self._buildStatistics(role, alone)
             if not self.phot[role]:
@@ -234,10 +235,9 @@ class PhotometerPanelController:
         if not self.calib.running:
             self.calib.startService()
         yield self.onStartPhotometerReq('test', alone=False)
+        self.calib.onPhotometerInfo('test', self.photinfo['test'])
         yield self.onStartPhotometerReq('ref', alone=False)
-        if self.phot['ref'].running:
-            self.calib.onPhotometerInfo('regf', self.phot['ref'])
-       
+        self.calib.onPhotometerInfo('ref', self.photinfo['ref'])
         self.view.mainArea.startCalibration()
 
 
@@ -308,7 +308,10 @@ class PhotometerPanelController:
         options['model']        = options['model'].upper()
         options['log_level']    = 'info' # A capón de momento
         options['write_zero_point'] = None # A capón de momento
-        options['log_messages'] = 'warn'  # A capón de momento
+        if self.messages == 'both' or self.messages == role:
+            options['log_messages'] = 'info'
+        else:
+            options['log_messages'] = 'warn'  # A capón de momento
         options['config_dao']   = self.model.config
         proto, addr, port = chop(options['endpoint'], sep=':')
         self._test_transport_method = proto

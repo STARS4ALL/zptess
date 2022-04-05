@@ -135,7 +135,9 @@ dbaseService.setServiceParent(application)
 
 if options.command == 'gui':
     from zptess.gui.service import GraphicalService
-    guiService = GraphicalService()
+    guiService = GraphicalService(
+        options = options,
+    )
     guiService.setName(GraphicalService.NAME)
     guiService.setServiceParent(application)
 elif options.command == 'cli':

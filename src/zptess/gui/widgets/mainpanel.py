@@ -87,13 +87,13 @@ class PhotometerInfoPanel(ttk.LabelFrame):
         widget.grid(row=4, column=0, padx=5, pady=0, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._freq_offset, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=4, column=1, padx=0, pady=2, sticky=tk.E)
-        ToolTip(widget, _("Sensor frequency offset"))
+        ToolTip(widget, _("Sensor frequency offset in complete darkness"))
 
         widget = ttk.Label(self, text= _("Zero Point"))
         widget.grid(row=5, column=0, padx=5, pady=0, sticky=tk.W)
         widget = ttk.Label(self, width=6, textvariable=self._zp, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=5, column=1, padx=0, pady=2, sticky=tk.E)
-        ToolTip(widget, _("ZP used in the firmware"))
+        ToolTip(widget, _("ZP used in the firmware when computing magnitudes"))
 
     def set(self, values):
         self._dev_name.set(values['name'])

@@ -28,6 +28,12 @@ from   tkinter import ttk
 
 from twisted.logger import Logger
 
+# -------------------
+# Third party imports
+# -------------------
+
+from pubsub import pub
+
 # -------------
 # local imports
 # -------------
@@ -56,7 +62,7 @@ log  = Logger(namespace=NAMESPACE)
 
 class WriteZeroPointDialog(tk.Toplevel):
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._zp = tk.DoubleVar()
         self._zp.set(20.50)
@@ -82,9 +88,9 @@ class WriteZeroPointDialog(tk.Toplevel):
 
         # Lower Buttons
         button = ttk.Button(bottom_frame, text=_("Flash"), command=self.onSaveButton)
-        button.pack(side=tk.TOP, padx=10, pady=5)
+        button.pack(side=tk.LEFT, padx=10, pady=5)
         button = ttk.Button(bottom_frame, text=_("Cancel"), command=self.onCancelButton)
-        button.pack(side=tk.TOP, padx=10, pady=5)
+        button.pack(side=tk.LEFT, padx=10, pady=5)
 
 
     def invalid_zp(self):
@@ -93,5 +99,10 @@ class WriteZeroPointDialog(tk.Toplevel):
     # Buttons callbacks
     def onCancelButton(self):
        self.destroy()
+    
+    # Buttons callbacks
+    def onSaveButton(self):
+        pub.sendMessage('write_zero_point_req', zero_point=self._zp.get())
+        self.destroy()
 
    

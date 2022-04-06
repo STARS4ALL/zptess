@@ -165,9 +165,9 @@ class MenuBar(ttk.Frame):
         menu_bar.add_cascade(label=_("File"), menu=file_menu)
 
         # Tools submenu
-        file_menu = tk.Menu(menu_bar, tearoff=False)
-        file_menu.add_separator()
-        file_menu.add_command(label=_("Tools..."), command=self.onMenuTools)
+        tools_menu = tk.Menu(menu_bar, tearoff=False)
+        tools_menu.add_command(label=_("Write Zero Point ..."), command=self.onMenuWriteZeroPoint)
+        menu_bar.add_cascade(label=_("Tools"), menu=tools_menu)
       
         # About submenu
         about_menu = tk.Menu(menu_bar, tearoff=False)
@@ -208,8 +208,8 @@ class MenuBar(ttk.Frame):
         self.preferences = preferences
         preferences.start()
 
-    def onMenuTools(self):
-        pass
+    def onMenuWriteZeroPoint(self):
+        writezp = WriteZeroPointDialog()
 
 
     

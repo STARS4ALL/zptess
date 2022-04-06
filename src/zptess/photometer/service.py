@@ -192,7 +192,7 @@ class PhotometerService(Service):
         except Exception as e:
             self.log.failure("{e}",e=e)
         else:
-            self.log.info("[{label}] Writen ZP : {zp:0.2f}", label=self.label, zp = zero_point)
+            self.log.info("[{label}] Updated ZP : {zp:0.2f}", label=self.label, zp = zero_point)
 
     # --------------
     # Helper methods

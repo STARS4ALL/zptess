@@ -125,6 +125,7 @@ class PhotometerPanelController:
         pub.subscribe(self.onStopPhotometerReq, 'stop_photometer_req')
         pub.subscribe(self.onStartCalibrationReq, 'start_calibration_req')
         pub.subscribe(self.onStopCalibrationReq, 'stop_calibration_req')
+        pub.subscribe(self.onWriteZeroPointReq, 'write_zero_point_req')
 
         # Events coming from services
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
@@ -158,6 +159,24 @@ class PhotometerPanelController:
     # --------------
     # Event handlers
     # --------------
+
+    @inlineCallbacks
+    def onWriteZeroPointReq(self, zero_point):
+        try:
+            if not self.phot['test']:
+                self.phot['test'] = yield self._buildPhotometer('test')
+            if not self.phot['test'].running:
+                yield self.phot['test'].startService()
+            result = yield self.phot['test'].writeZeroPoint(zero_point)
+            self.view.messageBoxInfo(
+                title = _("Test Photometer"),
+                message = _("New Zero Point written")
+            )
+        except Exception as e:
+            log.failure('{e}',e=e)
+            pub.sendMessage('quit', exit_code = 1)
+
+
 
     @inlineCallbacks
     def onPhotometerFirmware(self, role, firmware):

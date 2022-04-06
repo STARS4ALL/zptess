@@ -123,6 +123,8 @@ class CommandLineService(MultiService):
     @inlineCallbacks
     def onCalibrationEnd(self, session):
         set_status_code(0)
+        if self._cmd_options['update']:
+            yield self.testPhotometer.writeZeroPoint(self._zp_to_write)
         yield self.dbaseServ.flush()
         yield self.parent.stopService()
 
@@ -197,6 +199,7 @@ class CommandLineService(MultiService):
             log.info("Old {label} ZP = {old_zp:0.2f}, NEW {label} ZP = {new_zp:0.2f}", 
                 old_zp=stats_info['prev_zp'], new_zp=final_zp, label=label)
             log.info("#"*72)
+            self._zp_to_write = stats_info['zero_point']
 
         # log.info("{rLab} Freq. = {rF:0.3f} Hz , {tLab} Freq. = {tF:0.3f}, {rLab} Mag. = {rM:0.2f}, {tLab} Mag. = {tM:0.2f}, Diff {d:0.2f}", 
         #         rF= summary_ref['freq'], tF=summary_test['freq'], 

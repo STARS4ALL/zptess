@@ -187,7 +187,7 @@ class MenuBar(ttk.Frame):
     def doAbout(self, db_version, db_uuid):
         version = _("Software version {0}\nDatabase version {1}\nUUID:{2}").format(__version__, db_version, db_uuid)
         about = AboutDialog(
-            title      = _("About AZOTEA"),
+            title      = _("About ZPTESS"),
             version    = version, 
             descr_path = ABOUT_DESC_TXT, 
             ack_path   = ABOUT_ACK_TXT, 

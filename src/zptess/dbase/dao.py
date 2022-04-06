@@ -55,8 +55,9 @@ log = Logger(NAMESPACE)
 
 class DataAccesObject():
 
-    def __init__(self, pool, *args, **kargs):
+    def __init__(self, parent, pool, *args, **kargs):
         setLogLevel(namespace=NAMESPACE, levelStr='info')
+        self.parent = parent
         self.pool = pool
         self.start(*args)
         

@@ -180,7 +180,7 @@ class DatabaseService(Service):
             self.quit(exit_code=0)
         else:
             self.openPool()
-            self.dao = DataAccesObject(self.pool)
+            self.dao = DataAccesObject(self, self.pool)
             self.dao.version = version
             self.dao.uuid = guid
 

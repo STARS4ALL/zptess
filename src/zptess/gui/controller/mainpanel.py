@@ -115,6 +115,9 @@ class PhotometerPanelController:
         self.model = model
         self.view = view
         self.messages = messages
+        self._update_zp   = False
+        self._write_to_db = False
+
         setLogLevel(namespace=NAMESPACE, levelStr='info')
         reactor.callLater(0, self.start)
 
@@ -126,6 +129,8 @@ class PhotometerPanelController:
         pub.subscribe(self.onStartCalibrationReq, 'start_calibration_req')
         pub.subscribe(self.onStopCalibrationReq, 'stop_calibration_req')
         pub.subscribe(self.onWriteZeroPointReq, 'write_zero_point_req')
+        pub.subscribe(self.onUpdatePhotometerReq, 'update_photometer_req')
+        pub.subscribe(self.onUpdateDatabaseReq, 'update_database_req')
 
         # Events coming from services
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
@@ -138,6 +143,7 @@ class PhotometerPanelController:
         pub.subscribe(self.onCalibrationSummary, 'calib_summary_info')
         pub.subscribe(self.onCalibrationEnd, 'calib_end')
 
+        
         self.calib = yield self._buildCalibration()
         self.phot = {
             'ref':  None,
@@ -160,7 +166,13 @@ class PhotometerPanelController:
     # Event handlers
     # --------------
 
-    @inlineCallbacks
+    def onUpdatePhotometerReq(self, flag):
+        self._update_zp = flag
+    
+    def onUpdateDatabaseReq(self, flag):
+        self._write_to_db = flag
+
+   
     def onWriteZeroPointReq(self, zero_point):
         try:
             if not self.phot['test']:
@@ -247,6 +259,7 @@ class PhotometerPanelController:
     def onCalibrationSummary(self, role, stats_info):
         #log.info("onCalibrationSummary(stats_info={stats_info})", role=role, stats_info=stats_info)
         if role == 'test':
+            self._zp_to_write = stats_info['zero_point']
             self.view.mainArea.updateSummary(stats_info)
 
     @inlineCallbacks
@@ -272,17 +285,21 @@ class PhotometerPanelController:
 
     @inlineCallbacks
     def onCalibrationEnd(self, session):
+        messages = [_("Calibration process finsihed.") ]
+        if self._update_zp:
+            yield self.testPhotometer.writeZeroPoint(self._zp_to_write)
+            messages.append(_("Zero point updated."))
+        if self._write_to_db:
+            yield self.model.parent.flush()
+            messages.append(_("Database updated."))
         yield self.calib.stopService()
         yield self._stopChain('test')
         yield self._stopChain('ref')
         self.view.mainArea.stopCalibration()
         self.view.messageBoxInfo(
             title = _("Calibration"),
-            message = _("Calibration process finsihed.")
+            message = '\n'.join(messages)
         )
-
-       
-
 
     # ----------------
     # Auxiliar methods

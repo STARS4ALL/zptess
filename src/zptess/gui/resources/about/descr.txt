@@ -1,1 +1,1 @@
-Software tool for automatic night sky brightness estimation from raw RGB images taken from DSLR cameras and others imagers (Raspberry Pi HQ Cam, ZWO CMOS color cameras, etc).
+Software tool to calibrate the TESS suite of photometers (TESS-W, TESS-P & TAS) See https://tess.stars4all.eu/ for more details.

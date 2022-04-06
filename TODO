@@ -1,11 +1,8 @@
 SHORT TERM
 ==========
-* Comporbar que si calib.running, el hacer start_rervice de los checkbutton es dummy
-y des-pulsar el checkbox . haha
+* Luz roja cuando la stddev = 0
 
-* dialog cuando las muestras sessiones y summary se han escrito a la BBDD
 
-* implementar los checkbox de calibracion
 
 
 * MIGRACION 

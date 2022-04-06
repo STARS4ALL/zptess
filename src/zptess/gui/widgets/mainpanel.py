@@ -19,6 +19,7 @@ from   tkinter import ttk
 # -------------------
 
 from pubsub import pub
+from PIL import Image, ImageTk
 
 # ---------------
 # Twisted imports
@@ -30,6 +31,7 @@ from twisted.logger import Logger
 # Local imports
 # -------------
 
+from zptess.gui import YELLOW_ICON, GREEN_ICON, GRAY_ICON
 from zptess.gui.widgets.contrib import ToolTip
 from zptess.gui.widgets.validators import float_validator
 
@@ -270,6 +272,7 @@ class PhotometerPanel(ttk.LabelFrame):
         self.progress.start()
         self.stats.start()
 
+
     def build(self):
         upper_frame = ttk.Frame(self)
         upper_frame.pack(side=tk.TOP, fill=tk.X, padx=0, pady=0, ipadx=0, ipady=0,)
@@ -283,6 +286,13 @@ class PhotometerPanel(ttk.LabelFrame):
         minipanel.pack(side=tk.LEFT,fill=tk.BOTH,  padx=2, pady=2, ipadx=5, ipady=5)
         widget = ttk.Label(minipanel, width=25, textvariable=self._endpoint)
         widget.pack(side=tk.TOP, fill=tk.BOTH,  anchor=tk.E, padx=12, pady=2)
+
+        self._gray   = ImageTk.PhotoImage(Image.open(GRAY_ICON))
+        self._green  = ImageTk.PhotoImage(Image.open(GREEN_ICON))
+        self._yellow = ImageTk.PhotoImage(Image.open(YELLOW_ICON))
+        self._semaphore = widget = ttk.Label(upper_frame, image = self._gray )
+        widget.pack(side=tk.RIGHT, fill=tk.BOTH,  anchor=tk.E, padx=16, pady=4)
+       
 
         self.info = PhotometerInfoPanel(lower_frame)
         self.info.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=2, ipadx=0, ipady=5,)
@@ -308,9 +318,11 @@ class PhotometerPanel(ttk.LabelFrame):
 
     def notEnabled(self):
         self._enable.set(False)
+        self._semaphore.configure(image=self._gray)
 
     def notDisabled(self):
         self._enable.set(True)
+        self._semaphore.configure(image=self._green)
 
     def setEndpoint(self, endpoint):
         self._endpoint.set(endpoint)
@@ -328,6 +340,12 @@ class PhotometerPanel(ttk.LabelFrame):
     def stopCalibration(self):
         self._enable.set(False)
         self.clear()
+
+    def loadIcon(self, parent, path):
+        img = ImageTk.PhotoImage(Image.open(path))
+        icon = ttk.Label(parent, image = img)
+        icon.photo = img
+        return icon, img
 
 # ============================================================================
 #                        CALIBRATION PANEL WIDGETS
@@ -382,13 +400,19 @@ class CalibrationSettingsPanel(ttk.LabelFrame):
         widget.grid(row=3, column=1, padx=4, pady=4, sticky=tk.W)
         ToolTip(widget, _("Ficticious, common zero point when performing calibrations"))
 
-        widget = ttk.Checkbutton(self, text= _("Update\nDatabase"), variable=self._update_db)
+        widget = ttk.Checkbutton(self, text= _("Update\nDatabase"), variable=self._update_db, command=self.onUpdateDatabase)
         widget.grid(row=0, column=2, padx=2, pady=4, sticky=tk.W)
-        widget = ttk.Checkbutton(self, text= _("Update\nPhotometer"), variable=self._update_phot)
+        widget = ttk.Checkbutton(self, text= _("Update\nPhotometer"), variable=self._update_phot, command=self.onUpdatePhotometer)
         widget.grid(row=1, column=2, padx=2, pady=4, sticky=tk.EW)
        
         widget = ttk.Button(self, text=_("Save"), command=self.onClickButton)
         widget.grid(row=4, column=0, columnspan=3, padx=2, pady=4)
+
+    def onUpdatePhotometer(self):
+        pub.sendMessage('update_photometer_req', flag=self._update_phot.get())
+
+    def onUpdateDatabase(self):
+        pub.sendMessage('update_database_req', flag=self._update_db.get())
 
     def onClickButton(self):
         config = {

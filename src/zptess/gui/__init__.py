@@ -32,8 +32,13 @@ ABOUT_IMG      = resource_filename(__name__, os.path.join('resources', 'about', 
 ABOUT_ICONS = (
 	('Universidad Complutense de Madrid', resource_filename(__name__, os.path.join('resources', 'about', 'ucm64.png'))),
 	('GUAIX', resource_filename(__name__, os.path.join('resources', 'about', 'guaix60.jpg'))),
-	('ACTION PROJECT EU', resource_filename(__name__, os.path.join('resources', 'about', 'action64.png'))),
+	('ACTION PROJECT EU', resource_filename(__name__, os.path.join('resources', 'about', 'stars4all64.png'))),
 )
+
+GRAY_ICON   = resource_filename(__name__, os.path.join('resources', 'photpanel', 'gray64.png'))
+YELLOW_ICON = resource_filename(__name__, os.path.join('resources', 'photpanel', 'yellow64.png'))
+GREEN_ICON  = resource_filename(__name__, os.path.join('resources', 'photpanel', 'green64.png'))
+
 
 # Default falues for communication widgets
 

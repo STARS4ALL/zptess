@@ -31,7 +31,7 @@ from twisted.logger import Logger
 # Local imports
 # -------------
 
-from zptess.gui import YELLOW_ICON, GREEN_ICON, GRAY_ICON
+from zptess.gui import YELLOW_ICON, GREEN_ICON, GRAY_ICON, RED_ICON
 from zptess.gui.widgets.contrib import ToolTip
 from zptess.gui.widgets.validators import float_validator
 
@@ -287,6 +287,7 @@ class PhotometerPanel(ttk.LabelFrame):
         widget = ttk.Label(minipanel, width=25, textvariable=self._endpoint)
         widget.pack(side=tk.TOP, fill=tk.BOTH,  anchor=tk.E, padx=12, pady=2)
 
+        self._red   = ImageTk.PhotoImage(Image.open(RED_ICON))
         self._gray   = ImageTk.PhotoImage(Image.open(GRAY_ICON))
         self._green  = ImageTk.PhotoImage(Image.open(GREEN_ICON))
         self._yellow = ImageTk.PhotoImage(Image.open(YELLOW_ICON))
@@ -308,6 +309,7 @@ class PhotometerPanel(ttk.LabelFrame):
         self.progress.clear()
         self.stats.clear()
         self._own_zp.set(False)
+        self._semaphore.configure(image=self._gray)
 
     def updatePhotInfo(self, phot_info):
         self.info.set(phot_info)
@@ -316,13 +318,24 @@ class PhotometerPanel(ttk.LabelFrame):
         self.progress.set(stats_info)
         self.stats.set(stats_info)
 
-    def notEnabled(self):
-        self._enable.set(False)
+    def yellow(self):
+         self._semaphore.configure(image=self._yellow)
+
+    def green(self):
+         self._semaphore.configure(image=self._green)
+
+    def red(self):
+         self._semaphore.configure(image=self._red)
+
+    def gray(self):
         self._semaphore.configure(image=self._gray)
 
-    def notDisabled(self):
+    def disable(self):
+        self._enable.set(False)
+        self.gray()
+
+    def enable(self):
         self._enable.set(True)
-        self._semaphore.configure(image=self._green)
 
     def setEndpoint(self, endpoint):
         self._endpoint.set(endpoint)
@@ -341,11 +354,6 @@ class PhotometerPanel(ttk.LabelFrame):
         self._enable.set(False)
         self.clear()
 
-    def loadIcon(self, parent, path):
-        img = ImageTk.PhotoImage(Image.open(path))
-        icon = ttk.Label(parent, image = img)
-        icon.photo = img
-        return icon, img
 
 # ============================================================================
 #                        CALIBRATION PANEL WIDGETS

@@ -1,7 +1,7 @@
 SHORT TERM
 ==========
-* Luz roja cuando la stddev = 0
-
+* No actualiza la BD aunque el GUI dice que si (no hay las trazas de la BBDD)
+* No funciona el Flash ZP manual
 
 
 

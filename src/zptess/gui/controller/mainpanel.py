@@ -207,11 +207,16 @@ class PhotometerPanelController:
         reactor.callLater(1, self.parent.parent.stopService)
 
     def onStatisticsProgress(self, role, stats_info):
-        self.view.mainArea.updatePhotStats(role, stats_info)
+        self.view.mainArea.photPanel[role].yellow()
+        self.view.mainArea.photPanel[role].updatePhotStats(stats_info)
 
     def onStatisticsInfo(self, role, stats_info):
         #log.info("onStatisticsProgress(role={role},stats_info={stats_info})", role=role, stats_info=stats_info)
-        self.view.mainArea.updatePhotStats(role, stats_info)
+        if stats_info['stddev'] == 0.0:
+            self.view.mainArea.photPanel[role].red()
+        else:
+            self.view.mainArea.photPanel[role].green()
+        self.view.mainArea.photPanel[role].updatePhotStats(stats_info)
 
     def onPhotometerInfo(self, role, info):
         label = TEST if role == 'test' else REF
@@ -219,7 +224,7 @@ class PhotometerPanelController:
         if info is None:
             log.warn("[{label}] No photometer info available. Is it Connected?", label=label)
         else:
-            self.view.mainArea.updatePhotInfo(role, info)
+            self.view.mainArea.photPanel[role].updatePhotInfo(info)
       
     @inlineCallbacks
     def onStartPhotometerReq(self, role, alone):
@@ -234,6 +239,7 @@ class PhotometerPanelController:
             else:
                 self.stats[role].useFictZP()
             yield self._startChain(role)
+            self.view.mainArea.photPanel[role].enable()
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -243,10 +249,10 @@ class PhotometerPanelController:
     def onStopPhotometerReq(self, role):
         try:
             if self.calib.running:
-                self.view.mainArea.photPanel[role].notDisabled()
+                self.view.mainArea.photPanel[role].enable()
             else:
                 yield self._stopChain(role)
-                self.view.mainArea.clearPhotPanel(role)
+                self.view.mainArea.photPanel[role].clear()
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -254,13 +260,13 @@ class PhotometerPanelController:
     def onCalibrationRound(self, role, count, stats_info):
         #log.info("onCalibrationRound(stats_info={stats_info})", role=role, stats_info=stats_info)
         if role == 'test':
-            self.view.mainArea.updateCalibration(count, stats_info)
+            self.view.mainArea.calibPanel.updateCalibration(count, stats_info)
 
     def onCalibrationSummary(self, role, stats_info):
         #log.info("onCalibrationSummary(stats_info={stats_info})", role=role, stats_info=stats_info)
         if role == 'test':
             self._zp_to_write = stats_info['zero_point']
-            self.view.mainArea.updateSummary(stats_info)
+            self.view.mainArea.calibPanel.updateSummary(stats_info)
 
     @inlineCallbacks
     def onStartCalibrationReq(self):
@@ -270,7 +276,8 @@ class PhotometerPanelController:
         self.calib.onPhotometerInfo('test', self.photinfo['test'])
         yield self.onStartPhotometerReq('ref', alone=False)
         self.calib.onPhotometerInfo('ref', self.photinfo['ref'])
-        self.view.mainArea.startCalibration()
+        self.view.mainArea.photPanel['test'].startCalibration()
+        self.view.mainArea.photPanel['ref'].startCalibration()
 
 
     @inlineCallbacks
@@ -281,13 +288,15 @@ class PhotometerPanelController:
             yield self.calib.stopService()
             yield self._stopChain('test')
             yield self._stopChain('ref')
-        self.view.mainArea.stopCalibration()
+        self.view.mainArea.photPanel['test'].stopCalibration()
+        self.view.mainArea.photPanel['ref'].stopCalibration()
+        self.view.mainArea.calibPanel.stopCalibration()
 
     @inlineCallbacks
     def onCalibrationEnd(self, session):
         messages = [_("Calibration process finsihed.") ]
         if self._update_zp:
-            yield self.testPhotometer.writeZeroPoint(self._zp_to_write)
+            yield self.phot['test'].writeZeroPoint(self._zp_to_write)
             messages.append(_("Zero point updated."))
         if self._write_to_db:
             yield self.model.parent.flush()
@@ -295,7 +304,9 @@ class PhotometerPanelController:
         yield self.calib.stopService()
         yield self._stopChain('test')
         yield self._stopChain('ref')
-        self.view.mainArea.stopCalibration()
+        self.view.mainArea.photPanel['test'].stopCalibration()
+        self.view.mainArea.photPanel['ref'].stopCalibration()
+        self.view.mainArea.calibPanel.stopCalibration()
         self.view.messageBoxInfo(
             title = _("Calibration"),
             message = '\n'.join(messages)

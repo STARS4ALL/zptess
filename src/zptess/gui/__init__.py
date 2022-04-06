@@ -35,6 +35,7 @@ ABOUT_ICONS = (
 	('ACTION PROJECT EU', resource_filename(__name__, os.path.join('resources', 'about', 'stars4all64.png'))),
 )
 
+RED_ICON   = resource_filename(__name__, os.path.join('resources', 'photpanel', 'red64.png'))
 GRAY_ICON   = resource_filename(__name__, os.path.join('resources', 'photpanel', 'gray64.png'))
 YELLOW_ICON = resource_filename(__name__, os.path.join('resources', 'photpanel', 'yellow64.png'))
 GREEN_ICON  = resource_filename(__name__, os.path.join('resources', 'photpanel', 'green64.png'))

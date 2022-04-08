@@ -211,21 +211,21 @@ class CalibrationService(Service):
             summary_test['zero_point_method'] = 'mode'
             best_zp = mode(self.best['zp'])
         except statistics.StatisticsError as e:
-            log.error("Error choosing best zp using mode, selecting median instead")
+            log.warn("Error choosing best zp using mode, selecting median instead")
             summary_test['zero_point_method'] = 'median'
             best_zp = statistics.median(self.best['zp'])
         try:
             summary_ref['freq_method']   = 'mode'
             summary_ref['freq'] = mode(self.best['ref_freq'])
         except statistics.StatisticsError as e:
-            log.error("Error choosing best Ref. Freq. using mode, selecting median instead")
+            log.warn("Error choosing best Ref. Freq. using mode, selecting median instead")
             summary_ref['freq_method']   = 'median'
             summary_ref['freq'] = statistics.median(self.best['ref_freq'])
         try:
             summary_test['freq_method']   = 'mode'
             summary_test['freq']  = mode(self.best['test_freq'])
         except statistics.StatisticsError as e:
-            log.error("Error choosing best Test Freq. using mode, selecting median instead")
+            log.warn("Error choosing best Test Freq. using mode, selecting median instead")
             summary_test['freq_method']   = 'median'
             summary_test['freq'] = statistics.median(self.best['test_freq'])
         offset   = self.options['offset']

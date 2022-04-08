@@ -135,7 +135,7 @@ class DatabaseService(Service):
     def startService(self):
         setLogLevel(namespace=NAMESPACE, levelStr='warn')
         self.session       = None
-        self.test_mode     = True # Assume a safe position
+        self.test_mode     = True # Assume a safe state
         self.refSamples    = list()
         self.testSamples   = list()
         self.refRounds     = list()

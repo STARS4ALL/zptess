@@ -171,6 +171,7 @@ class PhotometerPanelController:
     
     def onUpdateDatabaseReq(self, flag):
         self._write_to_db = flag
+        self.model.parent.setTestMode(not flag)
 
    
     def onWriteZeroPointReq(self, zero_point):

@@ -299,8 +299,8 @@ class PhotometerPanelController:
         if self._update_zp:
             yield self.phot['test'].writeZeroPoint(self._zp_to_write)
             messages.append(_("Zero point updated."))
+        yield self.model.parent.flush() # this takes care of itself when flushing in test mode
         if self._write_to_db:
-            yield self.model.parent.flush()
             messages.append(_("Database updated."))
         yield self.calib.stopService()
         yield self._stopChain('test')

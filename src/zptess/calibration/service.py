@@ -130,6 +130,10 @@ class CalibrationService(Service):
     # OPERATIONAL API
     # ---------------
 
+    # ZP_ABS is simply the ZP chosen for the refrence photometer to read the same as the SQM (20.44 for the time being)
+    # ZP_FICT is the zero point used when calculating magnitudes for cross-calibration
+    # We used to set it to 20.50, but now we set it to reference photometer ZP (that is, ZP_ABS)
+    # ZP_FICT is only useful when visually displaying displaying both photometers' magnitudes
 
     def onPhotometerInfo(self, role, info):
         self.phot[role] = info
@@ -248,6 +252,9 @@ class CalibrationService(Service):
         summary_ref['offset']    = 0
         summary_ref['nrounds']   = self.nrounds
         summary_ref['author']    = self.options['author']
+        # ZP used when calculating magnitudes. Used in GUI
+        summary_test['zp_fict']  = self.zp_fict
+        summary_ref['zp_fict']   = self.zp_fict
         return summary_ref, summary_test
 
 

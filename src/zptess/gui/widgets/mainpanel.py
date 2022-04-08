@@ -451,7 +451,6 @@ class CalibrationStatePanel(ttk.LabelFrame):
         self._zp_fict = tk.StringVar()
         self._freq_method = tk.StringVar()
         self._zp_method = tk.StringVar()
-        self._zp_fict.set("@ 20.50")
         self.build()
 
     def start(self):
@@ -503,14 +502,15 @@ class CalibrationStatePanel(ttk.LabelFrame):
     def updateCalibration(self, count, stats_info):
         self._round.set(count)
         self._magdif.set(round(stats_info['mag_diff'],3))
-        self._zp.set(round(stats_info['zero_point'],2))
+        self._zp.set(stats_info['zero_point'])
 
     def updateSummary(self, summary_info):
         self._best_freq.set(summary_info['freq'])
         self._best_zp.set(summary_info['zero_point'])
-        self._best_mag.set(f"{ round(summary_info['mag'],2)} @ 20.xx")
+        self._best_mag.set(round(summary_info['mag'],2))
         self._freq_method .set(summary_info['freq_method'])
         self._zp_method.set(summary_info['zero_point_method'])
+        self._zp_fict.set(f"@ {summary_info['zp_fict']}")
 
     def clear(self):
         self._round.set(0)
@@ -519,11 +519,10 @@ class CalibrationStatePanel(ttk.LabelFrame):
         self._best_freq.set(0)
         self._best_zp.set(0)
         self._best_mag.set(0)
-        self._zp_fict.set(0)
+        self._zp_fict.set('')
         self._freq_method.set('')
         self._zp_method.set('')
-        self._zp_fict.set("@ 20.50")
-
+       
 # ----------------------------------------------------------------------------
 
 class CalibrationPanel(ttk.LabelFrame):
@@ -575,10 +574,23 @@ class BatchManagemetPanel(ttk.LabelFrame):
         pass
 
     def build(self):
-        widget = ttk.Combobox(self, state='readonly', textvariable=self._command, values=("Open Batch","Close Batch","Purge Batch"))
-        widget.pack(side=tk.LEFT,  padx=10, pady=1)
-        widget = ttk.Button(self, text=_("Go!"), command=self.onClickButton)
-        widget.pack(side=tk.LEFT,  padx=10, pady=5)
+
+        upper_panel = ttk.Frame(self)
+        upper_panel.pack(side=tk.TOP,  padx=0, pady=0)
+        lower_panel = ttk.Frame(self)
+        lower_panel.pack(side=tk.TOP,  padx=0, pady=0)
+
+        widget = ttk.Button(lower_panel, text=_("Execute"), command=self.onClickButton)
+        widget.pack(side=tk.TOP,  padx=5, pady=5)
+
+        widget = ttk.Radiobutton(upper_panel, text=_("Open Batch"), variable=self._command, value="open")
+        widget.grid(row=0, column=0, padx=2, pady=2, sticky=tk.W)
+        widget = ttk.Radiobutton(upper_panel, text=_("Close Batch"), variable=self._command, value="close")
+        widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.W)
+        widget = ttk.Radiobutton(upper_panel, text=_("Purge Batch"), variable=self._command, value="purge")
+        widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
+        widget = ttk.Radiobutton(upper_panel, text=_("Export Batch"), variable=self._command, value="export")
+        widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.W)
 
     def onClickButton(self):
         pass

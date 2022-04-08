@@ -82,7 +82,7 @@ class BatchController:
         pub.subscribe(self.onExportBatchReq, 'export_batch_req')
 
     @inlineCallbacks
-    def onOpenBatchReq(self):
+    def onOpenBatchReq(self, args):
         try:
             log.info("onOpenBatchReq()")
             isOpen = yield self.model.batch.isOpen()
@@ -101,7 +101,7 @@ class BatchController:
             pub.sendMessage('quit', exit_code = 1)
     
     @inlineCallbacks
-    def onCloseBatchReq(self):
+    def onCloseBatchReq(self, args):
         try:
             log.info("onCloseBatchReq()")
             isOpen = yield self.model.batch.isOpen()
@@ -123,7 +123,7 @@ class BatchController:
             pub.sendMessage('quit', exit_code = 1)
 
     @inlineCallbacks
-    def onPurgeBatchReq(self):
+    def onPurgeBatchReq(self, args):
         try:
             log.info("onPurgeBatchReq()")
             yield  self.model.batch.purge()
@@ -134,7 +134,7 @@ class BatchController:
             pub.sendMessage('quit', exit_code = 1)
 
     @inlineCallbacks
-    def onExportBatchReq(self):
+    def onExportBatchReq(self, args):
         try:
             log.info("onExportBatchReq()")
             isOpen = yield self.model.batch.isOpen()

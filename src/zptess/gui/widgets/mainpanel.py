@@ -626,8 +626,9 @@ class BatchManagemetPanel(ttk.LabelFrame):
 
     def onClickButton(self):
         cmd = self._command.get()
+        args = {'base_dir': self._base_dir.get(), 'email_flag': self._email.get(), 'update': self._updated.get()}
         if cmd:
-            pub.sendMessage(self.EVENTS[cmd])
+            pub.sendMessage(self.EVENTS[cmd], args=args)
 
        
 

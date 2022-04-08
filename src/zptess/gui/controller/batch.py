@@ -145,6 +145,11 @@ class BatchController:
                 )
                 return
             latest = yield self.model.batch.latest()
+            base_dir = args['base_dir']
+            send_email = args['email_flag']
+            updated = args['update']
+            # 'latest' es un dict e ese metodo espera una tupla
+            # self._export(latest, base_dir, updated, send_email)
 
         except Exception as e:
             log.failure('{e}',e=e)

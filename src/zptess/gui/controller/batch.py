@@ -33,7 +33,7 @@ from pubsub import pub
 # local imports
 # -------------
 
-from zptess import __version__
+from zptess import __version__, TSTAMP_SESSION_FMT
 from zptess.logger  import startLogging, setLogLevel
 
 
@@ -56,6 +56,8 @@ log = Logger(namespace=NAMESPACE)
 # Module Utility Functions
 # ------------------------
 
+def get_timestamp():
+    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).strftime(TSTAMP_SESSION_FMT)
 
 # --------------
 # Module Classes
@@ -79,23 +81,54 @@ class BatchController:
         pub.subscribe(self.onPurgeBatchReq, 'purge_batch_req')
         pub.subscribe(self.onExportBatchReq, 'export_batch_req')
       
+    @inlineCallbacks
     def onOpenBatchReq(self):
         try:
             log.info("onOpenBatchReq()")
+            isOpen = yield self.model.batch.isOpen()
+            if isOpen:
+                self.view.messageBoxWarn(
+                    title = _("Batch Management"),
+                    message = _("Batch already open")
+                )
+            else:
+                tstamp = get_timestamp()
+                yield self.model.batch.open(tstamp)
+                result = yield self.model.batch.latest()
+                self.view.statusBar.set(result)   
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
-
+    
+    @inlineCallbacks
     def onCloseBatchReq(self):
         try:
-            log.info("onOpenBatchReq()")
+            log.info("onCloseBatchReq()")
+            isOpen = yield self.model.batch.isOpen()
+            if not isOpen:
+                self.view.messageBoxWarn(
+                    title = _("Batch Management"),
+                    message = _("No open batch to close")
+                )
+            else:
+                result = yield self.model.batch.latest()
+                begin_tstamp = result['begin_tstamp']
+                end_tstamp = get_timestamp()
+                N = yield self.model.summary.numSessions(begin_tstamp, end_tstamp)
+                yield self.model.batch.close(end_tstamp, N)
+                result = yield self.model.batch.latest()
+                self.view.statusBar.set(result)   
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
 
+    @inlineCallbacks
     def onPurgeBatchReq(self):
         try:
-            log.info("onOpenBatchReq()")
+            log.info("onPurgeBatchReq()")
+            yield  self.model.batch.purge()
+            result = yield self.model.batch.latest()
+            self.view.statusBar.set(result)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -106,3 +139,5 @@ class BatchController:
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
+
+

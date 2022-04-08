@@ -31,6 +31,8 @@ from zptess import SQL_SCHEMA, SQL_INITIAL_DATA_DIR, SQL_UPDATES_DATA_DIR
 from zptess.logger import setLogLevel
 from zptess.dbase import tables
 from zptess.dbase.batch import BatchTable
+from zptess.dbase.summary import SummaryTable
+
 
 # ----------------
 # Module constants
@@ -95,7 +97,7 @@ class DataAccesObject():
             log_level           = 'info',
         )
 
-        self.summary = tables.Table(
+        self.summary = SummaryTable(
             pool                = self.pool, 
             table               = 'summary_t',
             id_column           = 'rowid',

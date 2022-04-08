@@ -12,6 +12,7 @@
 import os
 import gettext
 import tkinter as tk
+import tkinter.filedialog
 from   tkinter import ttk
 
 # -------------------
@@ -619,7 +620,9 @@ class BatchManagemetPanel(ttk.LabelFrame):
         widget.pack(side=tk.TOP,  padx=5, pady=5)
 
     def onChooseFolder(self):
-        pub.sendMessage('choose_export_folder_req')
+        base_dir = tk.filedialog.askdirectory()
+        self._base_dir.set(base_dir) 
+      
 
     def onClickButton(self):
         cmd = self._command.get()

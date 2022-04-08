@@ -80,18 +80,6 @@ class BatchController:
         pub.subscribe(self.onCloseBatchReq, 'close_batch_req')
         pub.subscribe(self.onPurgeBatchReq, 'purge_batch_req')
         pub.subscribe(self.onExportBatchReq, 'export_batch_req')
-        pub.subscribe(self.onChooseFolderReq, 'choose_export_folder_req')
-      
-    
-    def onChooseFolderReq(self):
-        try:
-            log.info("onChooseFolderReq()")
-            base_dir = self.view.openDirectoryDialog()
-            self.view.mainArea.batchPanel._base_dir.set(base_dir)   
-        except Exception as e:
-            log.failure('{e}',e=e)
-            pub.sendMessage('quit', exit_code = 1)
-    
 
     @inlineCallbacks
     def onOpenBatchReq(self):

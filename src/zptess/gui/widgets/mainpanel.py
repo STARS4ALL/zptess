@@ -564,9 +564,12 @@ class CalibrationPanel(ttk.LabelFrame):
 #                      BATCH MANAGEMENT PANEL WIDGETS
 # ============================================================================
 
-class BatchManagemetPanel(ttk.LabelFrame): 
+class BatchManagemetPanel(ttk.LabelFrame):
+
+    EVENTS = {'open': "open_batch_req", 'close': "close_batch_req", 'purge': "purge_batch_req", 'export': "export_batch_req"}
+
     def __init__(self, parent, *args, **kwargs):
-        super().__init__(parent, *args, text=_("Batches"), borderwidth=4, **kwargs)
+        super().__init__(parent, *args, text=_("Batch Management"), borderwidth=4, **kwargs)
         self._command = tk.StringVar()
         self.build()
 
@@ -593,7 +596,9 @@ class BatchManagemetPanel(ttk.LabelFrame):
         widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.W)
 
     def onClickButton(self):
-        pass
+        cmd = self._command.get()
+        if cmd:
+            pub.sendMessage(self.EVENTS[cmd])
 
        
 

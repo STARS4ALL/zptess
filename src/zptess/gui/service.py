@@ -41,6 +41,7 @@ from zptess.gui.controller.application import ApplicationController
 from zptess.gui.controller.preferences import PreferencesController
 from zptess.gui.controller.statusbar import StatusBarController
 from zptess.gui.controller.mainpanel import CalibrationSettingsController, PhotometerPanelController
+from zptess.gui.controller.batch import BatchController
 
 
 # ----------------
@@ -114,7 +115,13 @@ class GraphicalService(Service):
                 view    = self.application, 
                 model   = self.dbaseService.dao,
                 messages= self.options.messages
+            ),
+            BatchController(
+                parent  = self, 
+                view    = self.application, 
+                model   = self.dbaseService.dao,
             )
+
         )
 
         tksupport.install(self.application)

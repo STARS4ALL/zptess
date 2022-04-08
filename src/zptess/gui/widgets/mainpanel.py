@@ -570,7 +570,13 @@ class BatchManagemetPanel(ttk.LabelFrame):
 
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, text=_("Batch Management"), borderwidth=4, **kwargs)
-        self._command = tk.StringVar()
+        self._command  = tk.StringVar()
+        self._email    = tk.BooleanVar()
+        self._updated  = tk.BooleanVar()
+        self._base_dir = tk.StringVar()
+        self._email.set(True)
+        self._updated.set(True)
+        self._base_dir.set("/tmp")
         self.build()
 
     def start(self):
@@ -583,17 +589,37 @@ class BatchManagemetPanel(ttk.LabelFrame):
         lower_panel = ttk.Frame(self)
         lower_panel.pack(side=tk.TOP,  padx=0, pady=0)
 
+        cmd_panel    = ttk.LabelFrame(upper_panel, text=_("Actions"))
+        cmd_panel.pack(side=tk.LEFT,  padx=3, pady=3)
+        export_panel = ttk.LabelFrame(upper_panel, text=_("Export options"))
+        export_panel.pack(side=tk.LEFT,  padx=3, pady=3)
+
+        # Commands
+        widget = ttk.Radiobutton(cmd_panel, text=_("Open Batch"), variable=self._command, value="open")
+        widget.pack(side=tk.TOP, anchor=tk.W, padx=2, pady=2)
+        widget = ttk.Radiobutton(cmd_panel, text=_("Close Batch"), variable=self._command, value="close")
+        widget.pack(side=tk.TOP, anchor=tk.W, padx=2, pady=2)
+        widget = ttk.Radiobutton(cmd_panel, text=_("Purge Batch"), variable=self._command, value="purge")
+        widget.pack(side=tk.TOP, anchor=tk.W, padx=2, pady=2)
+        widget = ttk.Radiobutton(cmd_panel, text=_("Export Batch"), variable=self._command, value="export")
+        widget.pack(side=tk.TOP, anchor=tk.W, padx=2, pady=2)
+
+        # Export options
+        widget = ttk.Checkbutton(export_panel, text= _("Email after export"),  variable=self._email)
+        widget.pack(side=tk.TOP,  fill=tk.X,padx=6, pady=2)
+        widget = ttk.Checkbutton(export_panel, text= _("Only ZP flashed to devices"),  variable=self._updated)
+        widget.pack(side=tk.TOP,  fill=tk.X, padx=6, pady=2)
+        widget = ttk.Button(export_panel, text=_("Choose folder"), command=self.onChooseFolder)
+        widget.pack(side=tk.TOP,   anchor=tk.W, padx=6, pady=2)
+        widget = ttk.Entry(export_panel, width=32, textvariable=self._base_dir)
+        widget.pack(side=tk.TOP,  fill=tk.X, padx=6, pady=2)
+
+        # Lower panel
         widget = ttk.Button(lower_panel, text=_("Execute"), command=self.onClickButton)
         widget.pack(side=tk.TOP,  padx=5, pady=5)
 
-        widget = ttk.Radiobutton(upper_panel, text=_("Open Batch"), variable=self._command, value="open")
-        widget.grid(row=0, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Radiobutton(upper_panel, text=_("Close Batch"), variable=self._command, value="close")
-        widget.grid(row=0, column=1, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Radiobutton(upper_panel, text=_("Purge Batch"), variable=self._command, value="purge")
-        widget.grid(row=1, column=0, padx=2, pady=2, sticky=tk.W)
-        widget = ttk.Radiobutton(upper_panel, text=_("Export Batch"), variable=self._command, value="export")
-        widget.grid(row=1, column=1, padx=2, pady=2, sticky=tk.W)
+    def onChooseFolder(self):
+        pub.sendMessage('choose_export_folder_req')
 
     def onClickButton(self):
         cmd = self._command.get()

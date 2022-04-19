@@ -46,6 +46,13 @@ _ = gettext.gettext
 
 NAMESPACE = 'ctrl'
 
+
+EXPORT_CSV_HEADERS = [ "Model","Name","Timestamp","Magnitud TESS.","Frecuencia","Magnitud Referencia",
+                    "Frec Ref","MagDiff vs stars3","ZP (raw)", "Extra offset", "Final ZP", "Station MAC","OLD ZP",
+                    "Author","Firmware","Updated"]
+EXPORT_CSV_ADD_HEADERS = ["# Rounds", "ZP Sel. Method", "Freq Method", "Ref Freq Method"]
+
+
 # -----------------------
 # Module global variables
 # -----------------------
@@ -58,6 +65,22 @@ log = Logger(namespace=NAMESPACE)
 
 def get_timestamp():
     return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).strftime(TSTAMP_SESSION_FMT)
+
+def summary_export(self, extended, csv_path, updated=None, begin_tstamp=None, end_tstamp=None):
+    '''Exports all the database to a single file'''
+    fieldnames = EXPORT_CSV_HEADERS
+    if extended:
+        fieldnames.extend(EXPORT_CSV_ADD_HEADERS)
+    with open(csv_path, 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=';')
+        writer.writerow(fieldnames)
+        iterable = export_iterable(connection, extended, updated, begin_tstamp, end_tstamp)
+        for row in iterable:
+            row = list(row)
+            row[13] = bool(row[13]) 
+            writer.writerow(row)
+    log.info(f"Saved summary calibration data to CSV file: '{os.path.basename(csv_path)}'")
+
 
 # --------------
 # Module Classes
@@ -161,13 +184,24 @@ class BatchController:
     # --------------
 
 
+    def summary_export(self, updated, export_dir, begin_tstamp, end_tstamp):
+        suffix1 = f"from_{begin_tstamp}_to_{end_tstamp}".replace('-','').replace(':','')
+        csv_path = os.path.join(export_dir, f"summary_{suffix1}.csv")
+        
+
     def _export(self, batch, base_dir, updated, send_email):
         begin_tstamp, end_tstamp, email_sent, calibrations = batch
-        log.info(f"(begin_tstamp, end_tstamp)= ({begin_tstamp}, {end_tstamp}, up to {calibrations} calibrations)")
+        begin_tstamp = batch['begin_tstamp']
+        end_tstamp = batch['end_tstamp']
+        email_sent = batch['email_sent']
+        calibrations = batch['calibrations']
+        log.info("(begin_tstamp, end_tstamp)= ({bts}, {ets}, up to {cal} calibrations)",bts=begin_tstamp, ets=end_tstamp,cal=calibrations)
+        os.makedirs(export_dir, exist_ok=True)
+        
         suffix1 = f"from_{begin_tstamp}_to_{end_tstamp}".replace('-','').replace(':','')
         export_dir = os.path.join(base_dir, suffix1)
-        os.makedirs(export_dir, exist_ok=True)
         csv_path = os.path.join(export_dir, f"summary_{suffix1}.csv")
+        
         summary_export(
             connection   = connection,
             extended     = False, 

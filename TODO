@@ -1,25 +1,15 @@
 SHORT TERM
 ==========
 * No funciona el Flash ZP manual
-* batch management
-- export
-
-
 
 * MIGRACION 
 ===========
-ESTO PRA ACUANDO LO VAYA A  INSTALAR EN EL PC DESTINO
+ESTO PARA CUANDO LO VAYA A INSTALAR EN EL PC DESTINO
 
 Tabla config_t
  - Borrar propiedad (ref-device, zp_abs)
  - Modificar (ref-device, zp) => 20.44
  - Insertar propiedad (calibration, zp_fict) = 20.50
-
-* GUI
-
-- DAO de ssioness de batch_t
-  y el controlador que tenga openSession(), closeSession() y PurgeSession()
-
 
 * Pending bug fixes:
   zptool.utils.paging() no funciona en estos caso:

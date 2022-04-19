@@ -10,10 +10,21 @@
 # -------------------
 
 import os
+import os.path
 import sys
 import csv
+import zipfile
 import datetime
 import gettext
+import ssl
+import smtplib
+import email
+
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 
 # ---------------
 # Twisted imports
@@ -28,6 +39,7 @@ from twisted.internet.threads import deferToThread
 # Third party imports
 # -------------------
 
+import requests
 from pubsub import pub
 
 #--------------
@@ -67,20 +79,65 @@ log = Logger(namespace=NAMESPACE)
 def get_timestamp():
     return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).strftime(TSTAMP_SESSION_FMT)
 
-def summary_export(self, extended, csv_path, updated=None, begin_tstamp=None, end_tstamp=None):
-    '''Exports all the database to a single file'''
-    fieldnames = EXPORT_CSV_HEADERS
-    if extended:
-        fieldnames.extend(EXPORT_CSV_ADD_HEADERS)
-    with open(csv_path, 'w') as csvfile:
-        writer = csv.writer(csvfile, delimiter=';')
-        writer.writerow(fieldnames)
-        iterable = export_iterable(connection, extended, updated, begin_tstamp, end_tstamp)
-        for row in iterable:
-            row = list(row)
-            row[13] = bool(row[13]) 
-            writer.writerow(row)
-    log.info(f"Saved summary calibration data to CSV file: '{os.path.basename(csv_path)}'")
+def get_paths(directory):
+    '''Get all file paths in a list''' 
+    # crawling through directory and subdirectories 
+    for root, directories, files in os.walk(directory):
+        root = os.path.basename(root) # Needs a change of cwd later on if we do this
+        log.debug("Exploring directory '{0}'".format(root))
+    return files         
+
+def pack(base_dir, zip_file):
+    '''Pack all files in the ZIP file given by options'''
+    paths = get_paths(base_dir)
+    log.info(f"Creating ZIP File: '{os.path.basename(zip_file)}'")
+    with zipfile.ZipFile(zip_file, 'w') as myzip:
+        for myfile in paths: 
+            myzip.write(myfile) 
+
+# Adapted From https://realpython.com/python-send-email/
+def email_send(subject, body, sender, receivers, attachment, host, port, password, confidential=False):
+    msg_receivers = receivers
+    receivers = receivers.split(sep=',')
+    message = MIMEMultipart()
+    message["Subject"] = subject
+    # Create a multipart message and set headers
+    if confidential:
+        message["From"] = sender
+        message["To"]   = sender
+        message["Bcc"]  = msg_receivers
+    else:
+        message["From"] = sender
+        message["To"]   = msg_receivers
+
+    # Add body to email
+    message.attach(MIMEText(body, "plain"))
+
+    # Open file in binary mode
+    with open(attachment, "rb") as fd:
+        # Add file as application/octet-stream
+        # Email client can usually download this automatically as attachment
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(fd.read())
+
+    # Encode file in ASCII characters to send by email    
+    encoders.encode_base64(part)
+
+    # Add header as key/value pair to attachment part
+    part.add_header(
+        "Content-Disposition",
+        f"attachment; filename= {os.path.basename(attachment)}",
+    )
+    # Add attachment to message and convert message to string
+    message.attach(part)
+    # Log in to server using secure context and send email
+    context = ssl.create_default_context()
+    with smtplib.SMTP(host, port) as server:
+        server.ehlo()  # Can be omitted
+        server.starttls(context=context)
+        server.ehlo()  # Can be omitted
+        server.login(sender, password)
+        server.sendmail(sender, receivers, message.as_string())
 
 
 # --------------
@@ -169,13 +226,41 @@ class BatchController:
                 )
                 return
             latest = yield self.model.batch.latest()
+            begin_tstamp = latest['begin_tstamp']
             base_dir = args['base_dir']
             send_email = args['email_flag']
             updated = args['update']
-            yield self._export(latest, base_dir, updated, send_email)
+            email_sent = yield self._export(latest, base_dir, updated, send_email)
+        except (requests.ConnectionError, requests.Timeout) as exception:
+            self.view.messageBoxError(
+                title = _("Batch Management"),
+                message = _("No Internet connection!")
+            )
+            email_sent = False
+        except smtplib.SMTPSenderRefused:
+            self.view.messageBoxError(
+                title = _("Batch Management"),
+                message = _("Error sending email.\nCheck logfile for details")
+            )
+            email_sent = False
+            yield self.model.batch.emailed(begin_tstamp, 0)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
+            email_sent = False
+        latest = yield self.model.batch.latest()
+        self.view.statusBar.set(latest)
+        if email_sent:
+            self.view.messageBoxInfo(
+                title = _("Batch Management"),
+                message = _("Batch exported & email sent.")
+            )
+        else:
+            self.view.messageBoxInfo(
+                title = _("Batch Management"),
+                message = _("ZIP File available at folder.") 
+            )
+
 
 
     # --------------
@@ -219,7 +304,7 @@ class BatchController:
                 writer.writerow(sample)
             for sample in ref_samples:
                 writer.writerow(sample)
-        log.info(f"Saved samples calibration data to CSV file: '{os.path.basename(csv_path)}'")
+        log.debug(f"Saved samples calibration data to CSV file: '{os.path.basename(csv_path)}'")
 
 
     @inlineCallbacks
@@ -263,6 +348,41 @@ class BatchController:
             yield deferToThread(self._samples_write, test_samples, ref_samples, csv_path)
 
 
+    def _archive(self, base_dir, begin_tstamp, end_tstamp):
+        suffix1 = f"from_{begin_tstamp}_to_{end_tstamp}".replace('-','').replace(':','')
+        prev_workdir = os.getcwd()
+        zip_file = os.path.join(os.path.dirname(base_dir), suffix1 + '.zip' )
+        os.chdir(base_dir)
+        pack(base_dir, zip_file)
+        os.chdir(prev_workdir)
+        return zip_file
+
+
+    @inlineCallbacks
+    def _email(self, begin_tstamp, end_tstamp, email_sent, zip_file):
+        config = yield self.model.config.loadSection('smtp')
+        if email_sent is None:
+            log.info("Never tried to send an email for this batch")
+        elif email_sent == 0:
+            log.info("Tried to send email for this batch previously but failed")
+        else:
+            log.info("Already sent an email for this batch")
+            return False
+        request = yield deferToThread(requests.head, "http://www.google.com", timeout=5)
+        log.info("Connected to Internet")
+        email_send(
+            subject    = f"[STARS4ALL] TESS calibration data from {begin_tstamp} to {end_tstamp}", 
+            body       = "Find attached hereafter the summary, rounds and samples from this calibration batch", 
+            sender     = config["sender"],
+            receivers  = config["receivers"], 
+            attachment = zip_file, 
+            host       = config["host"], 
+            port       = int(config["port"]),
+            password   = config["password"],
+        )
+        log.info("Email sent")
+        return True
+    
 
     @inlineCallbacks
     def _export(self, batch, base_dir, updated, send_email):
@@ -296,76 +416,11 @@ class BatchController:
                 csv_path     = os.path.join(base_dir, samples_name),
             )
 
-        # ------------------------------
-        # DE MOMENTO PROBAMOS HASTA AQUI
-        # ------------------------------
-        return 
-            
-        # Prepare a ZIP File
-        try:
-            prev_workdir = os.getcwd()
-            zip_file = os.path.join(base_dir, suffix1 + '.zip' )
-            os.chdir(base_dir)
-            pack(export_dir, zip_file)
-        except Exception as e:
-            log.error(f"excepcion {e}")
-        finally:
-            os.chdir(prev_workdir)
-
+        zip_file = yield deferToThread(self._archive, base_dir, begin_tstamp, end_tstamp)
         if not send_email:
-            return
-        if email_sent is None:
-            log.info("Never tried to send an email for this batch")
-        elif email_sent == 0:
-            log.info("Tried to send email for this batch previously but failed")
-        else:
-            log.info("Already sent an email for this batch")
-        # Test internet connectivity
-        try:
-            request = requests.get("http://www.google.com", timeout=5)
-            log.info("Connected to Internet")
-        except (requests.ConnectionError, requests.Timeout) as exception:
-            log.warning("No connection to internet. Stopping here")
-            return
+            return False
+        emailed = yield self._email(begin_tstamp, end_tstamp, email_sent, zip_file)
+        yield self.model.batch.emailed(begin_tstamp, 1)
+        return emailed
 
-        # Check email configuration
-        config = dict()
-        missing = list()
-        smtp_keys   = ("host", "port", "sender", "password", "receivers")
-        for key in smtp_keys:
-            try:
-                config[key] = read_property(connection, "smtp", key)
-            except Exception as e:
-                missing.append(key)
-                continue
-        if len(config) != len(smtp_keys):
-            log.error(f"Missing configuration: {missing}")
-            return   
-
-        # Email ZIP File
-        try:
-            email_sent = 1
-            receivers = read_property(connection, "smtp","receivers")
-            email_send(
-                subject    = f"[STARS4ALL] TESS calibration data from {begin_tstamp} to {end_tstamp}", 
-                body       = "Find attached hereafter the summary, rounds and samples from this calibration batch", 
-                sender     = config["sender"],
-                receivers  = config["receivers"], 
-                attachment = zip_file, 
-                host       = config["host"], 
-                port       = int(config["port"]),
-                password   = config["password"],
-            )
-        except Exception as e:
-            # Mark fail in database
-            email_sent = 0
-            log.error(f"Exception while sending email: {e}")
-            print(traceback.format_exc())
-        else:
-            # Mark success in database
-            log.info(f"Mail succesfully sent.")
-        finally:
-            update_email_state(connection, begin_tstamp, email_sent)
-
-
-
+    

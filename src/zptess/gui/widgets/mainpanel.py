@@ -577,7 +577,7 @@ class BatchManagemetPanel(ttk.LabelFrame):
         self._base_dir = tk.StringVar()
         self._email.set(True)
         self._updated.set(True)
-        self._base_dir.set("/tmp")
+        self._base_dir.set("/tmp/zptess")
         self.build()
 
     def start(self):

@@ -81,3 +81,13 @@ class BatchTable(Table):
                 '''
             txn.execute(sql)
         return self._pool.runInteraction(_purge)
+
+
+    def emailed(self, begin_tstamp, flag):
+        def _emailed(txn, row):
+            sql = '''
+                UPDATE batch_t SET email_sent = :flag WHERE begin_tstamp = :tstamp
+                '''
+            txn.execute(sql, row)
+        row = {'tstamp': begin_tstamp, 'flag': flag}
+        return self._pool.runInteraction(_emailed, row)

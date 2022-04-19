@@ -19,6 +19,7 @@ import gettext
 import ssl
 import smtplib
 import email
+import shutil
 
 from email import encoders
 from email.mime.base import MIMEBase
@@ -79,17 +80,10 @@ log = Logger(namespace=NAMESPACE)
 def get_timestamp():
     return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).strftime(TSTAMP_SESSION_FMT)
 
-def get_paths(directory):
-    '''Get all file paths in a list''' 
-    # crawling through directory and subdirectories 
-    for root, directories, files in os.walk(directory):
-        root = os.path.basename(root) # Needs a change of cwd later on if we do this
-        log.debug("Exploring directory '{0}'".format(root))
-    return files         
 
 def pack(base_dir, zip_file):
     '''Pack all files in the ZIP file given by options'''
-    paths = get_paths(base_dir)
+    paths = os.listdir(base_dir)
     log.info(f"Creating ZIP File: '{os.path.basename(zip_file)}'")
     with zipfile.ZipFile(zip_file, 'w') as myzip:
         for myfile in paths: 
@@ -258,7 +252,7 @@ class BatchController:
         else:
             self.view.messageBoxInfo(
                 title = _("Batch Management"),
-                message = _("ZIP File available at folder.") 
+                message = _("ZIP File available at folder\n{0}.").format(os.path.dirname(base_dir))
             )
 
 
@@ -300,11 +294,11 @@ class BatchController:
             writer = csv.writer(csvfile, delimiter=';')
             if not created:
                 writer.writerow(HEADERS)
+                log.info(f"Saved samples calibration data to CSV file: '{os.path.basename(csv_path)}'")
             for sample in test_samples:
                 writer.writerow(sample)
             for sample in ref_samples:
                 writer.writerow(sample)
-        log.debug(f"Saved samples calibration data to CSV file: '{os.path.basename(csv_path)}'")
 
 
     @inlineCallbacks
@@ -353,7 +347,11 @@ class BatchController:
         prev_workdir = os.getcwd()
         zip_file = os.path.join(os.path.dirname(base_dir), suffix1 + '.zip' )
         os.chdir(base_dir)
-        pack(base_dir, zip_file)
+        paths = os.listdir(base_dir)
+        log.info(f"Creating ZIP File: '{os.path.basename(zip_file)}'")
+        with zipfile.ZipFile(zip_file, 'w') as myzip:
+            for myfile in paths: 
+                myzip.write(myfile) 
         os.chdir(prev_workdir)
         return zip_file
 
@@ -415,8 +413,8 @@ class BatchController:
                 roun         = None, # None is a marker for all rounds,
                 csv_path     = os.path.join(base_dir, samples_name),
             )
-
         zip_file = yield deferToThread(self._archive, base_dir, begin_tstamp, end_tstamp)
+        shutil.rmtree(base_dir)
         if not send_email:
             return False
         emailed = yield self._email(begin_tstamp, end_tstamp, email_sent, zip_file)

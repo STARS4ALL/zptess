@@ -32,7 +32,8 @@ from zptess.logger import setLogLevel
 from zptess.dbase import tables
 from zptess.dbase.batch import BatchTable
 from zptess.dbase.summary import SummaryTable
-
+from zptess.dbase.rounds import RoundsTable
+from zptess.dbase.samples import SamplesTable
 
 # ----------------
 # Module constants
@@ -76,7 +77,7 @@ class DataAccesObject():
             log_level = 'info',
         )
         
-        self.samples = tables.Table(
+        self.samples = SamplesTable(
             pool                = self.pool, 
             table               = 'samples_t',
             id_column           = 'rowid',
@@ -86,7 +87,7 @@ class DataAccesObject():
             log_level           = 'info',
         )
 
-        self.rounds = tables.Table(
+        self.rounds = RoundsTable(
             pool                = self.pool, 
             table               = 'rounds_t',
             id_column           = 'rowid',
@@ -118,5 +119,7 @@ class DataAccesObject():
             insert_mode         = tables.INSERT,
             log_level           = 'info',
         )
+        
+
         
         

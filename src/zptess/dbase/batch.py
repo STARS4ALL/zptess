@@ -9,9 +9,6 @@
 # System wide imports
 # -------------------
 
-import sqlite3
-import datetime
-
 # ---------------
 # Twisted imports
 # ---------------

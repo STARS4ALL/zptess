@@ -11,6 +11,7 @@
 
 import os
 import sys
+import csv
 import datetime
 import gettext
 
@@ -171,9 +172,7 @@ class BatchController:
             base_dir = args['base_dir']
             send_email = args['email_flag']
             updated = args['update']
-            # 'latest' es un dict e ese metodo espera una tupla
-            # self._export(latest, base_dir, updated, send_email)
-
+            yield self._export(latest, base_dir, updated, send_email)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)
@@ -183,52 +182,124 @@ class BatchController:
     # Helper methods
     # --------------
 
+    def _summary_write(self, summary, csv_path, extended):
+        fieldnames = EXPORT_CSV_HEADERS
+        if extended:
+            fieldnames.extend(EXPORT_CSV_ADD_HEADERS)
+        with open(csv_path, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
+            writer.writerow(fieldnames)
+            for row in summary:
+                row = list(row) # row was a tuple thus we could not modifi it
+                row[13] = bool(row[13]) 
+                writer.writerow(row)
+        log.info(f"Saved summary calibration data to CSV file: '{os.path.basename(csv_path)}'")
 
-    def summary_export(self, updated, export_dir, begin_tstamp, end_tstamp):
+
+    def _rounds_write(self, test_rounds, ref_rounds, csv_path):
+        header = ("Model", "Name", "MAC", "Session (UTC)", "Role", "Round", "Freq (Hz)", "\u03C3 (Hz)", "Mag", "ZP", "# Samples","\u0394 T (s.)")
+        with open(csv_path, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
+            writer.writerow(header)
+            for row in test_rounds:
+                writer.writerow(row)
+            for row in ref_rounds:
+                writer.writerow(row)
+        log.info(f"Saved rounds calibration data to CSV file: '{os.path.basename(csv_path)}'")
+
+
+    def _samples_write(self, test_samples, ref_samples, csv_path):
+        HEADERS = ("Model", "Name", "MAC", "Session (UTC)", "Role", "Round", "Timestamp", "Frequency", "Box Temperature", "Sequence #")
+        created = os.path.isfile(csv_path)
+        with open(csv_path, 'a') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
+            if not created:
+                writer.writerow(HEADERS)
+            for sample in test_samples:
+                writer.writerow(sample)
+            for sample in ref_samples:
+                writer.writerow(sample)
+        log.info(f"Saved samples calibration data to CSV file: '{os.path.basename(csv_path)}'")
+
+
+    @inlineCallbacks
+    def _summary_export(self, updated, export_dir, begin_tstamp, end_tstamp):
         suffix1 = f"from_{begin_tstamp}_to_{end_tstamp}".replace('-','').replace(':','')
         csv_path = os.path.join(export_dir, f"summary_{suffix1}.csv")
-        
+        summary = yield self.model.summary.export(
+            extended     = False,
+            updated      = updated,
+            begin_tstamp = begin_tstamp,
+            end_tstamp   = end_tstamp
+        )
+        yield deferToThread(self._summary_write, summary, csv_path, False)
 
+
+    @inlineCallbacks
+    def _rounds_export(self, session, updated, csv_path):
+        test_rounds = yield self.model.rounds.export(session, 'test', updated)
+        ref_rounds  = yield self.model.rounds.export(session, 'ref', None)
+        yield deferToThread(self._rounds_write, test_rounds, ref_rounds, csv_path)
+           
+
+    @inlineCallbacks
+    def _samples_export(self, session, roun, also_ref, csv_path):
+        test_model, test_name, nrounds = yield self.model.summary.getDeviceInfo(session,'test')
+        ref_model,  ref_name, _        = yield self.model.summary.getDeviceInfo(session,'ref')
+        if roun is None:   # round None is a marker for all rounds
+            for r in range(1, nrounds+1):
+                test_samples = yield self.model.samples.export(session, 'test', r)
+                if also_ref:
+                    ref_samples = yield self.model.samples.export(session, 'ref', r)
+                else:
+                    ref_samples = tuple()
+                yield deferToThread(self._samples_write, test_samples, ref_samples, csv_path)
+        else:
+            test_samples = yield self.model.samples.export(session, 'test', roun)
+            if also_ref:
+                ref_samples = yield self.model.samples.export(session, 'ref', roun)
+            else:
+                ref_samples = tuple()
+            yield deferToThread(self._samples_write, test_samples, ref_samples, csv_path)
+
+
+
+    @inlineCallbacks
     def _export(self, batch, base_dir, updated, send_email):
-        begin_tstamp, end_tstamp, email_sent, calibrations = batch
         begin_tstamp = batch['begin_tstamp']
         end_tstamp = batch['end_tstamp']
         email_sent = batch['email_sent']
         calibrations = batch['calibrations']
         log.info("(begin_tstamp, end_tstamp)= ({bts}, {ets}, up to {cal} calibrations)",bts=begin_tstamp, ets=end_tstamp,cal=calibrations)
-        os.makedirs(export_dir, exist_ok=True)
-        
-        suffix1 = f"from_{begin_tstamp}_to_{end_tstamp}".replace('-','').replace(':','')
-        export_dir = os.path.join(base_dir, suffix1)
-        csv_path = os.path.join(export_dir, f"summary_{suffix1}.csv")
-        
-        summary_export(
-            connection   = connection,
-            extended     = False, 
+        os.makedirs(base_dir, exist_ok=True)
+        yield self._summary_export(
             updated      = updated,   # This should be true when sendimg email to people
-            csv_path     = csv_path,
+            export_dir   = base_dir,
             begin_tstamp = begin_tstamp, 
             end_tstamp   = end_tstamp, 
         )
-        iterable = summary_sessions_iterable(connection, updated, begin_tstamp, end_tstamp)
-        for i, (session,) in enumerate(iterable):
+        sessions = yield self.model.summary.sessions(updated, begin_tstamp, end_tstamp)
+        for i, (session,) in enumerate(sessions):
             log.info(f"Calibration {session} [{i+1}/{calibrations}] (updated = {bool(updated)})")
-            _, name, _ = summary_get_info(connection, session, 'test')
-            rounds_name = f"{name}_rounds_{session}.csv".replace('-','').replace(':','')
+            _, name, _ = yield self.model.summary.getDeviceInfo(session,'test')
+            rounds_name  = f"{name}_rounds_{session}.csv".replace('-','').replace(':','')
             samples_name = f"{name}_samples_{session}.csv".replace('-','').replace(':','')
-            rounds_export(
-                connection   = connection,
-                updated      = updated, # This should be true when sendimg email to people
-                csv_path     = os.path.join(export_dir, rounds_name),
-                session      = session, 
+            yield self._rounds_export(
+                session = session, 
+                updated = updated, 
+                csv_path = os.path.join(base_dir, rounds_name)
             )
-            samples_export(
-                connection   = connection,
+            yield self._samples_export(
                 session      = session,
-                roun         = None, # None is a marker for all rounds,
                 also_ref     = True, # Include reference photometer samples
-                csv_path     = os.path.join(export_dir, samples_name),
+                roun         = None, # None is a marker for all rounds,
+                csv_path     = os.path.join(base_dir, samples_name),
             )
+
+        # ------------------------------
+        # DE MOMENTO PROBAMOS HASTA AQUI
+        # ------------------------------
+        return 
             
         # Prepare a ZIP File
         try:

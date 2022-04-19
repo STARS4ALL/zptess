@@ -99,3 +99,10 @@ class SummaryTable(Table):
         return self._pool.runInteraction(_export, sql, row)
 
 
+    def getDeviceInfo(self, session, role):
+        def _getDeviceInfo(txn, sql, row):
+            txn.execute(sql, row)
+            return txn.fetchone()
+        row = {'session': session, 'role': role}
+        sql = "SELECT model, name, nrounds FROM summary_t WHERE session = :session AND role = :role"
+        return self._pool.runInteraction(_getDeviceInfo, sql, row)

@@ -135,7 +135,7 @@ class PhotometerPanelController:
 
         # Events coming from services
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
-        pub.subscribe(self.onPhotometerOffline, 'phot_firmware')
+        pub.subscribe(self.onPhotometerFirmware, 'phot_firmware')
         pub.subscribe(self.onPhotometerOffline, 'phot_offline')
         pub.subscribe(self.onPhotometerEnd, 'phot_end')
         pub.subscribe(self.onStatisticsProgress, 'stats_progress')
@@ -196,6 +196,11 @@ class PhotometerPanelController:
     def onPhotometerFirmware(self, role, firmware):
         label = TEST if role == 'test' else REF
         if self._test_transport_method == 'tcp':
+            message = _("Conflictive firmware '{0}' for TCP comms. Use UDP instead").format(firmware)
+            self.view.messageBoxIWarn(
+                title = _("Test Photometer"),
+                message = message
+            )
             log.critical("[{label}] Conflictive firmware '{firmware}' for TCP comms. Use UDP instead", label=label, firmware=firmware)
             yield self.parent.parent.stopService()
 

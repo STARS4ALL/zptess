@@ -22,9 +22,6 @@ from pkg_resources import resource_filename
 # Module constants
 # ----------------
 
-ICONS_DIR   = resource_filename(__name__, os.path.join('resources', 'img' ))
-IMG_ROI     = resource_filename(__name__, os.path.join('resources', 'img', 'roi.png'))
-
 # About Widget resources configuration
 ABOUT_DESC_TXT = resource_filename(__name__, os.path.join('resources', 'about', 'descr.txt'))
 ABOUT_ACK_TXT  = resource_filename(__name__, os.path.join('resources', 'about', 'ack.txt'))

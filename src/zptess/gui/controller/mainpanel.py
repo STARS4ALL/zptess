@@ -173,7 +173,7 @@ class PhotometerPanelController:
         self._write_to_db = flag
         self.model.parent.setTestMode(not flag)
 
-   
+    @inlineCallbacks
     def onWriteZeroPointReq(self, zero_point):
         try:
             if not self.phot['test']:

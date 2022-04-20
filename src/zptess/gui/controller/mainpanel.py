@@ -98,6 +98,7 @@ class CalibrationSettingsController:
         try:
             result = yield self.config.loadSection('calibration')
             self.view.mainArea.calibPanel.settings.set(result)
+            self.view.mainArea.calibPanel.state.set(result)
         except Exception as e:
             log.failure('{e}',e=e)
             pub.sendMessage('quit', exit_code = 1)

@@ -452,12 +452,25 @@ class CalibrationStatePanel(ttk.LabelFrame):
         self._zp_fict = tk.StringVar()
         self._freq_method = tk.StringVar()
         self._zp_method = tk.StringVar()
+        self._progress = tk.IntVar()
+        self._nrounds  = 0
         self.build()
 
     def start(self):
         pass
 
     def build(self):
+        widget = ttk.Progressbar(self, 
+            variable = self._progress,
+            maximum  = 100,  # Express in percentage
+            length   = 100, 
+            mode     = 'determinate', 
+            orient   = tk.HORIZONTAL, 
+            value    = 0,
+        )
+        widget.pack(side=tk.BOTTOM, fill=tk.BOTH, padx=2, pady=5, ipadx=0, ipady=0)
+        self._progress_widget = widget
+
         left_frame = ttk.LabelFrame(self,text= _("Round"))
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=2, pady=2, ipadx=0, ipady=0)
 
@@ -500,10 +513,15 @@ class CalibrationStatePanel(ttk.LabelFrame):
         widget = ttk.Label(right_frame, width=8, textvariable=self._zp_fict, anchor=tk.E, borderwidth=1, relief=tk.SUNKEN)
         widget.grid(row=2, column=2, padx=2, pady=2, sticky=tk.W)
 
+    def set(self, config):
+        self._nrounds = config['rounds']
+
+
     def updateCalibration(self, count, stats_info):
         self._round.set(count)
         self._magdif.set(round(stats_info['mag_diff'],3))
         self._zp.set(stats_info['zero_point'])
+        self._progress.set(count * 100 / self._nrounds)
 
     def updateSummary(self, summary_info):
         self._best_freq.set(summary_info['freq'])
@@ -523,6 +541,7 @@ class CalibrationStatePanel(ttk.LabelFrame):
         self._zp_fict.set('')
         self._freq_method.set('')
         self._zp_method.set('')
+        self._progress.set(0)
        
 # ----------------------------------------------------------------------------
 

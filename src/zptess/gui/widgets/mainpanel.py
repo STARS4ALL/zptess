@@ -514,7 +514,7 @@ class CalibrationStatePanel(ttk.LabelFrame):
         widget.grid(row=2, column=2, padx=2, pady=2, sticky=tk.W)
 
     def set(self, config):
-        self._nrounds = config['rounds']
+        self._nrounds = int(config['rounds'])
 
 
     def updateCalibration(self, count, stats_info):

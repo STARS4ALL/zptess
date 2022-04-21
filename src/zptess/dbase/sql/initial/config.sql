@@ -17,6 +17,8 @@ INSERT INTO config_t(section, property, value)
 VALUES ('calibration', 'offset', '0.0');
 INSERT INTO config_t(section, property, value) 
 VALUES ('calibration', 'author', '');
+INSERT INTO config_t(section, property, value) 
+VALUES ('calibration', 'zp_fict', '20.50');
 
 -------------------------------
 -- Reference photometer section
@@ -66,7 +68,7 @@ VALUES ('test-device', 'model', 'TESS-W');
 -- Default device protocol and comm method
 
 INSERT INTO config_t(section, property, value) 
-VALUES ('test-device', 'endpoint', 'tcp:192.168.4.1:23');
+VALUES ('test-device', 'endpoint', 'udp:192.168.4.1:2255');
 INSERT INTO config_t(section, property, value) 
 VALUES ('test-device', 'old_proto', '0');
 
@@ -78,5 +80,3 @@ INSERT INTO config_t(section, property, value)
 VALUES ('test-stats', 'period', '5');
 INSERT INTO config_t(section, property, value) 
 VALUES ('test-stats', 'central', 'median');
-INSERT INTO config_t(section, property, value) 
-VALUES ('test-stats', 'period', '5');

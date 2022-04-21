@@ -44,6 +44,10 @@ PACKAGE_DATA = {
         'sql/initial/*.sql',
         'sql/updates/*.sql',
     ],
+    'zptess.gui': [
+        'resources/photpanel/*.*',
+        'resources/about/*.*',
+    ],
 }
 
 SCRIPTS = [

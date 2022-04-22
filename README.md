@@ -9,6 +9,7 @@ Works both in command line and GUI mode using Tkinter.
 1. type `zptess` to launch gui
 
 ![Main Panel](doc/image/main.png)
+![About](doc/image/about.png)
 
 ## CLI Mode
 

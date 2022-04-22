@@ -1,3 +1,1 @@
 ZPTESS software development has been possible through STARS4ALL, an European Union's Horizon 2020 research and innovation project under grant agreement number 688135.
-
-See https://actionproject.eu/ for more details.

@@ -1,10 +1,14 @@
 # TESS calibration tool
 
 Calibration tool for the [TESS-W photometer](https://tess.stars4all.eu/) and derivates.
+Works both in command line and GUI mode using Tkinter.
 
-## Migration
 
-## Operation
+## GUI Mode
+
+* type `zptess`
+![Main Panel](doc/image/main.png)
+
 
 ### Summary
 

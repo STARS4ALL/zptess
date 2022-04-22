@@ -62,6 +62,7 @@ class TESSProtocolFactory(ClientFactory):
         self.model   = model
         self.log     = log
         self.log_msg = Logger(namespace=namespace)
+        self.tcp_deferred = None
 
     def startedConnecting(self, connector):
         self.log.debug('Factory: Started to connect.')

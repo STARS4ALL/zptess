@@ -43,7 +43,9 @@ from zptess.photometer.protocol.interface import IPhotometerControl
 # Module functions
 # ----------------
 
-
+def format_mac(mac):
+    '''Formats MAC strings as returned from the device into well-known MAC format'''
+    return ':'.join(map(''.join, zip(*[iter(mac)]*2)))
 
 # ----------
 # Exceptions
@@ -188,6 +190,8 @@ class CLIPhotometer:
         self.log = log_msg
         self.label = label
         self.parent = None
+        self.read_deferred = None
+        self.write_deferred = None
         log.info("{label:6s} Using {who} Info", label=self.label, who=self.__class__.__name__)
 
     def setParent(self, protocol):
@@ -234,6 +238,7 @@ class CLIPhotometer:
         sr, matchobj = self._match_solicited(line)
         if not sr:
             return False
+        self.read_response['freq_offset'] = 0 # This is hardwired until we can query
         if sr['name'] == 'name':
             self.read_response['tstamp'] = tstamp
             self.read_response['name'] = str(matchobj.group(1))

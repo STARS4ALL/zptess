@@ -139,8 +139,8 @@ class TESSStreamProtocol(LineOnlyReceiver):
         self._payload  = payload_obj
         self._phot     = photinfo_obj
         self.factory   = factory
-        self.log = factory.log
-        self.label = label
+        self.log       = factory.log
+        self.label     = label
         self.log.info("{label:6s} Created protocol {who}", label=label, who=self.__class__.__name__)
 
     # -------------------------

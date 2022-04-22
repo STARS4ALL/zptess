@@ -6,9 +6,11 @@ Works both in command line and GUI mode using Tkinter.
 
 ## GUI Mode
 
-* type `zptess`
+1. type `zptess` to launch gui
+
 ![Main Panel](doc/image/main.png)
 
+## CLI Mode
 
 ### Summary
 

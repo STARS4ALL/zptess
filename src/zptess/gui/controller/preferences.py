@@ -140,7 +140,7 @@ class PreferencesController:
             yield self.config.saveSection('test-stats', config['test-stats'])
             yield self.config.saveSection('test-device', config['test-device'])
             self.view.menuBar.preferences.testFrame.saveOkResp()
-            self.view.messageBoxWarn(
+            yield self.view.messageBoxWarn(
                 title = _("ZPTESS"),
                 message = _("Preferences changed.\nMust close the whole application!")
             )

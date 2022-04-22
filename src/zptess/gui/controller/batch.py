@@ -162,7 +162,7 @@ class BatchController:
             log.info("onOpenBatchReq()")
             isOpen = yield self.model.batch.isOpen()
             if isOpen:
-                self.view.messageBoxWarn(
+                yield self.view.messageBoxWarn(
                     title = _("Batch Management"),
                     message = _("Batch already open")
                 )
@@ -181,7 +181,7 @@ class BatchController:
             log.info("onCloseBatchReq()")
             isOpen = yield self.model.batch.isOpen()
             if not isOpen:
-                self.view.messageBoxWarn(
+                yield self.view.messageBoxWarn(
                     title = _("Batch Management"),
                     message = _("No open batch to close")
                 )
@@ -214,7 +214,7 @@ class BatchController:
             log.info("onExportBatchReq()")
             isOpen = yield self.model.batch.isOpen()
             if isOpen:
-                self.view.messageBoxWarn(
+                yield self.view.messageBoxWarn(
                     title = _("Batch Management"),
                     message = _("Must close batch first!")
                 )
@@ -226,13 +226,13 @@ class BatchController:
             updated = args['update']
             email_sent = yield self._export(latest, base_dir, updated, send_email)
         except (requests.ConnectionError, requests.Timeout) as exception:
-            self.view.messageBoxError(
+            yield self.view.messageBoxError(
                 title = _("Batch Management"),
                 message = _("No Internet connection!")
             )
             email_sent = False
         except smtplib.SMTPSenderRefused:
-            self.view.messageBoxError(
+            yield self.view.messageBoxError(
                 title = _("Batch Management"),
                 message = _("Error sending email.\nCheck logfile for details")
             )
@@ -245,12 +245,12 @@ class BatchController:
         latest = yield self.model.batch.latest()
         self.view.statusBar.set(latest)
         if email_sent:
-            self.view.messageBoxInfo(
+            yield self.view.messageBoxInfo(
                 title = _("Batch Management"),
                 message = _("Batch exported & email sent.")
             )
         else:
-            self.view.messageBoxInfo(
+            yield self.view.messageBoxInfo(
                 title = _("Batch Management"),
                 message = _("ZIP File available at folder\n{0}.").format(os.path.dirname(base_dir))
             )

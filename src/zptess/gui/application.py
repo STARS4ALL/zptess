@@ -99,19 +99,24 @@ class Application(tk.Tk):
     # ----------------
 
     def messageBoxInfo(self, title, message):
-        tk.messagebox.showinfo(message=message, title=title)
+        tk.messagebox.showinfo(message=message, title=title) # Someday, it will be replaced with a non blocking dialog
+        return defer.succeed(None)
 
     def messageBoxError(self, title, message):
-        tk.messagebox.showerror(message=message, title=title)
+        tk.messagebox.showerror(message=message, title=title) # Someday, it will be replaced with a non blocking dialog
+        return defer.succeed(None)
 
     def messageBoxWarn(self, title, message):
-        tk.messagebox.showwarning(message=message, title=title)
+        tk.messagebox.showwarning(message=message, title=title) # Someday, it will be replaced with a non blocking dialog
+        return defer.succeed(None)
 
     def messageBoxAcceptCancel(self, title, message):
-        return tk.messagebox.askokcancel(message=message, title=title)
+        flag = tk.messagebox.askokcancel(message=message, title=title) # Someday, it will be replaced with a non blocking dialog
+        return defer.succeed(flag)
 
     def openDirectoryDialog(self):
-        return tk.filedialog.askdirectory()
+        base_dir = tk.filedialog.askdirectory() # Someday, it will be replaced with a non blocking dialog
+        return defer.succeed(base_dir)
 
     def saveFileDialog(self, title, filename, extension):
         return tk.filedialog.asksaveasfilename(

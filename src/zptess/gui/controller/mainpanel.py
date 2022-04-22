@@ -182,7 +182,7 @@ class PhotometerPanelController:
             if not self.phot['test'].running:
                 yield self.phot['test'].startService()
             result = yield self.phot['test'].writeZeroPoint(zero_point)
-            self.view.messageBoxInfo(
+            yield self.view.messageBoxInfo(
                 title = _("Test Photometer"),
                 message = _("New Zero Point written")
             )
@@ -197,7 +197,7 @@ class PhotometerPanelController:
         label = TEST if role == 'test' else REF
         if self._test_transport_method == 'tcp':
             message = _("Conflictive firmware '{0}' for TCP comms. Use UDP instead").format(firmware)
-            self.view.messageBoxIWarn(
+            yield self.view.messageBoxWarn(
                 title = _("Test Photometer"),
                 message = message
             )
@@ -314,7 +314,7 @@ class PhotometerPanelController:
         self.view.mainArea.photPanel['test'].stopCalibration()
         self.view.mainArea.photPanel['ref'].stopCalibration()
         self.view.mainArea.calibPanel.stopCalibration()
-        self.view.messageBoxInfo(
+        yield self.view.messageBoxInfo(
             title = _("Calibration"),
             message = '\n'.join(messages)
         )

@@ -78,8 +78,8 @@ def createParser():
     # -----------------------------
 
     # Calibration related options
-    parser_cli.add_argument('-a', '--author',  type=str, nargs='+', required=True, help='person performing the calibration process')
-    parser_cli.add_argument('-o', '--offset',  type=float, required=True, help='Additional offset to add to final ZP')
+    parser_cli.add_argument('-a', '--author',  type=str, nargs='+', default=None, help='person performing the calibration process')
+    parser_cli.add_argument('-o', '--offset',  type=float, default=None, help='Additional offset to add to final ZP')
     parser_cli.add_argument('-n', '--rounds',  type=int, default=5, help='how many rounds')
     
     # Statistics related options

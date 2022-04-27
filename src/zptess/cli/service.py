@@ -269,9 +269,10 @@ class CommandLineService(MultiService):
         section = 'calibration'
         options = self.dbaseServ.getInitialConfig(section)
         options['rounds'] = self._cmd_options['rounds'] or int(options['rounds'])
-        options['author'] = " ".join(self._cmd_options['author']) or options['author']
+        author = self._cmd_options['author'] if self._cmd_options['author'] is not None else []
+        options['author'] = " ".join(author) or options['author']
         options['offset'] = self._cmd_options['offset'] or float(options['offset'])
-        options['update'] = self._cmd_options['update']
+        options['update'] = self._cmd_options['update'] # siempre en linea de comando
         options['log_level'] = 'info' # A capón de momento
         service = CalibrationService(options)
         service.setName(CalibrationService.NAME)

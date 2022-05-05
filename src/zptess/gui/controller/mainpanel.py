@@ -141,6 +141,7 @@ class PhotometerPanelController:
         pub.subscribe(self.onStatisticsProgress, 'stats_progress')
         pub.subscribe(self.onStatisticsInfo, 'stats_info')
         pub.subscribe(self.onCalibrationRound, 'calib_round_info')
+        pub.subscribe(self.onCalibrationLists, 'calib_summary_lists')
         pub.subscribe(self.onCalibrationSummary, 'calib_summary_info')
         pub.subscribe(self.onCalibrationEnd, 'calib_end')
 
@@ -214,11 +215,30 @@ class PhotometerPanelController:
         reactor.callLater(1, self.parent.parent.stopService)
 
     def onStatisticsProgress(self, role, stats_info):
+        label = TEST if role == 'test' else REF
+        log.info('[{label:4s}] {name:8s} waiting for enough samples, {pend} remaining', 
+            label = label, 
+            name = stats_info['name'], 
+            pend = stats_info['nsamples'] - stats_info['current'],
+        )
         self.view.mainArea.photPanel[role].yellow()
         self.view.mainArea.photPanel[role].updatePhotStats(stats_info)
 
     def onStatisticsInfo(self, role, stats_info):
-        #log.info("onStatisticsProgress(role={role},stats_info={stats_info})", role=role, stats_info=stats_info)
+        label = TEST if role == 'test' else REF
+        log.info("[{label:4s}] {name:8s} ({start}-{end})[{w:0.1f}s][{sz:d}] {central:6s} f = {cFreq:0.3f} Hz, \u03C3 = {sFreq:0.3f} Hz, m = {cMag:0.2f} @ {zp:0.2f}",
+            label   = label, 
+            name    = stats_info['name'], 
+            start   = stats_info['begin_tstamp'].strftime("%H:%M:%S"),
+            end     = stats_info['end_tstamp'].strftime("%H:%M:%S"), 
+            sz      = stats_info['nsamples'],
+            zp      = stats_info['zp_fict'], 
+            central = stats_info['central'],
+            cFreq   = stats_info['freq'], 
+            cMag    = stats_info['mag'], 
+            sFreq   = stats_info['stddev'],
+            w       = stats_info['duration']
+        )
         if stats_info['stddev'] == 0.0:
             self.view.mainArea.photPanel[role].red()
         else:
@@ -231,6 +251,13 @@ class PhotometerPanelController:
         if info is None:
             log.warn("[{label}] No photometer info available. Is it Connected?", label=label)
         else:
+            log.info("[{label}] Role         : {value}", label=label, value=info['role'])
+            log.info("[{label}] Model        : {value}", label=label, value=info['model'])
+            log.info("[{label}] Name         : {value}", label=label, value=info['name'])
+            log.info("[{label}] MAC          : {value}", label=label, value=info['mac'])
+            log.info("[{label}] Zero Point   : {value:.02f} (old)", label=label, value=info['zp'])
+            log.info("[{label}] Offset Freq. : {value}", label=label, value=info['freq_offset'])
+            log.info("[{label}] Firmware     : {value}", label=label, value=info['firmware'])
             self.view.mainArea.photPanel[role].updatePhotInfo(info)
       
     @inlineCallbacks
@@ -266,12 +293,49 @@ class PhotometerPanelController:
 
     def onCalibrationRound(self, role, count, stats_info):
         #log.info("onCalibrationRound(stats_info={stats_info})", role=role, stats_info=stats_info)
+        label = TEST if role == 'test' else REF
         if role == 'test':
+            log.info('ROUND       {i:02d}: New ZP = {zp:0.2f} = \u0394(ref-test) Mag ({magDiff:0.2f}) + ZP Abs ({zp_fict:0.2f})',
+                i        = count ,
+                magDiff  = stats_info['mag_diff'], 
+                zp_fict  = stats_info['zp_fict'], 
+                zp       = stats_info['zero_point'],
+            )
+            log.info("="*72)
             self.view.mainArea.calibPanel.updateCalibration(count, stats_info)
 
+    def onCalibrationLists(self, session, zp_list, ref_freqs, test_freqs):
+        log.info("#"*72)
+        log.info("Session = {session}",session=session)
+        log.info("Best ZP        list is {bzp}",  bzp=zp_list)
+        log.info("Best {rLab} Freq list is {brf}",brf=ref_freqs,  rLab=REF)
+        log.info("Best {tLab} Freq list is {btf}",btf=test_freqs, tLab=TEST)
+
+
     def onCalibrationSummary(self, role, stats_info):
-        #log.info("onCalibrationSummary(stats_info={stats_info})", role=role, stats_info=stats_info)
+        label = TEST if role == 'test' else REF
+        log.info("{label} Best Freq. = {freq:0.3f} Hz, Mag. = {mag:0.2f}, Diff {diff:0.2f}", 
+            freq  = stats_info['freq'],
+            mag   = stats_info['mag'],  
+            diff  = stats_info['mag_offset'],
+            label = label
+        )
         if role == 'test':
+            final_zp = stats_info['zero_point']
+            offset   = stats_info['offset']
+            best_zp  = final_zp - offset
+            log.info("Final {label} ZP ({fzp:0.2f}) = Best ZP ({bzp:0.2f}) + ZP offset ({o:0.2f})",
+                fzp   = final_zp, 
+                bzp   = best_zp, 
+                o     = offset, 
+                label = label
+            )
+            log.info("Old {label} ZP = {old_zp:0.2f}, NEW {label} ZP = {new_zp:0.2f}", 
+                old_zp = stats_info['prev_zp'], 
+                new_zp = final_zp, 
+                label  = label
+            )
+            log.info("#"*72)
             self._zp_to_write = stats_info['zero_point']
             self.view.mainArea.calibPanel.updateSummary(stats_info)
 
@@ -315,7 +379,7 @@ class PhotometerPanelController:
         self.view.mainArea.photPanel['ref'].stopCalibration()
         self.view.mainArea.calibPanel.stopCalibration()
         yield self.view.messageBoxInfo(
-            title = _("Calibration"),
+            title   = _("Calibration"),
             message = '\n'.join(messages)
         )
 

@@ -142,9 +142,9 @@ class CommandLineService(MultiService):
     def onStatisticsProgress(self, role, stats_info):
         label = TEST if role == 'test' else REF
         log.info('[{label:4s}] {name:8s} waiting for enough samples, {pend} remaining', 
-                label = label, 
-                name = stats_info['name'], 
-                pend = stats_info['nsamples'] - stats_info['current'],
+            label = label, 
+            name = stats_info['name'], 
+            pend = stats_info['nsamples'] - stats_info['current'],
         )
 
     def onStatisticsInfo(self, role, stats_info):
@@ -186,18 +186,26 @@ class CommandLineService(MultiService):
     def onCalibrationSummary(self, role, stats_info):
         label = TEST if role == 'test' else REF
         log.info("{label} Best Freq. = {freq:0.3f} Hz, Mag. = {mag:0.2f}, Diff {diff:0.2f}", 
-                freq= stats_info['freq'],
-                mag=stats_info['mag'],  
-                diff=stats_info['mag_offset'],
-                label=label
+            freq  = stats_info['freq'],
+            mag   = stats_info['mag'],  
+            diff  = stats_info['mag_offset'],
+            label = label
         )
         if role == 'test':
             final_zp = stats_info['zero_point']
             offset   = stats_info['offset']
             best_zp  = final_zp - offset
-            log.info("Final {label} ZP ({fzp:0.2f}) = Best ZP ({bzp:0.2f}) + ZP offset ({o:0.2f})",fzp=final_zp, bzp=best_zp, o=offset, label=label)
+            log.info("Final {label} ZP ({fzp:0.2f}) = Best ZP ({bzp:0.2f}) + ZP offset ({o:0.2f})",
+                fzp   = final_zp, 
+                bzp   = best_zp, 
+                o     = offset, 
+                label = label
+            )
             log.info("Old {label} ZP = {old_zp:0.2f}, NEW {label} ZP = {new_zp:0.2f}", 
-                old_zp=stats_info['prev_zp'], new_zp=final_zp, label=label)
+                old_zp = stats_info['prev_zp'], 
+                new_zp = final_zp, 
+                label  = label
+            )
             log.info("#"*72)
             self._zp_to_write = stats_info['zero_point']
 

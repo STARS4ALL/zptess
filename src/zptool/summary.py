@@ -358,6 +358,30 @@ def summary_view_sql(connection, latest, also_ref, view_all):
         headers = tuple()
     return sql, headers
 
+
+def summary_get_zero_point(connection, updated, begin_tstamp, end_tstamp):
+    row = {'begin_tstamp': begin_tstamp, 'end_tstamp': end_tstamp, 'updated': updated}
+    cursor = connection.cursor()
+    if updated is not None:
+        cursor.execute('''
+            SELECT zero_point 
+            FROM summary_t 
+            WHERE session BETWEEN :begin_tstamp AND :end_tstamp
+            AND role = 'test'
+            AND upd_flag = :updated
+        ''', row)
+    else:
+        cursor.execute('''
+            SELECT zero_point 
+            FROM summary_t 
+            WHERE session BETWEEN :begin_tstamp AND :end_tstamp
+            AND role = 'test'
+        ''', row)
+
+    result = list(map(lambda x: x[0], cursor))
+    return result
+   
+
 # ==================
 # 'summary' commands
 # ==================

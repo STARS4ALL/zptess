@@ -272,6 +272,15 @@ def createParser():
 	baex.add_argument('-e', '--email',   action='store_true', help='send results by email')
 	baex.add_argument('-u', '--updated', type=mkbool, choices=(True, False), default=None, help='do action only when ZP updated flag is True|False')
 
+	bast = subparser.add_parser('stats', help="generate ZP statistics per batch")
+	bastex = bast.add_mutually_exclusive_group(required=True)
+	bastex.add_argument('-b', '--begin-date',  type=mkdate, metavar='<YYYY-MM-DDTHH:MM:SS>', default=None, help='by begin')
+	bastex.add_argument('-l', '--latest',   action='store_true', help='latest closed batch')
+	bastex.add_argument('-a', '--all',   action='store_true', help='all closed batches')
+	bast.add_argument('-f', '--csv-file',  type=str, required=True, help='CSV file to export (required)')
+	bast.add_argument('-v', '--view',  action='store_true', help='View as console table as well')
+
+
 	return parser
 
 # ================ #

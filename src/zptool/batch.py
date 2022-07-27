@@ -18,6 +18,7 @@ import datetime
 import logging
 import zipfile
 import traceback
+import statistics
 
 # --------------------
 # Third party packages
@@ -31,7 +32,7 @@ import requests
 
 from zptess import TSTAMP_SESSION_FMT
 from zptool.utils import paging, read_property
-from zptool.summary import summary_number_of_sessions, summary_export, summary_sessions_iterable, summary_get_info
+from zptool.summary import summary_number_of_sessions, summary_export, summary_sessions_iterable, summary_get_info, summary_get_zero_point
 from zptool.rounds  import rounds_export
 from zptool.samples import samples_export
 from zptool.emailer import email_send
@@ -318,3 +319,41 @@ def export(connection, options):
         for begin_tstamp, end_tstamp in batch_iterable(connection):
             batch_export(connection, batch, options.base_dir, options.updated, options.email)
             
+
+def stats(connection, options):
+    HEADER = ("from","to","N","mean","stdev")
+    if options.latest:
+        log.info(f"calculating mean zero point for latest batch")
+        begin_tstamp, end_tstamp, _, N = batch_latest(connection)
+        do_zero_point_stats(connection, begin_tstamp, end_tstamp, N, options.csv_file)
+
+    elif options.begin_date:
+        log.info(f"calculating mean zero point for specific batch {options.begin_date}")
+        begin_tstamp, end_tstamp, _, N = batch_specific(connection, options.begin_date)
+        do_zero_point_stats(connection, begin_tstamp, end_tstamp, N, options.csv_file)
+
+    else:
+        log.info(f"calculating mean zero point for all batches")
+        stats = list()
+        for begin_tstamp, end_tstamp, _, N in batch_iterable(connection):
+            zero_points = summary_get_zero_point(connection, None, begin_tstamp, end_tstamp)
+            try:
+                mean = round(statistics.mean(zero_points),2)
+                stdev = round(statistics.stdev(zero_points),3)
+            except Exception as e:
+                log.warn(f"Excluding batch {begin_tstamp} from the list due to: {e}")
+            else:
+                stats.append((begin_tstamp, end_tstamp, N, mean, stdev))
+
+        log.info(f"Generating CSV file with {len(stats)} entries + header")
+        with open(options.csv_file, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
+            writer.writerow(HEADER)
+            for row in stats:
+                writer.writerow(row)
+        if options.view:
+            paging(stats, HEADER,size=len(stats))
+           
+
+
+         

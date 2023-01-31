@@ -19,51 +19,46 @@ import csv
 # -------------
 
 from zptess import TSTAMP_SESSION_FMT
+from zptess.dbase.summary import EXPORT_HEADERS, EXPORT_ADD_HEADERS, dyn_sql
 from zptool.utils import paging
 
 
-EXPORT_CSV_HEADERS = [ "Model","Name","Timestamp","Magnitud TESS.","Frecuencia","Magnitud Referencia",
-					"Frec Ref","MagDiff vs stars3","ZP (raw)", "Extra offset", "Final ZP", "Station MAC","OLD ZP",
-					"Author","Firmware","Updated"]
-EXPORT_CSV_ADD_HEADERS = ["# Rounds", "ZP Sel. Method", "Freq Method", "Ref Freq Method"]
-
-EXPORT_HEADERS = ("model","name","session", "test_mag", "test_freq", "ref_mag", "ref_freq", 
-					"mag_diff", "raw_zero_point", "offset", "zero_point", "mac", "prev_zp", "author", "firmware", "upd_flag")
-EXPORT_ADD_HEADERS = ("offset","nrounds","zero_point_method","test_freq_method","ref_freq_method" )
-       		
 NAMES_MAP = {
-    "Model" : "model", 
-    "Name" : "name",
-    "Timestamp": "session",
-    "Magnitud TESS" : "test_mag",
-    "Frecuencia" : "test_freq",
-    "Magnitud Referencia" : "ref_mag",
-    "Frec Ref" : "ref_freq",
-    "Offset vs stars3" : "mag_diff",
-    "ZP": "zero_point",
-    "Station MAC": "mac",
-    "OLD ZP": "prev_zp"
+    'model'             : "Model", 
+    'name'              : "Name",
+    'mac'               : "MAC",
+    'firmware'          : "Firmware",
+    'session'           : "Calibration date",
+    'calibration'       : "Calibration",
+    'ref_mag'           : "Ref. Mag.",
+    'ref_freq'          : "Ref. Freq." ,
+    'test_mag'          : "Test Mag.",
+    'test_freq'         : "Test Freq.",
+    'raw_zero_point'    : "Raw ZP",
+    'mag_diff'          : "Ref-Test Mag. Diff.",
+    'offset'            : "ZP Offset",
+    'zero_point'        : "Final ZP",
+    'prev_zp'           : "Prev. ZP",
+    'filter'            : "Filter",
+    'socket'            : "Socket",
+    'box'               : "Box",
+    'collector'         : "Collector" ,
+    'author'            : "Author",
+    'comment'           : "Comment",
+    'nrounds'            : "# Rounds",
+    'zero_point_method' : "ZP Sel. Method",
+    'test_freq_method'  : "Freq Method",
+    'ref_freq_method'   : "Ref Freq Method",
 }
 
+EXPORT_CSV_HEADERS = tuple(NAMES_MAP[key] for key in EXPORT_HEADERS)
+EXPORT_CSV_ADD_HEADERS = tuple(NAMES_MAP[key] for key in EXPORT_ADD_HEADERS)
 
 # -----------------------
 # Module global variables
 # -----------------------
 
 log = logging.getLogger("zptool")
-
-
-def dyn_sql(columns, updated, begin_tstamp):
-    all_columns = ",".join(columns)
-    if begin_tstamp is None and updated is None:
-        sql = f"SELECT {all_columns} FROM summary_v ORDER BY session ASC"
-    elif begin_tstamp is None and updated is not None:
-        sql = f"SELECT {all_columns} FROM summary_v WHERE upd_flag = :updated ORDER BY session ASC"
-    elif begin_tstamp is not None and updated is None:
-        sql = f"SELECT {all_columns} FROM summary_v WHERE session BETWEEN :begin_tstamp AND :end_tstamp ORDER BY session ASC"
-    else:
-        sql = f"SELECT {all_columns} FROM summary_v WHERE upd_flag = :updated AND session BETWEEN :begin_tstamp AND :end_tstamp ORDER BY session ASC"
-    return sql
 
 
 def export_iterable(connection, extended, updated, begin_tstamp, end_tstamp):
@@ -73,98 +68,6 @@ def export_iterable(connection, extended, updated, begin_tstamp, end_tstamp):
     sql = dyn_sql(headers, updated, begin_tstamp)
     cursor.execute(sql, row)
     return cursor
-
-
-def remap_2_summary_rows(item):
-    test = {
-        'session'          : item['Timestamp'][:-1],
-        'role'             : 'test',
-        'model'            : item['Model'],
-        'name'             : item['Name'],
-        'mac'              : item['Station MAC'],
-        'firmware'         : item['Firmware'],
-        'prev_zp'          : item['OLD ZP'],
-        'author'           : item['Author'],
-        'nrounds'          : None, # For the time being
-        'offset'           : 0.0, # Foir the time being, we have the new boxes ....
-        'upd_flag'         : 1 if item['Updated'] == 'True' else 0,
-        'zero_point'       : float(item['ZP']),
-        'freq'             : float(item['Frecuencia']),
-        'mag'              : float(item['Magnitud TESS.']),
-        'zero_point_method': None, # for the time being
-        'freq_method'      : None, # for the time being
-    }
-    ref  = {
-        'session'          : item['Timestamp'][:-1],
-        'role'             : 'ref',
-        'model'            : "TESS-W",
-        'name'             : "stars3",
-        'mac'              : "18:FE:34:CF:E9:A3",
-        'firmware'         : '',
-        'prev_zp'          : 20.50,
-        'author'           : item['Author'],
-        'nrounds'          : None, # For the time being
-        'offset'           : 0.0, 
-        'upd_flag'         : 0,
-        'zero_point'       : 20.50,
-        'freq'             : float(item['Frec Ref']),
-        'mag'              : float(item['Magnitud Referencia']),
-        'zero_point_method': None, # Always
-        'freq_method'      : None, # for the time being
-    }
-
-    return ref, test
-
-def fix_frequency(row):
-    if (row['freq'] > 1000):
-        fix = row['freq']/1000
-        log.warning(f"{row['name']} has wrong frequency {row['freq']} => {fix:.3f}")
-        row['freq'] = fix
-
-def write_to_summary_table(connection, rows):
-    cursor = connection.cursor()
-    cursor.executemany(
-        '''
-        INSERT OR IGNORE INTO summary_t (
-            session,
-            role, 
-            model, 
-            name,
-            mac,  
-            firmware,
-            prev_zp,
-            author,
-            nrounds,
-            offset,
-            upd_flag,
-            zero_point,
-            zero_point_method,
-            freq,
-            freq_method,
-            mag
-        )
-        VALUES (
-            :session,
-            :role, 
-            :model, 
-            :name,
-            :mac,  
-            :firmware,
-            :prev_zp,
-            :author,
-            :nrounds,
-            :offset,
-            :upd_flag,
-            :zero_point,
-            :zero_point_method,
-            :freq,
-            :freq_method,
-            :mag
-        )
-        ''',
-        rows,
-    )
-    connection.commit()
 
 # -------------------------------------
 # Useful functions to be used elsewhere
@@ -287,7 +190,7 @@ def summary_session_from_name(connection, name, role='test', updated=False):
             ''',row)
     return cursor.fetchone()
 
-def summary_export(connection, extended, csv_path, updated=None, begin_tstamp=None, end_tstamp=None):
+def summary_export(connection, extended, csv_path, updated, begin_tstamp=None, end_tstamp=None):
     '''Exports all the database to a single file'''
     fieldnames = EXPORT_CSV_HEADERS
     if extended:
@@ -298,7 +201,7 @@ def summary_export(connection, extended, csv_path, updated=None, begin_tstamp=No
         iterable = export_iterable(connection, extended, updated, begin_tstamp, end_tstamp)
         for row in iterable:
             row = list(row)
-            row[13] = bool(row[13]) 
+            row[1] = f"{row[1][0:5]}{int(row[1][5:]):04d}" # reformat starsXXXXX 
             writer.writerow(row)
     log.info(f"Saved summary calibration data to CSV file: '{os.path.basename(csv_path)}'")
 
@@ -389,20 +292,6 @@ def summary_get_zero_point(connection, updated, begin_tstamp, end_tstamp):
 def export(connection, options):
     '''Exports all the database to a single file'''
     summary_export(connection, options.extended, options.csv_file, options.updated)
-
-def load(connection, options):
-    '''Exports all the database to a single file'''
-    rows=list()
-    with open(options.csv_file, newline='') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=';')
-        for row in reader:
-            ref, test = remap_2_summary_rows(row)
-            fix_frequency(test)
-            fix_frequency(ref)
-            rows.append(ref)
-            rows.append(test)
-        log.info(f"Processed {len(rows)//2} items")
-    write_to_summary_table(connection, rows)
 
 
 # Differences may come from old log file parsing

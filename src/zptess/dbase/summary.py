@@ -27,11 +27,12 @@ from zptess.dbase.tables import Table
 # Module constants
 # ----------------
 
-EXPORT_HEADERS = ("model","name","session", "test_mag", "test_freq", "ref_mag", "ref_freq", 
-                    "mag_diff", "raw_zero_point", "offset", "zero_point", "mac", "prev_zp", 
-                    "author", "firmware", "upd_flag")
+# The order in this sequence matters because it will be dumped in a CSV file
+EXPORT_HEADERS = ("model","name", "mac","firmware", "session" ,"calibration", "ref_mag", "ref_freq", "test_mag", "test_freq",  
+                    "mag_diff", "raw_zero_point", "offset", "zero_point",  "prev_zp", 
+                    "filter", "socket", "box", "collector","author", "comment")
 
-EXPORT_ADD_HEADERS = ("offset","nrounds","zero_point_method","test_freq_method","ref_freq_method" )
+EXPORT_ADD_HEADERS = ("nrounds","zero_point_method","test_freq_method","ref_freq_method" )
 
 # ----------------
 # helper functions
@@ -40,9 +41,9 @@ EXPORT_ADD_HEADERS = ("offset","nrounds","zero_point_method","test_freq_method",
 def dyn_sql(columns, updated, begin_tstamp):
     all_columns = ",".join(columns)
     if begin_tstamp is None and updated is None:
-        sql = f"SELECT {all_columns} FROM summary_v ORDER BY session ASC"
+        sql = f"SELECT {all_columns} FROM summary_v WHERE name LIKE 'stars%' ORDER BY CAST(substr(name, 6) AS INT) ASC"
     elif begin_tstamp is None and updated is not None:
-        sql = f"SELECT {all_columns} FROM summary_v WHERE upd_flag = :updated ORDER BY session ASC"
+        sql = f"SELECT {all_columns} FROM summary_v WHERE name LIKE 'stars%' AND upd_flag = :updated ORDER BY CAST(substr(name, 6) AS INT) ASC"
     elif begin_tstamp is not None and updated is None:
         sql = f"SELECT {all_columns} FROM summary_v WHERE session BETWEEN :begin_tstamp AND :end_tstamp ORDER BY session ASC"
     else:

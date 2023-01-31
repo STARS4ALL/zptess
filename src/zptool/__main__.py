@@ -149,9 +149,6 @@ def createParser():
 	smexp.add_argument('-x', '--extended',  action='store_true', help='extended data export')
 	smexp.add_argument('-u', '--updated',   action='store_true', help='export only when ZP was actually written to TESS-W')
 
-	smld = subparser.add_parser('load',  help="Import summary data from CSV file")
-	smld.add_argument('-f', '--csv-file',  type=str, required=True, help='CSV file to import (required)')
-
 	smdf = subparser.add_parser('differences',  help="Show mismatches respect to rounds information")
 
 	smvw = subparser.add_parser('view',  help="View calibration summary")

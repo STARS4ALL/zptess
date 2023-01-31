@@ -255,6 +255,20 @@ class CalibrationService(Service):
         # ZP used when calculating magnitudes. Used in GUI
         summary_test['zp_fict']  = self.zp_fict
         summary_ref['zp_fict']   = self.zp_fict
+        # Other miscellaneous stuff
+        summary_test['calibration'] = self.options['calibration']
+        summary_ref['calibration'] = self.options['calibration']
+        summary_test['filter'] = self.options['filter']
+        summary_ref['filter'] = None
+        summary_test['socket'] = self.options['socket']
+        summary_ref['socket'] = None
+        summary_test['box'] = self.options['box']
+        summary_ref['box'] = None
+        summary_test['collector'] = self.options['collector']
+        summary_ref['collector'] = None
+        summary_test['comment'] = self.options['comment']
+        summary_ref['comment'] = None
+
         return summary_ref, summary_test
 
 

@@ -282,6 +282,12 @@ class CommandLineService(MultiService):
         options['offset'] = self._cmd_options['offset'] or float(options['offset'])
         options['update'] = self._cmd_options['update'] # siempre en linea de comando
         options['log_level'] = 'info' # A capón de momento
+        options['calibration'] = 'AUTO'
+        options['filter'] =  self._cmd_options['filter']
+        options['socket'] =  self._cmd_options['socket']
+        options['box'] =  self._cmd_options['box']
+        options['collector'] =  self._cmd_options['collector']
+        options['comment'] =  self._cmd_options['comment']
         service = CalibrationService(options)
         service.setName(CalibrationService.NAME)
         service.setServiceParent(self)

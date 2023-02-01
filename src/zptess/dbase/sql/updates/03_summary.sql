@@ -161,10 +161,10 @@ WHERE mac = '98:F4:AB:B2:7B:53';
 ------------------------------------------------------
 
 -- stars3
-INSERT INTO summary_t(model, name, mac, session, calibration, role, zero_point, mag, filter, socket, box, collector, comment)
-VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','0000-01-01T00:00:00','MANUAL','test',20.44, 20.44, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
-INSERT INTO summary_t(model,name,mac,session,calibration,role,zero_point,mag,filter,socket, box, collector, comment)
-VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','0000-01-01T00:00:00','MANUAL','ref',20.44, 20.44, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
+INSERT INTO summary_t(model, name, mac, session, calibration, role, zero_point, mag, offset, filter, socket, box, collector, comment)
+VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','0000-01-01T00:00:00','MANUAL','test',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
+INSERT INTO summary_t(model,name,mac,session,calibration,role,zero_point,mag,offset,filter,socket, box, collector, comment)
+VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','0000-01-01T00:00:00','MANUAL','ref',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
 
 
 COMMIT;

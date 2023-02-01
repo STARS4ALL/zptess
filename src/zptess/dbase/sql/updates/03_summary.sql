@@ -100,7 +100,8 @@ WHERE name IN
 -- -----------------------
 
 -- Las excepciones estan en fotómetros que ahora mismo no estan en la BD
-UPDATE summary_t SET socket  = 'USB-A';
+UPDATE summary_t SET socket  = 'USB-A' WHERE name != 'stars3';
+UPDATE summary_t SET socket  = 'USB-A+serial' WHERE name = 'stars3';
 
 -- --------
 -- Colector
@@ -127,8 +128,9 @@ WHERE name IN
 
 ----------------------------
 -- Toques diversos a la BBDD
------------------------------
+----------------------------
 
+UPDATE summary_t SET author = 'Rafael Gonzalez' where author = 'Rafael_Gonzalez';
 
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars23';
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars29';
@@ -154,9 +156,15 @@ WHERE mac = '98:F4:AB:B2:7B:53';
 -- ¿Este es el de la UCM con filtro especial?
 --UPDATE summary_t SET socket = 'UK socket' WHERE name = 'stars85';
 
+------------------------------------------------------
+-- AÑADIR NUEVOS FOTOMETROS SIN CALIBRACION AUTOMATICA
+------------------------------------------------------
 
-
-
+-- stars3
+INSERT INTO summary_t(model, name, mac, session, calibration, role, zero_point, mag, filter, socket, box, collector, comment)
+VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','0000-01-01T00:00:00','MANUAL','test',20.44, 20.44, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
+INSERT INTO summary_t(model,name,mac,session,calibration,role,zero_point,mag,filter,socket, box, collector, comment)
+VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','0000-01-01T00:00:00','MANUAL','ref',20.44, 20.44, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
 
 
 COMMIT;

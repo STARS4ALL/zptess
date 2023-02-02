@@ -41,9 +41,9 @@ EXPORT_ADD_HEADERS = ("nrounds","zero_point_method","test_freq_method","ref_freq
 def dyn_sql(columns, updated, begin_tstamp):
     all_columns = ",".join(columns)
     if begin_tstamp is None and updated is None:
-        sql = f"SELECT {all_columns} FROM summary_v WHERE name LIKE 'stars%' ORDER BY CAST(substr(name, 6) AS INT) ASC"
+        sql = f"SELECT {all_columns} FROM summary_v WHERE name LIKE 'stars%' ORDER BY CAST(substr(name, 6) AS INT) ASC, session ASC"
     elif begin_tstamp is None and updated is not None:
-        sql = f"SELECT {all_columns} FROM summary_v WHERE name LIKE 'stars%' AND upd_flag = :updated ORDER BY CAST(substr(name, 6) AS INT) ASC"
+        sql = f"SELECT {all_columns} FROM summary_v WHERE name LIKE 'stars%' AND upd_flag = :updated ORDER BY CAST(substr(name, 6) AS INT) ASC, session ASC"
     elif begin_tstamp is not None and updated is None:
         sql = f"SELECT {all_columns} FROM summary_v WHERE session BETWEEN :begin_tstamp AND :end_tstamp ORDER BY session ASC"
     else:

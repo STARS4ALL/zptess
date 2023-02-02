@@ -69,6 +69,9 @@ WHERE name NOT IN (SELECT * FROM (VALUES ('stars1')));
 -- Caja por defecto
 -- ----------------
 
+-- Conectores para los TASS y TESS-P
+UPDATE summary_t SET plug  = 'USB-micro' WHERE (model = 'TAS') OR (model = 'TESS-P');
+
 --------------------------------------------------
 -- CAJA PARA LOS TESS4C
 -- Aunque no apareczan en la BD lo pogo aqui para que no se pierda
@@ -100,8 +103,8 @@ WHERE model = 'TESS-W' AND name IN
 -- -----------------------
 
 -- Las excepciones estan en fotómetros que ahora mismo no estan en la BD
-UPDATE summary_t SET plug  = 'USB-A' WHERE name != 'stars3';
-UPDATE summary_t SET plug  = 'USB-A+serial' WHERE name = 'stars3';
+UPDATE summary_t SET plug  = 'USB-A' WHERE model = 'TESS-W' AND name != 'stars3';
+UPDATE summary_t SET plug  = 'USB-A+serial' WHERE model = 'TESS-W' AND name = 'stars3';
 
 -- --------
 -- Colector

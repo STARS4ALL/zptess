@@ -14,7 +14,7 @@ VALUES ('database', 'version', '03');
 
 ALTER TABLE summary_t ADD COLUMN calibration TEXT;
 ALTER TABLE summary_t ADD COLUMN filter TEXT;
-ALTER TABLE summary_t ADD COLUMN socket TEXT;
+ALTER TABLE summary_t ADD COLUMN plug TEXT;
 ALTER TABLE summary_t ADD COLUMN box TEXT;
 ALTER TABLE summary_t ADD COLUMN collector TEXT;
 ALTER TABLE summary_t ADD COLUMN comment TEXT;
@@ -46,7 +46,7 @@ AS SELECT
     ROUND(ref_t.mag - test_t.mag, 2) AS mag_diff,
     ROUND(test_t.zero_point, 2) - test_t.offset as raw_zero_point,
     test_t.filter,
-    test_t.socket,
+    test_t.plug,
     test_t.box,
     test_t.collector,
     test_t.comment
@@ -100,8 +100,8 @@ WHERE name IN
 -- -----------------------
 
 -- Las excepciones estan en fotómetros que ahora mismo no estan en la BD
-UPDATE summary_t SET socket  = 'USB-A' WHERE name != 'stars3';
-UPDATE summary_t SET socket  = 'USB-A+serial' WHERE name = 'stars3';
+UPDATE summary_t SET plug  = 'USB-A' WHERE name != 'stars3';
+UPDATE summary_t SET plug  = 'USB-A+serial' WHERE name = 'stars3';
 
 -- --------
 -- Colector
@@ -139,7 +139,7 @@ UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE 
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars87';
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars90';
 UPDATE summary_t 
-    SET comment = 'recalibrado, calibracion anterior manual' , socket = 'USB-A + serial'
+    SET comment = 'recalibrado, calibracion anterior manual' , plug = 'USB-A + serial'
 WHERE name = 'stars58';
 
 -- caso de stars382
@@ -154,17 +154,23 @@ WHERE mac = '98:F4:AB:B2:7B:53';
 
 
 -- ¿Este es el de la UCM con filtro especial?
---UPDATE summary_t SET socket = 'UK socket' WHERE name = 'stars85';
+--UPDATE summary_t SET plug = 'UK plug' WHERE name = 'stars85';
 
 ------------------------------------------------------
 -- AÑADIR NUEVOS FOTOMETROS SIN CALIBRACION AUTOMATICA
 ------------------------------------------------------
 
 -- stars3
-INSERT INTO summary_t(model, name, mac, session, calibration, role, zero_point, mag, offset, filter, socket, box, collector, comment)
-VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','0000-01-01T00:00:00','MANUAL','test',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
-INSERT INTO summary_t(model,name,mac,session,calibration,role,zero_point,mag,offset,filter,socket, box, collector, comment)
-VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','0000-01-01T00:00:00','MANUAL','ref',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
+
+-- Found out in stars3 web page that the firmware compilation date is 'May 19 2016'
+UPDATE summary_t
+SET firmware = 'May 19 2016'
+WHERE name = 'stars3' AND (firmware = NULL OR firmware = '');
+
+INSERT INTO summary_t(model, name, mac, firmware, session, calibration, role, zero_point, mag, offset, filter, plug, box, collector, comment)
+VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','May 19 2016','0000-01-01T00:00:00','MANUAL','test',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
+INSERT INTO summary_t(model,name,mac, firmware, session,calibration,role,zero_point,mag,offset,filter,plug, box, collector, comment)
+VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3', 'May 19 2016','0000-01-01T00:00:00','MANUAL','ref',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
 
 
 COMMIT;

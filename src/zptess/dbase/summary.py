@@ -30,7 +30,7 @@ from zptess.dbase.tables import Table
 # The order in this sequence matters because it will be dumped in a CSV file
 EXPORT_HEADERS = ("model","name", "mac","firmware", "session" ,"calibration", "ref_mag", "ref_freq", "test_mag", "test_freq",  
                     "mag_diff", "raw_zero_point", "offset", "zero_point",  "prev_zp", 
-                    "filter", "socket", "box", "collector","author", "comment")
+                    "filter", "plug", "box", "collector","author", "comment")
 
 EXPORT_ADD_HEADERS = ("nrounds","zero_point_method","test_freq_method","ref_freq_method" )
 

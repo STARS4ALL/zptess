@@ -5,10 +5,10 @@
 ----------------------------
 {% for r in rows -%}
 -- '{{r['Name']}}'
-INSERT INTO summary_t(model, name, mac, firmware, session, calibration, role, freq, mag, offset, zero_point, filter, socket, box, collector, comment)
-	VALUES({{r['Model']}},{{r['Name']}},{{r['MAC']}},{{r['Firmware']}},{{r['Calibration date']}},MANUAL,'test',{{r['Test Freq.']}},{{r['Test Mag.']}},{{r['Ref-Test Mag. Diff.']}},{{r['Raw ZP']}},{{r['Filter']}},{{r['Socket']}},{{r['Box']}},{{r['Collector']}},{{r['Comment']}});
-INSERT INTO summary_t(model, name, mac, firmware, session, calibration, role, freq, mag, offset, zero_point, filter, socket, box, collector, comment)
-	VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3',NULL,NULL,MANUAL,'ref',{{r['Ref Freq.']}},{{r['Ref Mag.']}},{{r['Ref-Test Mag. Diff.']}},20.50,'UV/IR-740','USB-A+serial','Caja plastico antigua','standard',NULL);
+INSERT INTO summary_t(model, name, mac, firmware, session, calibration, role, freq, mag, offset, zero_point, filter, plug, box, collector, comment)
+	VALUES({{r['Model']}},{{r['Name']}},{{r['MAC']}},{{r['Firmware']}},{{r['Calibration date']}},MANUAL,'test',{{r['Test Freq.']}},{{r['Test Mag.']}},{{r['Ref-Test Mag. Diff.']}},{{r['Raw ZP']}},{{r['Filter']}},{{r['Plug']}},{{r['Box']}},{{r['Collector']}},{{r['Comment']}});
+INSERT INTO summary_t(model, name, mac, firmware, session, calibration, role, freq, mag, offset, zero_point, filter, plug, box, collector, comment)
+	VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3',NULL,{{r['Calibration date']}},MANUAL,'ref',{{r['Ref Freq.']}},{{r['Ref Mag.']}},{{r['Ref-Test Mag. Diff.']}},20.50,'UV/IR-740','USB-A+serial','Caja plastico antigua','standard',NULL);
 
 {% endfor -%}
 --------------------------

@@ -82,7 +82,7 @@ def createParser():
     parser_cli.add_argument('-o', '--offset',  type=float, default=None, help='Additional offset to add to final ZP')
     parser_cli.add_argument('-n', '--rounds',  type=int, default=5, help='how many rounds')
     parser_cli.add_argument('--filter',        type=str, default="UV/IR-740", help='installed filter')
-    parser_cli.add_argument('--socket',        type=str, default="USB-A", help='socket type')
+    parser_cli.add_argument('--plug',        type=str, default="USB-A", help='plug type')
     parser_cli.add_argument('--box',           type=str, default="FSH714", help='mounted on box model')
     parser_cli.add_argument('--collector',     type=str, default=None, help='installed collector')
     parser_cli.add_argument('--comment',       type=str, default=None, help='additional comment for the calibration session')

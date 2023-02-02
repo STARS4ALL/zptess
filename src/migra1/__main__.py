@@ -130,6 +130,13 @@ def slurpInputFile(filepath):
 def quoteOrNull(string):
     return "'" +  string + "'" if string != '' else 'NULL'
 
+def floatOrNull(string, ndecimals):
+    try:
+        result = round(float(string),ndecimals)
+    except Exception:
+        result = 'NULL'
+    return result
+
 def filterNotCalibrated(row):
     return row['Calibration date'] == '';
 
@@ -154,11 +161,15 @@ def mapAll(row):
     row['Model'] = quoteOrNull(row['Model'])
     row['Name'] = quoteOrNull(row['Name'])
     row['MAC'] = quoteOrNull(formatMAC(row['MAC']))
+    row['Test Freq.'] = floatOrNull(row['Test Freq.'],3)
+    row['Ref. Freq.'] = floatOrNull(row['Ref. Freq.'],3)
+    row['Test Mag.'] = floatOrNull(row['Test Mag.'],2)
+    row['Ref. Mag.'] = floatOrNull(row['Ref. Mag.'],2)
+    row['Ref-Test Mag. Diff.'] = floatOrNull(row['Ref-Test Mag. Diff.'],3)
     row['Filter'] = 'UV/IR-740' if row['Filter'] == 'UV/IR-cut' else row['Filter']
     row['Filter'] = quoteOrNull(row['Filter'])
-    row['Socket'] = 'USB-A' if row['Socket'] == 'USB' else row['Socket']
-    row['Socket'] = 'USB-A+Power supply' if row['Socket'] == 'USB-D' else row['Socket']
-    row['Socket'] = quoteOrNull(row['Socket'])
+    row['Plug'] = 'USB-A' if row['Plug'] == 'USB' else row['Plug']
+    row['Plug'] = quoteOrNull(row['Plug'])
     row['Box'] = quoteOrNull(row['Box'])
     row['Collector'] = quoteOrNull(row['Collector'])
     row['Comment'] = quoteOrNull(row['Comment'])

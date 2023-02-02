@@ -284,7 +284,7 @@ class CommandLineService(MultiService):
         options['log_level'] = 'info' # A capón de momento
         options['calibration'] = 'AUTO'
         options['filter'] =  self._cmd_options['filter']
-        options['socket'] =  self._cmd_options['socket']
+        options['plug'] =  self._cmd_options['plug']
         options['box'] =  self._cmd_options['box']
         options['collector'] =  self._cmd_options['collector']
         options['comment'] =  self._cmd_options['comment']

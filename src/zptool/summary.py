@@ -40,7 +40,7 @@ NAMES_MAP = {
     'zero_point'        : "Final ZP",
     'prev_zp'           : "Prev. ZP",
     'filter'            : "Filter",
-    'socket'            : "Socket",
+    'plug'              : "Plug",
     'box'               : "Box",
     'collector'         : "Collector" ,
     'author'            : "Author",
@@ -190,8 +190,9 @@ def summary_session_from_name(connection, name, role='test', updated=False):
             ''',row)
     return cursor.fetchone()
 
+
 def summary_export(connection, extended, csv_path, updated, begin_tstamp=None, end_tstamp=None):
-    '''Exports all the database to a single file'''
+    '''Exports all the database summary to a single file'''
     fieldnames = EXPORT_CSV_HEADERS
     if extended:
         fieldnames.extend(EXPORT_CSV_ADD_HEADERS)
@@ -202,6 +203,7 @@ def summary_export(connection, extended, csv_path, updated, begin_tstamp=None, e
         for row in iterable:
             row = list(row)
             row[1] = f"{row[1][0:5]}{int(row[1][5:]):04d}" # reformat starsXXXXX 
+            row[4] = row[4] + 'Z' # reformat session timestamp 
             writer.writerow(row)
     log.info(f"Saved summary calibration data to CSV file: '{os.path.basename(csv_path)}'")
 

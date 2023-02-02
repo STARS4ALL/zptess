@@ -260,8 +260,8 @@ class CalibrationService(Service):
         summary_ref['calibration'] = self.options['calibration']
         summary_test['filter'] = self.options['filter']
         summary_ref['filter'] = None
-        summary_test['socket'] = self.options['socket']
-        summary_ref['socket'] = None
+        summary_test['plug'] = self.options['plug']
+        summary_ref['plug'] = None
         summary_test['box'] = self.options['box']
         summary_ref['box'] = None
         summary_test['collector'] = self.options['collector']

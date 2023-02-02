@@ -14,10 +14,10 @@ import re
 import os
 import sys
 import csv
+import datetime
 import argparse
 import logging
 import traceback
-import sqlite3
 import jinja2
 
 # -------------
@@ -32,10 +32,16 @@ from zptool.utils import mkdate, mkbool
 # -----------------------
 
 log = logging.getLogger("zptool")
-EXCLUDED_NAMES = {'stars3'}
 
-WRONG_MAC_REGEXP = re.compile(r"^((([A-F0-9]{2}-){5})|(([A-F0-9]{2}-){5}))[A-F0-9]{2}$")
+EXCLUDED_NAMES = ('stars3','stars700','stars701','stars702','stars703','stars704','stars705','stars706','stars707','stars708','stars709','stars710',)
+
+UNWANTED_WORDS = ('Sí', 'Sí **')
 WRONG_MAC_REGEXP = re.compile(r"^([A-F0-9]{2})-([A-F0-9]{2})-([A-F0-9]{2})-([A-F0-9]{2})-([A-F0-9]{2})-([A-F0-9]{2})$")
+
+TSTAMP_SESSION_FMT = "'%Y-%m-%dT%H:%M:%S'"
+
+currentTimestamp = datetime.datetime(year=1000,month=1,day=1,hour=0,minute=1,second=0)
+ONE_MINUTE = datetime.timedelta(minutes=1)
 
 # -----------------------
 # Module global functions
@@ -134,7 +140,7 @@ def floatOrNull(string, ndecimals):
     try:
         result = round(float(string),ndecimals)
     except Exception:
-        result = 'NULL'
+        result= 'NULL'
     return result
 
 def filterNotCalibrated(row):
@@ -142,6 +148,13 @@ def filterNotCalibrated(row):
 
 def excludeNames(row):
     return row['Name'] not in EXCLUDED_NAMES;
+
+def replaceCollector(collector):
+    if collector in UNWANTED_WORDS:
+        collector = 'NULL'
+    else:
+        collector = quoteOrNull(collector)
+    return collector 
 
 def mapNames(row):
     '''This must be separate to exclude names later'''
@@ -157,22 +170,26 @@ def formatMAC(mac):
 
     return mac
 def mapAll(row):
+    global currentTimestamp
     row['Firmware'] = quoteOrNull(row['Firmware'])
     row['Model'] = quoteOrNull(row['Model'])
     row['Name'] = quoteOrNull(row['Name'])
     row['MAC'] = quoteOrNull(formatMAC(row['MAC']))
+    row['Calibration date'] = currentTimestamp.strftime(TSTAMP_SESSION_FMT)
     row['Test Freq.'] = floatOrNull(row['Test Freq.'],3)
     row['Ref. Freq.'] = floatOrNull(row['Ref. Freq.'],3)
     row['Test Mag.'] = floatOrNull(row['Test Mag.'],2)
     row['Ref. Mag.'] = floatOrNull(row['Ref. Mag.'],2)
     row['Ref-Test Mag. Diff.'] = floatOrNull(row['Ref-Test Mag. Diff.'],3)
+    row['Raw ZP'] = floatOrNull(row['Test Mag.'],2)
     row['Filter'] = 'UV/IR-740' if row['Filter'] == 'UV/IR-cut' else row['Filter']
     row['Filter'] = quoteOrNull(row['Filter'])
     row['Plug'] = 'USB-A' if row['Plug'] == 'USB' else row['Plug']
     row['Plug'] = quoteOrNull(row['Plug'])
     row['Box'] = quoteOrNull(row['Box'])
-    row['Collector'] = quoteOrNull(row['Collector'])
+    row['Collector'] = replaceCollector(row['Collector'])
     row['Comment'] = quoteOrNull(row['Comment'])
+    currentTimestamp += ONE_MINUTE
     return row
 
 

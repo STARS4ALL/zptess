@@ -132,25 +132,38 @@ WHERE name IN
 
 UPDATE summary_t SET author = 'Rafael Gonzalez' where author = 'Rafael_Gonzalez';
 
+-- caso de stars9
+UPDATE summary_t SET comment = 'recalibrado, no se tienen datos de calibracion anterior' WHERE name = 'stars9';
+-- caso de stars17. En realidad era stars624, para tenerlo en cuenta en la migracion
+UPDATE summary_t SET comment = 'reparado y recalibrado (nueva MAC), renombrado de stars624 a stars17 porque éste se rompio' WHERE mac = '98:F4:AB:B2:7B:53';
+-- caso de stars23
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars23';
+-- caso de stars29
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars29';
+-- caso de stars30
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars30';
+-- caso de stars31
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars31';
+-- caso de stars58
+UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' , plug = 'USB-A + serial' WHERE name = 'stars58';
+-- caso de stars87
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars87';
+-- caso de stars90
 UPDATE summary_t SET comment = 'recalibrado, calibracion anterior manual' WHERE name = 'stars90';
-UPDATE summary_t 
-    SET comment = 'recalibrado, calibracion anterior manual' , plug = 'USB-A + serial'
-WHERE name = 'stars58';
-
+-- caso de stars241
+UPDATE summary_t SET comment = 'reparado por Cristobal y recalibrado' WHERE mac = '5C:CF:7F:76:65:4A';
+-- caso de stars246
+UPDATE summary_t SET comment = 'recalibrado' WHERE mac = '5C:CF:7F:76:6A:CF';
+-- caso de stars292
+UPDATE summary_t SET comment = 'reparado y recalibrado (nueva MAC)' WHERE mac = '5C:CF:7F:76:60:D8';
+-- caso de stars293
+UPDATE summary_t SET comment = 'reparado y recalibrado (nueva MAC)' WHERE mac = '5C:CF:7F:76:65:10';
 -- caso de stars382
 UPDATE summary_t SET comment = 'reparado y recalibrado (nueva MAC)' WHERE mac = '5C:CF:7F:76:6A:33';
 -- caso de stars422
-UPDATE summary_t SET comment = 'reparado y recalibrado (nueva MAC)' WHERE mac = '98:F4:AB:B2:7C:3D';
+UPDATE summary_t SET comment = 'recalibrado' WHERE mac = '98:F4:AB:B2:7C:3D';
 
--- NOTA: stars017 lo hemos tenido que renombrar porque el otro cascó
--- En realidad era stars624, para tenerlo en cuenta en la migracion
-UPDATE summary_t SET comment = 'reparado y recalibrado (nueva MAC), renombrado de stars624 a stars17 porque éste se rompio' 
-WHERE mac = '98:F4:AB:B2:7B:53';
+
 
 
 -- ¿Este es el de la UCM con filtro especial?
@@ -168,9 +181,9 @@ SET firmware = 'May 19 2016'
 WHERE name = 'stars3' AND (firmware = NULL OR firmware = '');
 
 INSERT INTO summary_t(model, name, mac, firmware, session, calibration, role, zero_point, mag, offset, filter, plug, box, collector, comment)
-VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','May 19 2016','0000-01-01T00:00:00','MANUAL','test',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
+VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3','May 19 2016','1000422-01-01T00:00:00','MANUAL','test',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
 INSERT INTO summary_t(model,name,mac, firmware, session,calibration,role,zero_point,mag,offset,filter,plug, box, collector, comment)
-VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3', 'May 19 2016','0000-01-01T00:00:00','MANUAL','ref',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
+VALUES('TESS-W','stars3','18:FE:34:CF:E9:A3', 'May 19 2016','1000-01-01T00:00:00','MANUAL','ref',20.44, 20.44, 0, 'UV/IR-740','USB-A+serial','Caja plastico antigua', 'standard', 'Fotometro de referencia. 20.44 es el ZP para que sus lecturas coincidan con un Unihedron SQM');
 
 
 COMMIT;

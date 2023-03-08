@@ -1,0 +1,51 @@
+{# SQL FILE GENERATOR #}
+
+--------------------------------------------------
+-- BEGIN NEW INSERT LINES MIGRACION POR migra1 --
+--------------------------------------------------
+{% for r in rows -%}
+-- {{r['Name']}}
+INSERT INTO summary_t(model, name, mac, firmware, session, calibration, role, freq, mag, offset, zero_point, filter, plug, box, collector, comment,upd_flag)
+    VALUES(
+    {{r['Model']}},             -- model
+    {{r['Name']}},              -- name
+    {{r['MAC']}},               -- mac
+    {{r['Firmware']}},          -- firmware
+    {{r['Calibration date']}},  -- session
+    'MANUAL',                   -- calibration
+    'test',                     -- role
+    {{r['Test Freq.']}},        -- freq
+    {{r['Test Mag.']}},         -- mag
+    {{r['ZP Offset']}},         -- offset
+    {{r['Raw ZP']}},            -- zero_point
+    {{r['Filter']}},            -- filter
+    {{r['Plug']}},              -- plug
+    {{r['Box']}},               -- box
+    {{r['Collector']}},         -- collector
+    {{r['Comment']}},           -- comment
+    1                           -- upd_flag
+    );
+INSERT INTO summary_t(model, name, mac, firmware, session, calibration, role, freq, mag, offset, zero_point, filter, plug, box, collector, comment)
+    VALUES(
+    'TESS-W',                       -- model
+    'stars3',                       -- name
+    '18:FE:34:CF:E9:A3',            -- mac
+    NULL,                           -- firmware
+    {{r['Calibration date']}},      -- session
+    'MANUAL',                       -- callibration
+    'ref',                          -- role
+    {{r['Ref. Freq.']}},            -- freq
+    {{r['Ref. Mag.']}},             -- mag
+    0.0,                            -- offset
+    20.50,                          -- zero point
+    'UV/IR-740',                    -- filter
+    'USB-A+serial',                 -- plug
+    'Caja plastico antigua',        -- box
+    'standard',                     -- collector
+    NULL                            -- comment
+);
+{% endfor -%}
+-----------------------------------------------
+-- END NEW INSERT LINES MIGRACION POR migra1 --
+-----------------------------------------------
+

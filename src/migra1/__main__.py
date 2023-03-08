@@ -181,7 +181,8 @@ def mapAll(row):
     row['Test Mag.'] = floatOrNull(row['Test Mag.'],2)
     row['Ref. Mag.'] = floatOrNull(row['Ref. Mag.'],2)
     row['Ref-Test Mag. Diff.'] = floatOrNull(row['Ref-Test Mag. Diff.'],3)
-    row['Raw ZP'] = floatOrNull(row['Test Mag.'],2)
+    row['Raw ZP'] = floatOrNull(row['Raw ZP'],2)
+    row['ZP Offset'] = floatOrNull(row['ZP Offset'],2)
     row['Filter'] = 'UV/IR-740' if row['Filter'] == 'UV/IR-cut' else row['Filter']
     row['Filter'] = quoteOrNull(row['Filter'])
     row['Plug'] = 'USB-A' if row['Plug'] == 'USB' else row['Plug']
@@ -189,6 +190,7 @@ def mapAll(row):
     row['Box'] = quoteOrNull(row['Box'])
     row['Collector'] = replaceCollector(row['Collector'])
     row['Comment'] = quoteOrNull(row['Comment'])
+
     currentTimestamp += ONE_MINUTE
     return row
 

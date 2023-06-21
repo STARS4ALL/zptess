@@ -27,7 +27,7 @@ from twisted.application.service  import Service
 from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet.endpoints   import clientFromString
 from twisted.internet.interfaces  import IPushProducer, IPullProducer, IConsumer
-from zope.interface               import implementer, implements
+from zope.interface               import implementer
 
 # -------------------
 # Third party imports

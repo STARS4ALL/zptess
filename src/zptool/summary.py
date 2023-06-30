@@ -28,6 +28,7 @@ NAMES_MAP = {
     'name'              : "Name",
     'mac'               : "MAC",
     'firmware'          : "Firmware",
+    'sensor'            : "Sensor",
     'session'           : "Calibration date",
     'calibration'       : "Calibration",
     'ref_mag'           : "Ref. Mag.",

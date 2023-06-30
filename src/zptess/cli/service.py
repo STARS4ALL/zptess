@@ -223,6 +223,7 @@ class CommandLineService(MultiService):
         else:
             log.info("[{label}] Role         : {value}", label=label, value=info['role'])
             log.info("[{label}] Model        : {value}", label=label, value=info['model'])
+            log.info("[{label}] Sensor       : {value}", label=label, value=info['sensor'])
             log.info("[{label}] Name         : {value}", label=label, value=info['name'])
             log.info("[{label}] MAC          : {value}", label=label, value=info['mac'])
             log.info("[{label}] Zero Point   : {value:.02f} (old)", label=label, value=info['zp'])
@@ -314,17 +315,20 @@ class CommandLineService(MultiService):
             modelkey  = 'ref_model'
             endpoikey = 'ref_endpoint'
             oldprokey = 'ref_old_proto'
+            sensorkey = 'ref_sensor'
             section   = 'ref-device'
             prefix    = REF
         else:
             modelkey  = 'test_model'
             endpoikey = 'test_endpoint'
             oldprokey = 'test_old_proto'
+            sensorkey = 'test_sensor'
             section   = 'test-device'
             prefix    = TEST
         options = self.dbaseServ.getInitialConfig(section)
         options['model']        = self._cmd_options[modelkey]  or options['model']
         options['model']        = options['model'].upper()
+        options['sensor']       = self._cmd_options[sensorkey] or options['sensor']
         options['endpoint']     = self._cmd_options[endpoikey] or options['endpoint']
         options['old_proto']    = self._cmd_options[oldprokey] or int(options['old_proto'])
         options['dry_run']      = self._cmd_options['dry_run']

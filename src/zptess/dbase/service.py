@@ -274,6 +274,7 @@ class DatabaseService(Service):
         stats_info['name']     = self.phot[role]['info']['name']
         stats_info['mac']      = self.phot[role]['info']['mac']
         stats_info['firmware'] = self.phot[role]['info']['firmware']
+        stats_info['sensor']   = self.phot[role]['info']['sensor']
         stats_info['role']     = role
         stats_info['session']  = self.session
         self.summary_stats.append(stats_info)

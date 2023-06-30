@@ -1,6 +1,11 @@
 SHORT TERM
 ==========
 
+* SENSOR TYPE
+=============
+Toda la parte del GUI esta desactualizada respecto a incluir la informacion del tipo de sensor
+(TSL237, S9705)
+
 * FIX/EXCEL BRANCH
 ==================
 

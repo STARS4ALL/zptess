@@ -224,6 +224,7 @@ class PhotometerService(Service):
     def getPhotometerInfo(self):
         info = yield self.protocol.getPhotometerInfo()
         info['model'] = self.options['model']
+        info['sensor'] = self.options['sensor']
         info['label'] = self.label
         info['role']  = self.role
         return(info)

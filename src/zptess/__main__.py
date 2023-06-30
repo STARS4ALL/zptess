@@ -73,9 +73,9 @@ def createParser():
 
     parser_gui.add_argument('-m','--messages', type=str, choices=["ref","test","both"], default=None, help='log photometer messages')
 
-    # -----------------------------
-    # Arguments for 'batch' command
-    # -----------------------------
+    # ---------------------------
+    # Arguments for 'cli' command
+    # ---------------------------
 
     # Calibration related options
     parser_cli.add_argument('-a', '--author',  type=str, nargs='+', default=None, help='person performing the calibration process')
@@ -107,12 +107,14 @@ def createParser():
     parser_cli.add_argument('-tE', '--test-endpoint',  type=mkendpoint, default=None, metavar='<test endpoint>', help='Test photometer endpoint')
     parser_cli.add_argument('-tM', '--test-model',     type=str, default=None, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()],  help='Test photometer model')
     parser_cli.add_argument('-tO', '--test-old-proto', action='store_true', default=None, help='Use very old protocol instead of JSON')
+    parser_cli.add_argument('-tS', '--test-sensor',    type=str, default=None, choices=("TSL237", "S9705"), help='Test photometer sensor')
 
     # ref.device related options
     parser_cli.add_argument('-rE', '--ref-endpoint',  type=mkendpoint, default=None, metavar='<ref endpoint>', help='Reference photometer endpoint')
     parser_cli.add_argument('-rM', '--ref-model',     type=str, default=None, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()],  help='Ref. photometer model')
     parser_cli.add_argument('-rO', '--ref-old-proto', action='store_true', default=None, help='Use very old protocol instead of JSON')
- 
+    parser_cli.add_argument('-rS', '--ref-sensor',    type=str, default=None, choices=("TSL237", "S9705"), help='Reference phot sensor')
+
     return parser
 
 # -------------------

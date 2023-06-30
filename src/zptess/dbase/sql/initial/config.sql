@@ -35,6 +35,8 @@ VALUES ('ref-device', 'mac', '18:FE:34:CF:E9:A3');
 INSERT INTO config_t(section, property, value) 
 VALUES ('ref-device', 'firmware', '');
 INSERT INTO config_t(section, property, value) 
+VALUES ('ref-device', 'sensor', 'TSL237');
+INSERT INTO config_t(section, property, value) 
 VALUES ('ref-device', 'zp', '20.44');
 INSERT INTO config_t(section, property, value) 
 VALUES ('ref-device', 'freq_offset', '0.0');
@@ -65,6 +67,8 @@ VALUES ('ref-stats', 'period', '5');
 
 INSERT INTO config_t(section, property, value) 
 VALUES ('test-device', 'model', 'TESS-W');
+INSERT INTO config_t(section, property, value) 
+VALUES ('test-device', 'sensor', 'TSL237');
 -- Default device protocol and comm method
 
 INSERT INTO config_t(section, property, value) 

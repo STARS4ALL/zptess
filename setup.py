@@ -52,6 +52,7 @@ PACKAGE_DATA = {
 
 SCRIPTS = [
     "scripts/zptess",
+    "scripts/tkzptess",
     "scripts/zptessw",
     "scripts/zptessp",
     "scripts/zptas",

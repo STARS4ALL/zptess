@@ -11,6 +11,7 @@
 
 
 import os
+import sys
 import glob
 import uuid
 import datetime
@@ -121,16 +122,19 @@ class DatabaseService(Service):
     # Service name
     NAME = 'Database Service'
 
-    def __init__(self, path, create_only=False, *args, **kargs):
+    def __init__(self, path, *args, **kargs):
         super().__init__(*args, **kargs)
         self.path = path
         self.getPoolFunc = getPool
-        self.create_only = create_only
+        self.create_only = False
 
     #------------
     # Service API
     # ------------
 
+    def createOnly(self, flag):
+        '''must be called before start service'''
+        self.create_only = flag
 
     def startService(self):
         setLogLevel(namespace=NAMESPACE, levelStr='warn')
@@ -177,7 +181,13 @@ class DatabaseService(Service):
         connection.commit()
         connection.close()
         if self.create_only:
-            self.quit(exit_code=0)
+            log.warn("Stopping {service} on {database}, version = {version}, UUID = {uuid}", 
+                database = self.path, 
+                version  = version,
+                service  = self.name,
+                uuid     = guid,
+            )
+            sys.exit(0)
         else:
             self.openPool()
             self.dao = DataAccesObject(self, self.pool)

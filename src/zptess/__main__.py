@@ -51,7 +51,7 @@ def mkendpoint(value):
 def createParser():
     global name
     name = os.path.split(os.path.dirname(sys.argv[0]))[-1]
-    parser    = argparse.ArgumentParser(prog=name, description='AZOTEA GUI')
+    parser    = argparse.ArgumentParser(prog=name, description='Calibration tool for TESS photometers')
 
     # Global options
     parser.add_argument('--version', action='version', version='{0} {1}'.format(name, __version__))
@@ -66,6 +66,7 @@ def createParser():
     subparser = parser.add_subparsers(dest='command')
     parser_gui  = subparser.add_parser('gui', help='graphical user interface options')
     parser_cli  = subparser.add_parser('cli', help='command line interface options')
+    parser_mig  = subparser.add_parser('db', help='database creation/migration only')
 
     # -----------------------------------------------------------------------------------
     # Arguments for 'gui' command are not needed since they are handled by the GUI itself
@@ -134,11 +135,10 @@ startLogging(
 
 application = service.Application("zptess")
 dbaseService = DatabaseService(
-    path        = options.dbase,
-)
+        path        = options.dbase,
+    )
 dbaseService.setName(DatabaseService.NAME)
 dbaseService.setServiceParent(application)
-
 
 if options.command == 'gui':
     from zptess.gui.service import GraphicalService
@@ -154,6 +154,8 @@ elif options.command == 'cli':
     )
     batchService.setName(CommandLineService.NAME)
     batchService.setServiceParent(application)
+elif options.command == 'db':
+    dbaseService.createOnly(True)
 
 # Start the ball rolling
 service.IService(application).startService()

@@ -68,7 +68,7 @@ def pack(base_dir, zip_file):
 
 def batch_view_iterable(connection):
     cursor = connection.cursor()
-    cursor.execute("SELECT begin_tstamp, end_tstamp, calibrations, email_sent FROM batch_t ORDER BY begin_tstamp DESC")
+    cursor.execute("SELECT begin_tstamp, end_tstamp, calibrations, email_sent, comment FROM batch_t ORDER BY begin_tstamp DESC")
     return cursor
 
 def check_open_batch(connection):
@@ -95,10 +95,10 @@ def update_email_state(connection, tstamp, flag):
     cursor.execute("UPDATE batch_t SET email_sent = :flag WHERE begin_tstamp = :tstamp", row)
     connection.commit()
 
-def insert_begin(connection, tstamp):
+def insert_begin(connection, tstamp, comment):
     cursor = connection.cursor()
-    row = {'tstamp': tstamp}
-    cursor.execute("INSERT INTO batch_t(begin_tstamp, end_tstamp) VALUES(:tstamp, NULL)", row)
+    row = {'tstamp': tstamp, 'comment': comment}
+    cursor.execute("INSERT INTO batch_t(begin_tstamp, end_tstamp, comment) VALUES(:tstamp, NULL, :comment)", row)
 
 def insert_end(connection, begin_tstamp, end_tstamp, N):
     cursor = connection.cursor()
@@ -262,7 +262,7 @@ def begin(connection, options):
     if check_open_batch(connection):
         log.error("A batch is already open")
         return
-    insert_begin(connection, get_timestamp())
+    insert_begin(connection, get_timestamp(), options.comment)
     connection.commit()
     log.info("A new batch has been opened")
 
@@ -282,7 +282,7 @@ def end(connection, options):
 
 def view(connection, options):
     '''Exports all the database to a single file'''
-    HEADERS = ("Begin (UTC)","End (UTC)","# Sessions","Emailed?")
+    HEADERS = ("Begin (UTC)","End (UTC)","# Sessions","Emailed?","Comment")
     cursor =  batch_view_iterable(connection)
     paging(cursor, HEADERS, size=100)
 

@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS batch_t
     end_tstamp      TIMESTAMP,  -- end   timestamp session
     email_sent      INTEGER,    -- 1=Yes, 0=No, NULL=didn't even try.
     calibrations    INTEGER,    -- number of calibrations performed in this period
+    comment         TEXT,       -- optional comment for the opened calibration batch
 
     PRIMARY KEY(begin_tstamp)
 );

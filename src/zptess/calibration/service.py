@@ -256,6 +256,8 @@ class CalibrationService(Service):
         # Other miscellaneous stuff
         summary_test['calibration'] = self.options['calibration']
         summary_ref['calibration'] = self.options['calibration']
+        summary_test['calversion'] = self.options['calversion']
+        summary_ref['calversion'] = self.options['calversion']
         summary_test['filter'] = self.options['filter']
         summary_ref['filter'] = None
         summary_test['plug'] = self.options['plug']

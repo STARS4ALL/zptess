@@ -34,7 +34,7 @@ from pubsub import pub
 # local imports
 # -------------
 
-from zptess                    import FULL_VERSION_STRING, TSTAMP_SESSION_FMT, REF, TEST
+from zptess                    import FULL_VERSION_STRING, TSTAMP_SESSION_FMT, REF, TEST, __version__
 from zptess                    import set_status_code
 from zptess.utils              import chop
 from zptess.logger             import setLogLevel
@@ -283,6 +283,7 @@ class CommandLineService(MultiService):
         options['update'] = self._cmd_options['update'] # siempre en linea de comando
         options['log_level'] = 'info' # A capón de momento
         options['calibration'] = 'AUTO'
+        options['calversion'] = __version__
         options['filter'] =  self._cmd_options['filter']
         options['plug'] =  self._cmd_options['plug']
         options['box'] =  " ".join(self._cmd_options['box']) # Box has a default options value

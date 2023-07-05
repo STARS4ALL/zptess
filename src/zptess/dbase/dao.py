@@ -106,7 +106,7 @@ class DataAccesObject():
             other_columns       = ('model','name','mac','firmware','sensor', 'prev_zp','author','nrounds',
                                     'freq','freq_method','mag','zero_point','zero_point_method',
                                     'offset', 'upd_flag',
-                                    'calibration', 'filter', 'plug', 'box', 'collector','comment'),
+                                    'calibration', 'calversion', 'filter', 'plug', 'box', 'collector','comment'),
             insert_mode         = tables.INSERT,
             log_level           = 'info',
         )

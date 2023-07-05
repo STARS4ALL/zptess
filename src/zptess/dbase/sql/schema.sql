@@ -86,6 +86,8 @@ CREATE TABLE IF NOT EXISTS summary_t
 (
     session           TIMESTAMP,  -- calibration session identifier
     role              TEXT,       -- either 'test' or 'ref'
+    calibration       TEXT,       -- either 'MANUAL' or 'AUTO'
+    calversion        TEXT,       -- calibration software version
     model             TEXT,  -- TESS model
     name              TEXT,  -- TESS name
     mac               TEXT,  -- TESS MAC address
@@ -101,7 +103,11 @@ CREATE TABLE IF NOT EXISTS summary_t
     freq              REAL,  -- final chosen frequency
     freq_method       TEXT,  -- either the 'mode' or 'median' of the different rounds
     mag               REAL,  -- final chosen magnitude uzing ficticious ZP
-    
+    filter            TEXT,  -- Filter type (i.e. UV-IR/740)
+    plug              TEXT,  -- Plug type (i.e. USB-A)
+    box               TEXT,  -- Box model (i.e. FSH714)
+    collector         TEXT,  -- Collector model
+    comment           TEXT,  -- Additional comment for the callibration process
     PRIMARY KEY(session, role)
 );
 
@@ -110,6 +116,8 @@ CREATE VIEW IF NOT EXISTS summary_v
 AS SELECT
     test_t.session,
     test_t.role,
+    test_t.calibration,
+    test_t.calversion,
     test_t.model,
     test_t.name,
     test_t.mac,
@@ -129,7 +137,12 @@ AS SELECT
     ref_t.freq_method           AS ref_freq_method,
     ROUND(ref_t.mag, 2)         AS ref_mag,
     ROUND(ref_t.mag - test_t.mag, 2) AS mag_diff,
-    ROUND(test_t.zero_point, 2) - test_t.offset as raw_zero_point
+    ROUND(test_t.zero_point, 2) - test_t.offset as raw_zero_point,
+    test_t.filter,
+    test_t.plug,
+    test_t.box,
+    test_t.collector,
+    test_t.comment
 
 FROM summary_t AS ref_t
 JOIN summary_t AS test_t USING (session)

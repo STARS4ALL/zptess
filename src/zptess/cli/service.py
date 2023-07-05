@@ -278,17 +278,16 @@ class CommandLineService(MultiService):
         section = 'calibration'
         options = self.dbaseServ.getInitialConfig(section)
         options['rounds'] = self._cmd_options['rounds'] or int(options['rounds'])
-        author = self._cmd_options['author'] if self._cmd_options['author'] is not None else []
-        options['author'] = " ".join(author) or options['author']
+        options['author'] = " ".join(self._cmd_options['author']) or options['author']
         options['offset'] = self._cmd_options['offset'] or float(options['offset'])
         options['update'] = self._cmd_options['update'] # siempre en linea de comando
         options['log_level'] = 'info' # A capón de momento
         options['calibration'] = 'AUTO'
         options['filter'] =  self._cmd_options['filter']
         options['plug'] =  self._cmd_options['plug']
-        options['box'] =  self._cmd_options['box']
-        options['collector'] =  self._cmd_options['collector']
-        options['comment'] =  self._cmd_options['comment']
+        options['box'] =  " ".join(self._cmd_options['box']) # Box has a default options value
+        options['collector'] =  " ".join(self._cmd_options['collector']) or None
+        options['comment'] =  " ".join(self._cmd_options['comment']) or None
         service = CalibrationService(options)
         service.setName(CalibrationService.NAME)
         service.setServiceParent(self)

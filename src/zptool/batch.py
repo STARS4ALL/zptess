@@ -262,7 +262,8 @@ def begin(connection, options):
     if check_open_batch(connection):
         log.error("A batch is already open")
         return
-    insert_begin(connection, get_timestamp(), options.comment)
+    comment =  " ".join(options.comment)
+    insert_begin(connection, get_timestamp(), comment)
     connection.commit()
     log.info("A new batch has been opened")
 

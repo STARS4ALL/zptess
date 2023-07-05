@@ -253,7 +253,7 @@ def createParser():
 	subparser = parser_batch.add_subparsers(dest='subcommand')
 
 	babe = subparser.add_parser('begin', help="begin calibration batch")
-	babe.add_argument('-c', '--comment',  type=str, default=None, help='Optional batch comment')
+	babe.add_argument('-c', '--comment',  type=str, nargs='+', default=None, help='Optional batch comment')
 
 	
 	baen = subparser.add_parser('end',  help="end calibration batch")

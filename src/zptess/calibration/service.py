@@ -185,7 +185,9 @@ class CalibrationService(Service):
         '''Perform a calibration of a single round, accumulating best measurements'''
         magDiff = -2.5*math.log10(stats_ref['freq']/stats_test['freq'])
         zp = round(self.zp_abs + magDiff,2)
-        if stats_ref['stddev'] != 0.0 and stats_test['stddev'] != 0.0:
+        # We're only being suspicious of duplicate readings in the reference photometer
+        # as it is read from the serial port and does not show sequence numbers
+        if stats_ref['stddev'] != 0.0:
             self.best['zp'].append(zp)          # Collect this info whether we need it or not
             self.best['ref_freq'].append(stats_ref['freq'])
             self.best['test_freq'].append(stats_test['freq'])
@@ -199,12 +201,8 @@ class CalibrationService(Service):
             pub.sendMessage('calib_round_info', role='ref',  count=self.curRound, stats_info=stats_ref)
             pub.sendMessage('calib_round_info', role='test', count=self.curRound, stats_info=stats_test)
             self.curRound += 1
-        elif stats_ref['stddev'] == 0.0 and stats_test['stddev'] != 0.0:
-            log.warn('FROZEN {lab}', lab=stats_ref['name'])
-        elif stats_test['stddev'] == 0.0 and stats_ref['stddev'] != 0.0:
-            log.warn('FROZEN {lab}', lab=stats_test['name'])
         else:
-            log.warn('FROZEN {rLab} and {tLab}', rLab=stats_ref['name'], tLab=stats_test['name'])
+            log.warn('FROZEN {lab}', lab=stats_ref['name'])
 
 
     def summary(self):

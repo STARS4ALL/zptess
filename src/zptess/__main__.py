@@ -48,13 +48,12 @@ from zptess.dbase.service import DatabaseService
 def mkendpoint(value):
     return zptess.utils.mkendpoint(value)
 
-def createParser():
-    global name
-    name = os.path.split(os.path.dirname(sys.argv[0]))[-1]
-    parser    = argparse.ArgumentParser(prog=name, description='Calibration tool for TESS photometers')
+def createParser(progname):
+   
+    parser    = argparse.ArgumentParser(prog=progname, description='Calibration tool for TESS photometers')
 
     # Global options
-    parser.add_argument('--version', action='version', version='{0} {1}'.format(name, __version__))
+    parser.add_argument('--version', action='version', version='{0} {1}'.format(progname, __version__))
     parser.add_argument('-d', '--dbase',    type=str, required=True, action='store', metavar='<file path>', help='SQLite database to operate upon')
     parser.add_argument('-c', '--console',  action='store_true',  help='log to console.')
     parser.add_argument('-l', '--log-file', type=str, default=None, action='store', metavar='<file path>', help='log to file')
@@ -122,7 +121,8 @@ def createParser():
 # Booting application
 # -------------------
 
-options = createParser().parse_args(sys.argv[1:])
+progname = os.path.basename(os.path.dirname(sys.argv[0]))
+options = createParser(progname).parse_args(sys.argv[1:])
 
 startLogging(
     console  = options.console,
@@ -156,6 +156,9 @@ elif options.command == 'cli':
     batchService.setServiceParent(application)
 elif options.command == 'db':
     dbaseService.createOnly(True)
+else:
+    print("Error: no command specified. Type '%s -h' for help" % progname)
+    sys.exit(1)
 
 # Start the ball rolling
 service.IService(application).startService()

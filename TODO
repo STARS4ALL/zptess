@@ -4,7 +4,7 @@ SHORT TERM
 * SENSOR TYPE
 =============
 Toda la parte del GUI esta desactualizada respecto a incluir la informacion del tipo de sensor
-(TSL237, S9705)
+(TSL237, S9705-01DT) y version de software calibrador
 
 * FIX/EXCEL BRANCH
 ==================

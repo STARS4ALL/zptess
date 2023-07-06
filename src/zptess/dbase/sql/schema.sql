@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS summary_t
     name              TEXT,  -- TESS name
     mac               TEXT,  -- TESS MAC address
     firmware          TEXT,  -- firmware revision
-    sensor            TEXT,  -- Sensor model (TSL237, S9705)
+    sensor            TEXT,  -- Sensor model (TSL237, S9705-01DT)
     prev_zp           REAL,  -- previous ZP before calibration
     author            TEXT,  -- who run the calibration
     nrounds           INTEGER, -- Number of rounds passed

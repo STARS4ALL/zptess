@@ -48,13 +48,12 @@ from zptess.dbase.service import DatabaseService
 def mkendpoint(value):
     return zptess.utils.mkendpoint(value)
 
-def createParser():
-    global name
-    name = os.path.split(os.path.dirname(sys.argv[0]))[-1]
-    parser    = argparse.ArgumentParser(prog=name, description='Calibration tool for TESS photometers')
+def createParser(progname):
+   
+    parser    = argparse.ArgumentParser(prog=progname, description='Calibration tool for TESS photometers')
 
     # Global options
-    parser.add_argument('--version', action='version', version='{0} {1}'.format(name, __version__))
+    parser.add_argument('--version', action='version', version='{0} {1}'.format(progname, __version__))
     parser.add_argument('-d', '--dbase',    type=str, required=True, action='store', metavar='<file path>', help='SQLite database to operate upon')
     parser.add_argument('-c', '--console',  action='store_true',  help='log to console.')
     parser.add_argument('-l', '--log-file', type=str, default=None, action='store', metavar='<file path>', help='log to file')
@@ -108,13 +107,13 @@ def createParser():
     parser_cli.add_argument('-tE', '--test-endpoint',  type=mkendpoint, default=None, metavar='<test endpoint>', help='Test photometer endpoint')
     parser_cli.add_argument('-tM', '--test-model',     type=str, default=None, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()],  help='Test photometer model')
     parser_cli.add_argument('-tO', '--test-old-proto', action='store_true', default=None, help='Use very old protocol instead of JSON')
-    parser_cli.add_argument('-tS', '--test-sensor',    type=str, default=None, choices=("TSL237", "S9705"), help='Test photometer sensor')
+    parser_cli.add_argument('-tS', '--test-sensor',    type=str, default=None, choices=("TSL237", "S9705-01DT"), help='Test photometer sensor')
 
     # ref.device related options
     parser_cli.add_argument('-rE', '--ref-endpoint',  type=mkendpoint, default=None, metavar='<ref endpoint>', help='Reference photometer endpoint')
     parser_cli.add_argument('-rM', '--ref-model',     type=str, default=None, choices=[TESSW.lower(), TESSP.lower(), TAS.lower()],  help='Ref. photometer model')
     parser_cli.add_argument('-rO', '--ref-old-proto', action='store_true', default=None, help='Use very old protocol instead of JSON')
-    parser_cli.add_argument('-rS', '--ref-sensor',    type=str, default=None, choices=("TSL237", "S9705"), help='Reference phot sensor')
+    parser_cli.add_argument('-rS', '--ref-sensor',    type=str, default=None, choices=("TSL237", "S9705-01DT"), help='Reference phot sensor')
 
     return parser
 
@@ -122,7 +121,8 @@ def createParser():
 # Booting application
 # -------------------
 
-options = createParser().parse_args(sys.argv[1:])
+progname = os.path.basename(os.path.dirname(sys.argv[0]))
+options = createParser(progname).parse_args(sys.argv[1:])
 
 startLogging(
     console  = options.console,
@@ -156,6 +156,9 @@ elif options.command == 'cli':
     batchService.setServiceParent(application)
 elif options.command == 'db':
     dbaseService.createOnly(True)
+else:
+    print("Error: no command specified. Type '%s -h' for help" % progname)
+    sys.exit(1)
 
 # Start the ball rolling
 service.IService(application).startService()

@@ -22,7 +22,7 @@ from zptess import TSTAMP_SESSION_FMT
 from zptess.dbase.summary import EXPORT_HEADERS, EXPORT_ADD_HEADERS, dyn_sql
 from zptool.utils import paging
 
-
+# Beware: The source list for CSV exports is zptess.dbase.summary.EXPORT_HEADERS
 NAMES_MAP = {
     'model'             : "Model", 
     'name'              : "Name",
@@ -205,7 +205,7 @@ def summary_export(connection, extended, csv_path, updated, begin_tstamp=None, e
         for row in iterable:
             row = list(row)
             row[1] = f"{row[1][0:5]}{int(row[1][5:]):04d}" # reformat starsXXXXX 
-            row[4] = row[4] + 'Z' # reformat session timestamp 
+            row[5] = row[5] + 'Z' # reformat session timestamp 
             writer.writerow(row)
     log.info(f"Saved summary calibration data to CSV file: '{os.path.basename(csv_path)}'")
 

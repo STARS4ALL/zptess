@@ -28,7 +28,7 @@ from zptess.dbase.tables import Table
 # ----------------
 
 # The order in this sequence matters because it will be dumped in a CSV file
-EXPORT_HEADERS = ("model","name", "mac","firmware", "sensor", "session" ,"calibration", "ref_mag", "ref_freq", "test_mag", "test_freq",  
+EXPORT_HEADERS = ("model","name", "mac","firmware", "sensor", "session" ,"calibration", "calversion", "ref_mag", "ref_freq", "test_mag", "test_freq",  
                     "mag_diff", "raw_zero_point", "offset", "zero_point",  "prev_zp", 
                     "filter", "plug", "box", "collector","author", "comment")
 

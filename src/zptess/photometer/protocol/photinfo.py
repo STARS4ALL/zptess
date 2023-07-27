@@ -43,9 +43,9 @@ from zptess.photometer.protocol.interface import IPhotometerControl
 # Module functions
 # ----------------
 
-def format_mac(mac):
-    '''Formats MAC strings as returned from the device into well-known MAC format'''
-    return ':'.join(map(''.join, zip(*[iter(mac)]*2)))
+def formatted_mac(mac):
+    ''''Corrects TESS-W MAC strings to be properly formatted'''
+    return ':'.join(f"{int(x,16):02X}" for x in mac.split(':'))
 
 # ----------
 # Exceptions
@@ -128,7 +128,7 @@ class HTMLPhotometer:
         matchobj = self.GET_INFO['mac'].search(text)
         if not matchobj:
             self.log.error("{label:6s} MAC not found!", label=label)
-        result['mac'] = matchobj.groups(1)[0]
+        result['mac'] = formatted_mac(matchobj.groups(1)[0])
         matchobj = self.GET_INFO['zp'].search(text)
         if not matchobj:
             self.log.error("{label:6s} ZP not found!", label=label)
@@ -245,7 +245,7 @@ class CLIPhotometer:
             self.cnt += 1
         elif sr['name'] == 'mac':
             self.read_response['tstamp'] = tstamp
-            self.read_response['mac'] = format_mac(matchobj.group(1))
+            self.read_response['mac'] = formatted_mac(matchobj.group(1))
             self.cnt += 1
         elif sr['name'] == 'firmware':
             self.read_response['tstamp'] = tstamp

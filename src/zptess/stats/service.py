@@ -61,8 +61,9 @@ NAMESPACE = 'stats'
 
 class CircularBuffer(object):
 
-    def __init__(self, size, central, zp, log):
+    def __init__(self, tag, size, central, zp, log):
         self.log          = log
+        self._tag         = tag
         self._nsamples    = size
         self._buffer      = deque([], size)
         self._zp          = zp
@@ -108,6 +109,7 @@ class CircularBuffer(object):
         }
 
     def getStats(self):
+        tag         = self._tag
         ring        = self._buffer
         N           = len(self._buffer)
         zp          = self._zp
@@ -118,15 +120,16 @@ class CircularBuffer(object):
         duration    = (end_tstamp - begin_tstamp).total_seconds()
         frequencies = [item['freq'] for item in ring]
         try:
-            self.log.debug("ring = {q}", q=frequencies)
+            self.log.debug("[{tag}] ring = {q}", q=frequencies, tag=tag)
             cFreq  = self._central_func(frequencies)
             sFreq  = statistics.stdev(frequencies, cFreq)
             cMag   = zp - 2.5*math.log10(cFreq - freq_offset)
         except statistics.StatisticsError as e:
-            self.log.error("Statistics error: {e}", e=e)
+            self.log.error("[{tag}] Statistics error: {e}", e=e, tag=tag)
             return None
         except ValueError as e:
-            self.log.error("math.log10() error for freq={f}, freq_offset={foff}: {e}", e=e, f=cFreq, foff=freq_offset)
+            self.log.error("[{tag}] math.log10() error for freq={f}, freq_offset={foff}: {e}", 
+                e=e, f=cFreq, foff=freq_offset, tag=tag)
             return None
         else: 
             stats_info = {
@@ -192,6 +195,7 @@ class StatisticsService(Service):
             usage   = self._use_fict_zp
         )
         self._buffer = CircularBuffer(
+            tag         = self._label,
             size        = self.options['samples'],
             central     = self.options['central'],
             zp          = self.options['zp_fict'],

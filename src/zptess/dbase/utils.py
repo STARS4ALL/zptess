@@ -90,7 +90,7 @@ def create_schema(connection, schema_path, initial_data_dir_path, updates_data_d
         file_list = sorted(glob.glob(os.path.join(updates_data_dir, '*.sql')))
         file_list = list(filter(filter_func,file_list))
         for sql_file in file_list:
-            #log.info("Applying updates to data model from {0}".format(os.path.basename(sql_file)))
+            print("Applying updates to data model from {0}".format(os.path.basename(sql_file)))
             with open(sql_file) as f: 
                 lines = f.readlines() 
             script = ''.join(lines)

@@ -56,8 +56,6 @@ INSERT INTO config_t(section, property, value)
 VALUES ('ref-stats', 'period', '5');
 INSERT INTO config_t(section, property, value) 
 VALUES ('ref-stats', 'central', 'median');
-INSERT INTO config_t(section, property, value) 
-VALUES ('ref-stats', 'period', '5');
 
 -------------------------------
 --  Test photometer section

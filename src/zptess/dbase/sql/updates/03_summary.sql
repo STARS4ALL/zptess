@@ -5,8 +5,7 @@ BEGIN TRANSACTION;
 -- Database version upgrade --
 ------------------------------
 
-INSERT OR REPLACE INTO config_t(section, property, value) 
-VALUES ('database', 'version', '03');
+UPDATE config_t SET value = '03' WHERE section = 'database' AND property = 'version';
 
 ------------------------------------
 -- Schema change for summary data --

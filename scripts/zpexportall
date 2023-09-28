@@ -5,4 +5,4 @@
 # See the LICENSE file for details
 # ----------------------------------------------------------------------
 tstamp=$(date +'%Y-%m-%dT%H:%M:%S')
-python -m zptool -d $HOME/zptess/zptess.db -l $HOME/zptess/zptool.log summary export --updated --csv-file $HOME/zptess/summary_all_${tstamp}.csv $*
+python -m zptool -l $HOME/zptess/zptool.log summary export --updated --csv-file $HOME/zptess/summary_all_${tstamp}.csv $*

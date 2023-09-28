@@ -4,4 +4,4 @@
 #
 # See the LICENSE file for details
 # ----------------------------------------------------------------------
-python -m zptool -d $HOME/zptess/zptess.db -l $HOME/zptess/zptool.log batch export --email --updated True --latest --base-dir /tmp/zptool $*
+python -m zptool -l $HOME/zptess/zptool.log batch export --email --updated True --latest --base-dir /tmp/zptool $*

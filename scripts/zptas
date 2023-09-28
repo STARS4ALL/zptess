@@ -4,5 +4,5 @@
 #
 # See the LICENSE file for details
 # ----------------------------------------------------------------------
-python -m zptess -c -d $HOME/zptess/zptess.db -l $HOME/zptess/zptess.log cli -rO -tM tas -S 75 -tE serial:1 --plug USB-micro --box 'custom TAS box' $*
+python -m zptess -c -l $HOME/zptess/zptess.log cli -rO -tM tas -S 75 -tE serial:1 --plug USB-micro --box 'custom TAS box' $*
 

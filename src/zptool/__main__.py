@@ -19,6 +19,12 @@ import traceback
 import importlib
 import sqlite3
 
+# -------------------------
+# Other thrid party imports
+# -------------------------
+
+import decouple
+
 # -------------
 # Local imports
 # -------------
@@ -93,7 +99,6 @@ def createParser():
 	group.add_argument('-q', '--quiet',   action='store_true', help='Quiet output.')
 	parser.add_argument('-nk','--no-console', action='store_true', help='Do not log to console.')
 	parser.add_argument('-l', '--log-file', type=str, default=None, help='Optional log file')
-	parser.add_argument('-d', '--dbase', type=str, default="zptess.db", help='ZPTESS SQlite database')
 
 	
 	# --------------------------
@@ -296,7 +301,8 @@ def main():
 		setup(options)
 		name = os.path.split(os.path.dirname(sys.argv[0]))[-1]
 		log.info(f"============== {name} {__version__} ==============")
-		connection = open_database(options.dbase)
+		database_url = decouple.config('DATABASE_URL')
+		connection = open_database(database_url)
 		package = f"{name}"
 		command  = f"{options.command}"
 		subcommand = f"{options.subcommand}"

@@ -21,6 +21,11 @@ import argparse
 from twisted.internet import reactor
 from twisted.application import service
 
+# -------------------------
+# Other thrid party imports
+# -------------------------
+import decouple
+
 #--------------
 # local imports
 # -------------
@@ -54,7 +59,6 @@ def createParser(progname):
 
     # Global options
     parser.add_argument('--version', action='version', version='{0} {1}'.format(progname, __version__))
-    parser.add_argument('-d', '--dbase',    type=str, required=True, action='store', metavar='<file path>', help='SQLite database to operate upon')
     parser.add_argument('-c', '--console',  action='store_true',  help='log to console.')
     parser.add_argument('-l', '--log-file', type=str, default=None, action='store', metavar='<file path>', help='log to file')
    
@@ -121,6 +125,7 @@ def createParser(progname):
 # Booting application
 # -------------------
 
+database_url = decouple.config('DATABASE_URL')
 progname = os.path.basename(os.path.dirname(sys.argv[0]))
 options = createParser(progname).parse_args(sys.argv[1:])
 
@@ -135,7 +140,7 @@ startLogging(
 
 application = service.Application("zptess")
 dbaseService = DatabaseService(
-        path        = options.dbase,
+        path        = database_url,
     )
 dbaseService.setName(DatabaseService.NAME)
 dbaseService.setServiceParent(application)

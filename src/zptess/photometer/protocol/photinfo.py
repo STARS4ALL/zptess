@@ -101,9 +101,9 @@ class HTMLPhotometer:
         text = yield treq.text_content(resp)
         self.log.info("<== {label:6s} [HTTP GET] {url}", url=url, label=label)
         matchobj = self.GET_INFO['flash'].search(text)
-        result['zp'] = float(matchobj.groups(1)[0])
         if not matchobj:
-            self.log.error("{label:6s} ZP not written!", label=label)
+            raise IOError("{:6s} ZP not written!".format(label))
+        result['zp'] = float(matchobj.groups(1)[0])
         return(result)
 
     @inlineCallbacks

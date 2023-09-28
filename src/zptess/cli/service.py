@@ -124,7 +124,16 @@ class CommandLineService(MultiService):
     def onCalibrationEnd(self, session):
         set_status_code(0)
         if self._cmd_options['update']:
+            self._zp_to_write = round(self._zp_to_write, 2)
             yield self.testPhotometer.writeZeroPoint(self._zp_to_write)
+            info = yield self.testPhotometer.getPhotometerInfo()
+            if self._zp_to_write != info['zp']:
+                log.critical("ZP Write verification failed: ZP to Write ({zp_wr}) does not match with ZP subsequently read ({zp_re})",
+                    zp_wr=self._zp_to_write, zp_re=info['zp'])
+                yield self.quit(exit_code=1)
+                return
+            else:
+                log.info("ZP Write verification Ok.")
         yield self.dbaseServ.flush()
         yield self.parent.stopService()
 

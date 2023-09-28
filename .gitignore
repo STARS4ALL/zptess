@@ -137,4 +137,4 @@ src/zptess/dbase/sql/updates/smtp.sql
 src/*.txt
 src/*.sh
 *.db
-
+*.csv

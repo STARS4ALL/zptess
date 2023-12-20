@@ -68,11 +68,12 @@ class HTMLPhotometer:
         # These apply to the /config page
         'name'  : re.compile(r"(stars\d+)"),       
         'mac'   : re.compile(r"MAC: ([0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2})"),       
-        'zp'    : re.compile(r"(ZP|CI.*): (\d{1,2}\.\d{1,2})"),
+        'zp'    : re.compile(r"(ZP|CI): (\d{1,2}\.\d{1,2})"),
          #'zp'    : re.compile(r"Const\.: (\d{1,2}\.\d{1,2})"),
+        'freq_offset': re.compile(r"Offset mHz: (\d{1,2}\.\d{1,2})"),
         'firmware' : re.compile(r"Compiled: (.+?)<br>"),  # Non-greedy matching until <br>
         # This applies to the /setconst?cons=nn.nn page
-        'flash' : re.compile(r"New Zero Point (\d{1,2}\.\d{1,2})") 
+        'flash' : re.compile(r"New Zero Point (\d{1,2}\.\d{1,2})"),   
     }
 
     def __init__(self, addr, label, log, log_msg):
@@ -115,7 +116,6 @@ class HTMLPhotometer:
         label = self.label
         result = {}
         result['tstamp'] = datetime.datetime.now(datetime.timezone.utc)
-        result['freq_offset'] = 0.0 # For the timne being, we need to parse the page
         url = self._make_state_url()
         self.log.info("==> {label:6s} [HTTP GET] {url}", label=label,url=url)
         resp = yield treq.get(url, timeout=timeout)
@@ -139,7 +139,13 @@ class HTMLPhotometer:
         result['firmware'] = matchobj.groups(1)[0]
         firmware = result['firmware']
         if firmware in self.CONFLICTIVE_FIRMWARE:
-            pub.sendMessage('phot_firmware', role='test', firmware=firmware) 
+            pub.sendMessage('phot_firmware', role='test', firmware=firmware)
+        matchobj = self.GET_INFO['freq_offset'].search(text)
+        if not matchobj:
+            self.log.warn("{label:6s} Frequency offset not found, defaults to 0.0", label=label)
+            result['freq_offset'] = 0.0
+        else:
+            result['freq_offset'] = float(matchobj.groups(1)[0])
         return(result)
 
     def onPhotommeterInfoResponse(self, line, tstamp):
@@ -238,7 +244,7 @@ class CLIPhotometer:
         sr, matchobj = self._match_solicited(line)
         if not sr:
             return False
-        self.read_response['freq_offset'] = 0 # This is hardwired until we can query
+        self.read_response['freq_offset'] = 0 # This is hardwired until we can query this on the CLI
         if sr['name'] == 'name':
             self.read_response['tstamp'] = tstamp
             self.read_response['name'] = str(matchobj.group(1))

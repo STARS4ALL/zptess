@@ -237,7 +237,7 @@ class CommandLineService(MultiService):
             log.info("[{label}] MAC             : {value}", label=label, value=info['mac'])
             log.info("[{label}] Zero Point      : {value:.02f} (old)", label=label, value=info['zp'])
             log.info("[{label}] Firmware        : {value}", label=label, value=info['firmware'])
-            log.info("[{label}] Dark Freq. (mHz): {value}", label=label, value=info['freq_offset'])
+            log.info("[{label}] Dark Freq. (Hz) : {value}", label=label, value=info['freq_offset'])
         if role == 'test' and self._cmd_options['dry_run']:
             log.info('Dry run. Will stop here ...') 
             set_status_code(0)

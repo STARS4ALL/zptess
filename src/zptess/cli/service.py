@@ -230,14 +230,14 @@ class CommandLineService(MultiService):
         if info is None:
             log.warn("[{label}] No photometer info available. Is it Connected?", label=label)
         else:
-            log.info("[{label}] Role         : {value}", label=label, value=info['role'])
-            log.info("[{label}] Model        : {value}", label=label, value=info['model'])
-            log.info("[{label}] Sensor       : {value}", label=label, value=info['sensor'])
-            log.info("[{label}] Name         : {value}", label=label, value=info['name'])
-            log.info("[{label}] MAC          : {value}", label=label, value=info['mac'])
-            log.info("[{label}] Zero Point   : {value:.02f} (old)", label=label, value=info['zp'])
-            log.info("[{label}] Offset Freq. : {value}", label=label, value=info['freq_offset'])
-            log.info("[{label}] Firmware     : {value}", label=label, value=info['firmware'])
+            log.info("[{label}] Role            : {value}", label=label, value=info['role'])
+            log.info("[{label}] Model           : {value}", label=label, value=info['model'])
+            log.info("[{label}] Sensor          : {value}", label=label, value=info['sensor'])
+            log.info("[{label}] Name            : {value}", label=label, value=info['name'])
+            log.info("[{label}] MAC             : {value}", label=label, value=info['mac'])
+            log.info("[{label}] Zero Point      : {value:.02f} (old)", label=label, value=info['zp'])
+            log.info("[{label}] Firmware        : {value}", label=label, value=info['firmware'])
+            log.info("[{label}] Dark Freq. (mHz): {value}", label=label, value=info['freq_offset'])
         if role == 'test' and self._cmd_options['dry_run']:
             log.info('Dry run. Will stop here ...') 
             set_status_code(0)

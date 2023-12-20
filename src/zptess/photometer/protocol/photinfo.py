@@ -142,10 +142,10 @@ class HTMLPhotometer:
             pub.sendMessage('phot_firmware', role='test', firmware=firmware)
         matchobj = self.GET_INFO['freq_offset'].search(text)
         if not matchobj:
-            self.log.warn("{label:6s} Frequency offset not found, defaults to 0.0", label=label)
+            self.log.warn("{label:6s} Frequency offset not found, defaults to 0.0 mHz", label=label)
             result['freq_offset'] = 0.0
         else:
-            result['freq_offset'] = float(matchobj.groups(1)[0])
+            result['freq_offset'] = float(matchobj.groups(1)[0])/1000.0
         return(result)
 
     def onPhotommeterInfoResponse(self, line, tstamp):

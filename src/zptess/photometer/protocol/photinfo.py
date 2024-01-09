@@ -72,8 +72,8 @@ class HTMLPhotometer:
          #'zp'    : re.compile(r"Const\.: (\d{1,2}\.\d{1,2})"),
         'freq_offset': re.compile(r"Offset mHz: (\d{1,2}\.\d{1,2})"),
         'firmware' : re.compile(r"Compiled: (.+?)<br>"),  # Non-greedy matching until <br>
-        # This applies to the /setconst?cons=nn.nn page
-        'flash' : re.compile(r"New Zero Point (\d{1,2}\.\d{1,2})"),   
+        # This applies to the /setconst?cons=nn.nn or /SetZP?nZP1=nn.nn pages
+        'flash' : re.compile(r"New Zero Point (\d{1,2}\.\d{1,2})|CI 4 chanels:"),   
     }
 
     def __init__(self, addr, label, log, log_msg):
@@ -95,16 +95,22 @@ class HTMLPhotometer:
         label = self.label
         result = {}
         result['tstamp'] = datetime.datetime.now(datetime.timezone.utc)
-        url = self._make_save_url()
-        self.log.info("==> {label:6s} [HTTP GET] {url}", url=url, label=label)
-        params = [('cons', '{0:0.2f}'.format(zero_point))]
-        resp = yield treq.get(url, params=params, timeout=4)
-        text = yield treq.text_content(resp)
-        self.log.info("<== {label:6s} [HTTP GET] {url}", url=url, label=label)
-        matchobj = self.GET_INFO['flash'].search(text)
-        if not matchobj:
+        urls = (self._make_save_url(), self._make_save_url2())
+        params = ( [('cons', '{0:0.2f}'.format(zero_point))], # For first URL
+                  [('nZP1', '{0:0.2f}'.format(zero_point))])  # For second URL
+        written_zp = False
+        for i, (url, param) in enumerate(zip(urls, params), start=1):
+            self.log.info("==> {label:6s} [HTTP GET] {url}", url=url, label=label)
+            resp = yield treq.get(url, params=param, timeout=4)
+            text = yield treq.text_content(resp)
+            self.log.info("<== {label:6s} [HTTP GET] {url}", url=url, label=label)
+            matchobj = self.GET_INFO['flash'].search(text)
+            if matchobj:
+                result['zp'] = float(matchobj.groups(1)[0]) if i == 1 else zero_point
+                written_zp = True
+                break
+        if not written_zp:
             raise IOError("{:6s} ZP not written!".format(label))
-        result['zp'] = float(matchobj.groups(1)[0])
         return(result)
 
     @inlineCallbacks
@@ -160,6 +166,10 @@ class HTMLPhotometer:
 
     def _make_save_url(self):
         return f"http://{self.addr}/setconst"
+
+    def _make_save_url2(self):
+        '''New method from Firmware version starting on June 2023'''
+        return f"http://{self.addr}/SetZP"
 
 
 @implementer(IPhotometerControl)

@@ -68,7 +68,7 @@ class HTMLPhotometer:
         # These apply to the /config page
         'name'  : re.compile(r"(stars\d+)"),       
         'mac'   : re.compile(r"MAC: ([0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2}:[0-9A-Fa-f]{1,2})"),       
-        'zp'    : re.compile(r"(ZP|CI): (\d{1,2}\.\d{1,2})"),
+        'zp'    : re.compile(r"(ZP|CI.*): (\d{1,2}\.\d{1,2})"),
          #'zp'    : re.compile(r"Const\.: (\d{1,2}\.\d{1,2})"),
         'freq_offset': re.compile(r"Offset mHz: (\d{1,2}\.\d{1,2})"),
         'firmware' : re.compile(r"Compiled: (.+?)<br>"),  # Non-greedy matching until <br>

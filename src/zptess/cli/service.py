@@ -150,7 +150,7 @@ class CommandLineService(MultiService):
 
     def onStatisticsProgress(self, role, stats_info):
         label = TEST if role == 'test' else REF
-        log.info('[{label:4s}] {name:9s} waiting for enough samples, {pend} remaining', 
+        log.info('[{label:4s}] {name:9s} waiting for enough samples, {pend:03d} remaining', 
             label = label, 
             name = stats_info['name'], 
             pend = stats_info['nsamples'] - stats_info['current'],
@@ -158,7 +158,7 @@ class CommandLineService(MultiService):
 
     def onStatisticsInfo(self, role, stats_info):
         label = TEST if role == 'test' else REF
-        log.info("[{label:4s}] {name:9s} ({start}-{end})[{w:05.1f}s][{sz:d}] {central:6s} f = {cFreq:0.3f} Hz, \u03C3 = {sFreq:0.3f} Hz, m = {cMag:0.2f} @ {zp:0.2f}",
+        log.info("[{label:4s}] {name:9s} ({start}-{end})[{w:05.1f}s][{sz:03d}] {central:6s} f = {cFreq:0.3f} Hz, \u03C3 = {sFreq:0.3f} Hz, m = {cMag:0.2f} @ {zp:0.2f}",
             label   = label, 
             name    = stats_info['name'], 
             start   = stats_info['begin_tstamp'].strftime("%H:%M:%S"),

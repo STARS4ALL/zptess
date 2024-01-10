@@ -80,7 +80,8 @@ class HTMLPhotometer:
         self.log = log_msg
         self.addr = addr
         self.label = label
-        log.info("{label:6s} Using {who} Info", label=self.label, who=self.__class__.__name__)
+        self.glog = log # Global log for the module, not object instance
+        self.glog.info("{label:6s} Using {who} Info", label=self.label, who=self.__class__.__name__)
 
     # ---------------------
     # IPhotometerControl interface
@@ -100,10 +101,9 @@ class HTMLPhotometer:
                   [('nZP1', '{0:0.2f}'.format(zero_point))])  # For second URL
         written_zp = False
         for i, (url, param) in enumerate(zip(urls, params), start=1):
-            self.log.info("==> {label:6s} [HTTP GET] {url}", url=url, label=label)
+            self.glog.info("==> {label:6s} [HTTP GET] {url} {params}", url=url, label=label, params=params)
             resp = yield treq.get(url, params=param, timeout=4)
             text = yield treq.text_content(resp)
-            self.log.info("<== {label:6s} [HTTP GET] {url}", url=url, label=label)
             matchobj = self.GET_INFO['flash'].search(text)
             if matchobj:
                 result['zp'] = float(matchobj.groups(1)[0]) if i == 1 else zero_point
@@ -204,11 +204,12 @@ class CLIPhotometer:
 
     def __init__(self, label, log, log_msg):
         self.log = log_msg
+        self.glog = log
         self.label = label
         self.parent = None
         self.read_deferred = None
         self.write_deferred = None
-        log.info("{label:6s} Using {who} Info", label=self.label, who=self.__class__.__name__)
+        self.glog.info("{label:6s} Using {who} Info", label=self.label, who=self.__class__.__name__)
 
     def setParent(self, protocol):
         self.parent = protocol
@@ -223,7 +224,7 @@ class CLIPhotometer:
         Returns a Deferred
         '''
         line = 'CI{0:04d}'.format(int(round(zero_point*100,2)))
-        self.log.info("==> {label:6} [{l:02d}] {line}", label=self.label, l=len(line), line=line)
+        self.glog.info("==> {label:6} [{l:02d}] {line}", label=self.label, l=len(line), line=line)
         self.parent.sendLine(line.encode('ascii'))
         self.write_deferred = defer.Deferred()
         self.write_deferred.addTimeout(timeout, reactor)

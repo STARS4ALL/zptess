@@ -175,7 +175,7 @@ class CommandLineService(MultiService):
     def onCalibrationRoundInfo(self, role, count, stats_info):
         label = TEST if role == 'test' else REF
         if role == 'test':
-            log.info('ROUND       {i:02d}: New ZP = {zp:0.2f} = \u0394(ref-test) Mag ({magDiff:0.2f}) + ZP Abs ({zp_fict:0.2f})',
+            log.info('ROUND        {i:02d}: New ZP = {zp:0.2f} = \u0394(ref-test) Mag ({magDiff:0.2f}) + ZP Abs ({zp_fict:0.2f})',
                 i        = count ,
                 magDiff  = stats_info['mag_diff'], 
                 zp_fict  = stats_info['zp_fict'], 

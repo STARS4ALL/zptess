@@ -168,7 +168,7 @@ class HTMLPhotometer:
         return f"http://{self.addr}/setconst"
 
     def _make_save_url2(self):
-        '''New method from Firmware version starting on June 2023'''
+        '''New Write ZP URL from firmware version starting on 16 June 2023'''
         return f"http://{self.addr}/SetZP"
 
 

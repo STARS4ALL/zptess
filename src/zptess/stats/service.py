@@ -186,7 +186,7 @@ class StatisticsService(Service):
         self._freq_offset = None # Not known yet, must come from photometer Info
         self._dev_name    = None # Not known yet, must come from photometer Info
 
-        self.log.info("[{label:4s}] {name:8s} Starting {service} (T = {T} secs.), (fict zp = {zp}, usage = {usage})",
+        self.log.info("[{label:4s}] {name:9s} Starting {service} (T = {T} secs.), (fict zp = {zp}, usage = {usage})",
             label   = self._label,
             name    = '?????' if self._dev_name is None else self._dev_name,
             service = self.name,
@@ -205,7 +205,7 @@ class StatisticsService(Service):
         pub.subscribe(self.onPhotometerInfo, 'phot_info')
         t = random.uniform(0, self.T/2)
         reactor.callLater(t, self.progressTask.start, self.T, now=False)
-        self.log.info("[{label:4s}] {name:8s} Starting buffer fill monitoring task",
+        self.log.info("[{label:4s}] {name:9s} Starting buffer fill monitoring task",
             label   = self._label,
             name    = '?????' if self._dev_name is None else self._dev_name
         )
@@ -213,7 +213,7 @@ class StatisticsService(Service):
         
 
     def stopService(self):
-        self.log.info("[{label:4s}] {name:8s} Stopping {service}",
+        self.log.info("[{label:4s}] {name:9s} Stopping {service}",
             label   = self._label,
             name    = '????'if self._dev_name is None else self._dev_name,
             service = self.name,
@@ -221,13 +221,13 @@ class StatisticsService(Service):
         pub.unsubscribe(self.onSampleReceived, 'phot_sample')
         pub.unsubscribe(self.onPhotometerInfo, 'phot_info')
         if self.progressTask.running:
-            self.log.info("[{label:4s}] {name:8s} Stopping buffer fill monitoring task",
+            self.log.info("[{label:4s}] {name:9s} Stopping buffer fill monitoring task",
                 label   = self._label,
                 name    = '?????' if self._dev_name is None else self._dev_name
             )
             self.progressTask.stop()
         if self.statTask.running:
-            self.log.info("[{label:4s}] {name:8s} Stopping statistics task",
+            self.log.info("[{label:4s}] {name:9s} Stopping statistics task",
                 label   = self._label,
                 name    = '?????' if self._dev_name is None else self._dev_name
             )
@@ -239,7 +239,7 @@ class StatisticsService(Service):
     # --------------
 
     def useFictZP(self):
-        self.log.info("[{label:4s}] {name:8s} Using ficticious ZP {zp}",
+        self.log.info("[{label:4s}] {name:9s} Using ficticious ZP {zp}",
             label   = self._label,
             name    = '?????' if self._dev_name is None else self._dev_name,
             zp      = self.options['zp_fict']
@@ -247,7 +247,7 @@ class StatisticsService(Service):
         self._use_fict_zp = True
 
     def useOwnZP(self):
-        self.log.info("[{label:4s}] {name:8s} Using ZP stored in photometer",
+        self.log.info("[{label:4s}] {name:9s} Using ZP stored in photometer",
             label   = self._label,
             name    = '?????' if self._dev_name is None else self._dev_name,
         )
@@ -259,7 +259,7 @@ class StatisticsService(Service):
             self._freq_offset = info['freq_offset']
             self._buffer.fixFreqOffset(info['freq_offset'])
             if not self._use_fict_zp:
-                self.log.info("[{label:4s}] {name:8s} Using device ZP ({zp}) instead of ficticious ZP",
+                self.log.info("[{label:4s}] {name:9s} Using device ZP ({zp}) instead of ficticious ZP",
                     label   = self._label,
                     name    = '?????' if self._dev_name is None else self._dev_name,
                     zp      = info['zp']
@@ -274,12 +274,12 @@ class StatisticsService(Service):
     def _progress(self):
         '''Progress task'''
         if self._buffer.isFull() and self.progressTask.running:
-            self.log.info("[{label:4s}] {name:8s} Stopping buffer fill monitoring task",
+            self.log.info("[{label:4s}] {name:9s} Stopping buffer fill monitoring task",
                 label   = self._label,
                 name    = '?????' if self._dev_name is None else self._dev_name
             )
             self.progressTask.stop() # Self stop this task
-            self.log.info("[{label:4s}] {name:8s} Starting statistics task",
+            self.log.info("[{label:4s}] {name:9s} Starting statistics task",
                 label   = self._label,
                 name    = '?????' if self._dev_name is None else self._dev_name
             )

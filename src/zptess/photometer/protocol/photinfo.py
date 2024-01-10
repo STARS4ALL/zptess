@@ -101,7 +101,7 @@ class HTMLPhotometer:
                   [('nZP1', '{0:0.2f}'.format(zero_point))])  # For second URL
         written_zp = False
         for i, (url, param) in enumerate(zip(urls, params), start=1):
-            self.glog.info("==> {label:6s} [HTTP GET] {url} {params}", url=url, label=label, params=params)
+            self.glog.info("==> {label:6s} [HTTP GET] {url} {params}", url=url, label=label, params=param)
             resp = yield treq.get(url, params=param, timeout=4)
             text = yield treq.text_content(resp)
             matchobj = self.GET_INFO['flash'].search(text)

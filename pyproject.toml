@@ -35,17 +35,12 @@ dependencies = [
     "python-decouple",
 ]
 
-[project.optional-dependencies]
-test = [
-    "pytest>=6",
-]
-
 [project.urls]
 Homepage = "https://github.com/STARS4ALL/zptess"
 Repository = "https://github.com/STARS4ALL/zptess.git"
 
 # Nothing here
-#[project.scripts]
+[project.scripts]
 
 
 [build-system]
@@ -91,5 +86,7 @@ script-files = [
 
 [tool.uv]
 dev-dependencies = [
+    "pytest>=8.3.3",
+    "ruff>=0.6.9",
     "twine>=5.1.1",
 ]

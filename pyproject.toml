@@ -88,5 +88,6 @@ script-files = [
 dev-dependencies = [
     "pytest>=8.3.3",
     "ruff>=0.6.9",
+    "rust-just>=1.36.0",
     "twine>=5.1.1",
 ]

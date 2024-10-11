@@ -25,7 +25,7 @@ from twisted  import __version__ as __twisted_version__
 # local imports
 # -------------
 
-from ._version import get_versions
+from ._version import __version__
 
 # ----------------
 # Module constants
@@ -83,8 +83,6 @@ def set_status_code(code):
 # Assume bad result unless we set it to ok
 _exit_status_code = 1
 
-__version__ = get_versions()['version']
-
 name = os.path.split(os.path.dirname(sys.argv[0]))[-1]
 
 FULL_VERSION_STRING = "{4} {0} on Twisted {1}, Python {2}.{3}".format(
@@ -93,6 +91,3 @@ FULL_VERSION_STRING = "{4} {0} on Twisted {1}, Python {2}.{3}".format(
 		sys.version_info.major, 
 		sys.version_info.minor,
 		name)
-
-del get_versions
-del name

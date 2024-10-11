@@ -1,0 +1,95 @@
+[project]
+name = "zptess"
+dynamic = ["version"]
+description = "TESS-W calibration tool"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Rafael González", email = "rafael08@ucm.es"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: SQL",
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Natural Language :: Spanish",
+]
+
+dependencies = [
+    "treq",       # like requests, Twisted style 
+    "pyserial",   # RS232 handling
+    "pypubsub",   # Publish/Subscribe support for Model/View/Controller
+    "tabulate",   # fancy display tables for zptool,
+    "Pillow",     # needed by GUI,
+    "python-decouple",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=6",
+]
+
+[project.urls]
+Homepage = "https://github.com/STARS4ALL/zptess"
+Repository = "https://github.com/STARS4ALL/zptess.git"
+
+# Nothing here
+#[project.scripts]
+
+
+[build-system]
+requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+# pyproject.toml
+# Autimatically generates a _version-py file from with Git information
+# This file shold be placed in .gitignore
+[tool.setuptools_scm]
+write_to = "src/zptess/_version.py"
+
+[tool.setuptools.packages.find]
+# scanning for namespace packages is true by default in pyproject.toml, so
+# you do NOT need to include the following line.
+namespaces = true
+where = ["src"]
+
+[tool.setuptools]
+script-files = [
+    "scripts/zptess",
+    "scripts/tkzptess",
+    "scripts/zptessw",
+    "scripts/zptessp",
+    "scripts/zptas",
+    "scripts/zptool",
+    "scripts/zpbegin",
+    "scripts/zpend",
+    "scripts/zpexport", 
+    "scripts/zpexportall",
+]
+
+[tool.setuptools.package-data]
+"zptess.dbase" = [
+    "sql/*.sql",
+    "sql/initial/*.sql",
+    "sql/updates/*.sql",
+]
+"zptess.gui" = [
+    "resources/photpanel/*.*",
+    "resources/about/*.*",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "twine>=5.1.1",
+]

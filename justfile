@@ -11,7 +11,7 @@ project := file_stem(justfile_dir())
 local_env := join(justfile_dir(), ".env")
 
 
-pkg := "tess-ida-tools"
+pkg := "zptess"
 module := "zptess"
 
 # list all recipes

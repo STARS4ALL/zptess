@@ -25,7 +25,7 @@ from twisted  import __version__ as __twisted_version__
 # local imports
 # -------------
 
-from ._version import __version__
+from ._version import __version__ as __version__
 
 # ----------------
 # Module constants

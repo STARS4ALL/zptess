@@ -15,18 +15,4 @@
 # local imports
 # -------------
 
-from zptess._version import get_versions
-
-
-# -----------------------
-# Module global variables
-# -----------------------
-
-# ----------------
-# Module constants
-# ----------------
-
-
-__version__ = get_versions()['version']
-
-del get_versions
+from zptess._version import __version__ as __version__

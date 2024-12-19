@@ -3,6 +3,18 @@
 Calibration tool for the [TESS-W photometer](https://tess.stars4all.eu/) and derivates.
 Works both in command line and GUI mode using Tkinter.
 
+# Installation
+
+```bash
+mkdir zptess
+cd zptess
+uv venv
+source .venv/bin/activate
+uv pip install zptess
+echo "DATABASE_URL=zptess.db" > .env
+zptess --version
+zptool --version
+```
 
 ## GUI Mode
 

@@ -1,37 +1,4 @@
-SHORT TERM
-==========
-
-* SENSOR TYPE
-=============
-Toda la parte del GUI esta desactualizada respecto a incluir la informacion del tipo de sensor
-(TSL237, S9705-01DT) y version de software calibrador
-
-* FIX/EXCEL BRANCH
-==================
-
-2. Script auxiliar de comprobar si ha habido renombrados , calibrados con la misma MAC con el fin de ponerlo en los comentarios
-
-3. Script de migracion para los TESS-W viejos que no estan en la BBDD
-  * podemos hacer el checqueo doble por MAC y nombre
-  * Generar timestamps de 2016-01-01 en adelante para insertar en la BD
-  - Hay que generarlo por parejas con stars3. Nos tendremos que inventar los valores para que en la resta salga bien
-   
-
-
-* MIGRACION 
-===========
-ESTO PARA CUANDO LO VAYA A INSTALAR EN EL PC DESTINO
-
-Tabla config_t
- - Borrar propiedad (ref-device, zp_abs)
- - Modificar (ref-device, zp) => 20.44
- - Insertar propiedad (calibration, zp_fict) = 20.50
-
-* Pending bug fixes:
-  zptool.utils.paging() no funciona en estos caso:
-  - con lsitas/tuplas y size=None
-  - con cursores y size != None
-
-
-* stars488 saca por el puerto serie solo el formato antiguo
-* stars63 saca por el puerto serie tanto JSON como el formato antiguo
+NOTES
+=====
+* stars488, serial in old format only
+* stars63, serial both in JSON and old format

@@ -1,8 +1,0 @@
-#!/bin/bash
-# ----------------------------------------------------------------------
-# Copyright (c) 20121 astrorafael@gmail.com.
-#
-# See the LICENSE file for details
-# ----------------------------------------------------------------------
-tstamp=$(date +'%Y-%m-%dT%H:%M:%S')
-python -m zptool -l $HOME/zptess/zptool.log summary export --updated --csv-file $HOME/zptess/summary_all_${tstamp}.csv $*

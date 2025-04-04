@@ -1,54 +1,63 @@
 [project]
 name = "zptess"
 dynamic = ["version"]
-description = "TESS-W calibration tool"
+description = "TESS-W Calibration tool"
 readme = "README.md"
-requires-python = ">=3.9"
-license = {text = "MIT"}
+requires-python = ">=3.12"
+license-files = ["LICENSE"]
 authors = [
     {name = "Rafael González", email = "rafael08@ucm.es"},
 ]
 classifiers = [
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: SQL",
-    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.13",
+    "Development Status :: 3 - Alpha",
     "Environment :: Console",
-    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
     "Operating System :: POSIX :: Linux",
     "Topic :: Scientific/Engineering :: Astronomy",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
-    "Intended Audience :: Science/Research",
-    "Intended Audience :: Developers",
-    "Natural Language :: English",
-    "Natural Language :: Spanish",
 ]
-
 dependencies = [
-    "treq",       # like requests, Twisted style 
-    "pyserial",   # RS232 handling
-    "pypubsub",   # Publish/Subscribe support for Model/View/Controller
-    "tabulate",   # fancy display tables for zptool,
-    "Pillow",     # needed by GUI,
-    "python-decouple",
+  "python-decouple >= 3.8",  # Get info from enviromental variables
+  "typing-extensions >= 4.12", # Self for Python < 3.11
+  # Async Database stuff
+  "SQLAlchemy[asyncio]>=2.0",
+  "alembic >= 1.15",
+  "aiosqlite >= 0.21",
+  #'exceptiongroups', # For Python < 3.11 when using TaskGroups
+  #'asyncstdlib', # async counterparts such as aenumerate()
+  # synchronous style publish/subscribe mechanism
+  "pypubsub >= 4.0",
+  "lica[photometer,tabular]>=1.1",
+   "aiohttp >= 3.11",
 ]
 
 [project.urls]
-Homepage = "https://github.com/STARS4ALL/zptess"
-Repository = "https://github.com/STARS4ALL/zptess.git"
+Homepage = "https://github.com/astrorafael/textual-zptess"
+Repository = "https://github.com/astrorafael/textual-zptess.git"
 
-# Nothing here
 [project.scripts]
+# These are Database related commands
+zp-db-schema = "zptess.cli.dbase.schema:main"
+zp-db-extract = "zptess.cli.dbase.extract:main"
+zp-db-loader = "zptess.cli.dbase.loader:main"
+zp-db-qa = "zptess.cli.dbase.qa:main"
+zp-db-fix = "zptess.cli.dbase.fix:main"
+# These are photometer related commands
+zp-read =  "zptess.cli.reader:main"
+zp-calib =  "zptess.cli.calibrate:main"
+zp-write =  "zptess.cli.writer:main"
+# Additional tools
+zp-batch = "zptess.cli.tools:main"
 
 
 [build-system]
-requires = ["setuptools >= 45", "wheel", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools >= 78.1", "wheel", "setuptools_scm[toml]>=8.2"]
 build-backend = "setuptools.build_meta"
 
 # pyproject.toml
-# Autimatically generates a _version-py file from with Git information
+# Automatically generates a _version-py file from with Git information
 # This file shold be placed in .gitignore
 [tool.setuptools_scm]
 write_to = "src/zptess/_version.py"
@@ -61,30 +70,17 @@ where = ["src"]
 
 [tool.setuptools]
 script-files = [
-    "scripts/zptess",
-    "scripts/tkzptess",
-    "scripts/zptessw",
-    "scripts/zptessp",
-    "scripts/zptas",
-    "scripts/zptool",
-    "scripts/zpbegin",
-    "scripts/zpend",
-    "scripts/zpexport", 
-    "scripts/zpexportall",
+    "scripts/zp-db-fix-src"
 ]
 
-[tool.setuptools.package-data]
-"zptess.dbase" = [
-    "sql/*.sql",
-    "sql/initial/*.sql",
-    "sql/updates/*.sql",
-]
-"zptess.gui" = [
-    "resources/photpanel/*.*",
-    "resources/about/*.*",
-]
+[tool.ruff]
+line-length = 100
 
 [tool.uv]
 dev-dependencies = [
     "pytest>=8.3.3",
+    "mypy>=1.15.0",
 ]
+
+[tool.uv.sources]
+lica = { git = "https://github.com/guaix-ucm/lica", branch = "main" }

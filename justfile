@@ -9,7 +9,6 @@ def_drive := join("/media", user, drive_uuid)
 project := file_stem(justfile_dir())
 local_env := join(justfile_dir(), ".env")
 
-
 # list all recipes
 default:
     just --list

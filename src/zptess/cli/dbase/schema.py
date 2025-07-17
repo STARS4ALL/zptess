@@ -17,8 +17,8 @@ from argparse import ArgumentParser, Namespace
 
 from lica.asyncio.cli import execute
 from lica.sqlalchemy import sqa_logging
-from lica.sqlalchemy.asyncio.dbase import engine, Model
-
+from lica.sqlalchemy.asyncio.dbase import engine
+from lica.sqlalchemy.asyncio.model import Model
 # --------------
 # local imports
 # -------------

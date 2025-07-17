@@ -40,7 +40,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, aliased
 
-from lica.sqlalchemy.asyncio.dbase import Model
+from lica.sqlalchemy.asyncio.model import Model
 from lica.sqlalchemy.view import view
 from lica.asyncio.photometer import Model as PhotModel, Role, Sensor
 

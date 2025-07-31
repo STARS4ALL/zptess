@@ -29,7 +29,7 @@ dependencies = [
   #'asyncstdlib', # async counterparts such as aenumerate()
   # synchronous style publish/subscribe mechanism
   "pypubsub >= 4.0",
-  "lica[photometer,tabular]>=1.1",
+  "lica[photometer,tabular]>=1.2",
    "aiohttp >= 3.11",
 ]
 

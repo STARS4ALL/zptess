@@ -1,3 +1,8 @@
+IMPORTANT
+=========
+
+Upgrade this package to use the new zptess-dao>=1.0 package and lica>=2.0 
+
 NOTES
 =====
 * stars488, serial in old format only

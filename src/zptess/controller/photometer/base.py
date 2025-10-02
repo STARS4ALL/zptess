@@ -21,13 +21,13 @@ from typing import Mapping, Any, Dict, Tuple, AsyncIterator
 
 from lica.asyncio.photometer import Role, Message as PhotMessage, Model as PhotModel, Sensor
 from lica.asyncio.photometer.builder import PhotometerBuilder
-from lica.sqlalchemy.asyncio.dbase import engine, AsyncSession
 
 # --------------
 # local imports
 # -------------
 
 from ..  import load_config
+from ...dao import engine, Session
 
 # ----------------
 # Module constants
@@ -65,7 +65,7 @@ class Controller(ABC):
     ):
         self.param = {Role.REF: ref_params, Role.TEST: test_params}
         self.roles = list()
-        self.Session = AsyncSession
+        self.Session = Session
         self.photometer = dict()
         self.ring = dict()
         self.phot_info = dict()

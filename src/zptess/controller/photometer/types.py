@@ -1,8 +1,7 @@
-
+from enum import StrEnum
 
 from typing import Tuple, Sequence, Mapping
 
-from lica import StrEnum
 from lica.asyncio.photometer import Role
 
 

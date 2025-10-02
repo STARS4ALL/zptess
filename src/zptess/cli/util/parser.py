@@ -18,13 +18,14 @@ from argparse import ArgumentParser
 
 from lica.validators import vdir, vdate
 from lica.asyncio.photometer import Model as PhotModel, Sensor
+from zptessdao.constants import CentralTendency
+
 
 # --------------
 # local imports
 # -------------
 
 from .validator import vendpoint
-from ...lib import CentralTendency
 
 
 def idir() -> ArgumentParser:
@@ -284,6 +285,7 @@ def no_bat() -> ArgumentParser:
     )
     return parser
 
+
 # ------------------------------
 # These are for batch management
 # ------------------------------
@@ -318,6 +320,7 @@ def tbl() -> ArgumentParser:
     )
     return parser
 
+
 def lst() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -326,6 +329,7 @@ def lst() -> ArgumentParser:
         help="List orphan summaries one by one",
     )
     return parser
+
 
 def expor() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)

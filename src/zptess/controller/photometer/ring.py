@@ -18,12 +18,12 @@ from typing import Tuple, Mapping, Set, Any
 # Third party imports
 # -------------------
 
+from zptessdao.constants import CentralTendency
 
 # --------------
 # local imports
 # -------------
 
-from ... import CentralTendency
 
 # ----------------
 # Module constants

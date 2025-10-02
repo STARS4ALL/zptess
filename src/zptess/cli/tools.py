@@ -29,8 +29,8 @@ from lica.tabulate import paging
 from .. import __version__
 from .util import parser as prs
 
-from ..lib.controller.batch import Controller as BatchController
-from ..lib.controller.exporter import Controller as Exporter
+from ..controller.batch import Controller as BatchController
+from ..controller.exporter import Controller as Exporter
 
 
 # ----------------

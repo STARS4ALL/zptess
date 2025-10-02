@@ -32,15 +32,16 @@ from typing import Sequence, Tuple, Any
 # -------------------
 
 import aiohttp
+from sqlalchemy import select, func, cast, Integer
 
-from lica.sqlalchemy.asyncio.dbase import AsyncSession
+
+from zptessdao.asyncio import SummaryView, RoundsView, SampleView, Config, Batch
 
 # --------------
 # local imports
 # -------------
 
-from ..dbase.model import SummaryView, RoundView, SampleView, Config, Batch
-from sqlalchemy import select, func, cast, Integer
+from ..dao import Session
 
 
 SUMMARY_EXPORT_HEADERS = (
@@ -188,7 +189,7 @@ class Controller:
     # ----------
 
     async def query_summaries(self) -> Sequence[Tuple[Any]]:
-        async with AsyncSession() as session:
+        async with Session() as session:
             async with session.begin():
                 t0 = self.begin_tstamp
                 t1 = self.end_tstamp
@@ -232,40 +233,40 @@ class Controller:
         return summaries
 
     async def query_rounds(self) -> Sequence[Tuple[Any]]:
-        async with AsyncSession() as session:
+        async with Session() as session:
             async with session.begin():
                 t0 = self.begin_tstamp
                 t1 = self.end_tstamp
                 q = (
                     select(
-                        RoundView.model,
-                        RoundView.name,
-                        RoundView.mac,
-                        RoundView.session,
-                        RoundView.role,
-                        RoundView.round,
-                        RoundView.freq,
-                        RoundView.stddev,
-                        RoundView.mag,
-                        RoundView.zero_point,
-                        RoundView.nsamples,
-                        RoundView.duration,
+                        RoundsView.model,
+                        RoundsView.name,
+                        RoundsView.mac,
+                        RoundsView.session,
+                        RoundsView.role,
+                        RoundsView.round,
+                        RoundsView.freq,
+                        RoundsView.stddev,
+                        RoundsView.mag,
+                        RoundsView.zero_point,
+                        RoundsView.nsamples,
+                        RoundsView.duration,
                     )
                     # complicated filter because stars3 always has upd_flag = False
                     .where(
-                        RoundView.session.between(t0, t1)
+                        RoundsView.session.between(t0, t1)
                         & (
-                            (RoundView.upd_flag == True)  # noqa: E712
-                            | ((RoundView.upd_flag == False) & (RoundView.name == "stars3"))  # noqa: E712
+                            (RoundsView.upd_flag == True)  # noqa: E712
+                            | ((RoundsView.upd_flag == False) & (RoundsView.name == "stars3"))  # noqa: E712
                         )
                     )
-                    .order_by(RoundView.session, RoundView.round)
+                    .order_by(RoundsView.session, RoundsView.round)
                 )
                 rounds = (await session.execute(q)).all()
         return rounds
 
     async def query_samples(self) -> Sequence[Tuple[Any]]:
-        async with AsyncSession() as session:
+        async with Session() as session:
             async with session.begin():
                 t0 = self.begin_tstamp
                 t1 = self.end_tstamp
@@ -352,7 +353,7 @@ class Controller:
     async def load_email_config(self) -> None:
         # Read email configuration
         smtp_keys = set(("host", "port", "sender", "password", "receivers"))
-        async with AsyncSession() as session:
+        async with Session() as session:
             async with session.begin():
                 q = select(Config).where(Config.section == "smtp").order_by(Config.prop)
                 configs = (await session.scalars(q)).all()
@@ -382,7 +383,7 @@ class Controller:
         return email_sent
 
     async def update_batch(self, batch: Batch, email_sent: bool) -> None:
-        async with AsyncSession() as session:
+        async with Session() as session:
             async with session.begin():
                 batch.email_sent = email_sent
                 session.add(batch)

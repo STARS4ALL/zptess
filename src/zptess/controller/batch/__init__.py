@@ -4,18 +4,18 @@
 # ---------------------
 
 from sqlalchemy import select
-from lica.sqlalchemy.asyncio.dbase import AsyncSession
+from zptessdao.asyncio import Batch
 
 # -------------
 # Own Libraries
 # -------------
 
-from ...dbase.model import Batch
+from ...dao import Session
 
 # Re-exports
 from .batch import Controller as Controller
 
-async def get_open_batch(session: AsyncSession) -> Batch | None:
+async def get_open_batch(session: Session) -> Batch | None:
         """Used by the persistent controller"""
         q = select(Batch).where(Batch.end_tstamp.is_(None))
         batch = (await session.scalars(q)).one_or_none()

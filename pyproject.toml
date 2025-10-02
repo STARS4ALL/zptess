@@ -21,10 +21,7 @@ classifiers = [
 dependencies = [
   "python-decouple >= 3.8",  # Get info from enviromental variables
   "typing-extensions >= 4.12", # Self for Python < 3.11
-  # Async Database stuff
-  "SQLAlchemy[asyncio]>=2.0",
-  "alembic >= 1.15",
-  "aiosqlite >= 0.21",
+  "zptess-dao >= 1.0", # Own database model
   #'exceptiongroups', # For Python < 3.11 when using TaskGroups
   #'asyncstdlib', # async counterparts such as aenumerate()
   # synchronous style publish/subscribe mechanism
@@ -38,12 +35,6 @@ Homepage = "https://github.com/astrorafael/textual-zptess"
 Repository = "https://github.com/astrorafael/textual-zptess.git"
 
 [project.scripts]
-# These are Database related commands
-zp-db-schema = "zptess.cli.dbase.schema:main"
-zp-db-extract = "zptess.cli.dbase.extract:main"
-zp-db-loader = "zptess.cli.dbase.loader:main"
-zp-db-qa = "zptess.cli.dbase.qa:main"
-zp-db-fix = "zptess.cli.dbase.fix:main"
 # These are photometer related commands
 zp-read =  "zptess.cli.reader:main"
 zp-calib =  "zptess.cli.calibrate:main"

@@ -24,7 +24,7 @@ from lica.asyncio.photometer import Role
 # -------------
 
 from .. import __version__
-from ..lib.controller.photometer import Writer
+from ..controller.photometer import Writer
 from .util.misc import log_phot_info, update_zp
 from .util import parser as prs
 

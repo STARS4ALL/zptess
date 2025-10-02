@@ -72,44 +72,6 @@ env-bak drive=def_drive: (check_mnt drive) (env-backup join(drive, "env", projec
 # Restore .env from storage unit
 env-rst drive=def_drive: (check_mnt drive) (env-restore join(drive, "env", project))
 
-# Restore a fresh, unmigrated ZPTESS database
-db-anew date drive=def_drive: (check_mnt drive) (db-restore date)
-
-# Starts a new database export migration cycle   
-anew date="20250121" folder="migra" verbose="": (db-anew date)
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    uv sync --reinstall
-    uv run zp-db-fix-src
-    test -d {{ folder }} || mkdir {{ folder }}
-    uv run zp-db-schema --console --log-file zptool.log {{ verbose }}
-    uv run zp-db-extract --console --log-file zptool.log {{ verbose }} all --output-dir {{ folder }}
-
-# Starts a new database import migration cycle   
-aload stage="summary" folder="migra":
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    test -d {{ folder }} || mkdir {{folder}}
-    uv run zp-db-loader --console config --input-dir {{folder}}
-    uv run zp-db-loader --console batch --input-dir {{folder}}
-    if [ "{{stage}}" == "photometer" ]; then
-        uv run zp-db-loader --console photometer --input-dir {{folder}}
-    elif [ "{{stage}}" == "summary" ]; then
-        uv run zp-db-loader --console photometer --input-dir {{folder}}
-        uv run zp-db-loader --console summary --input-dir {{folder}}
-    elif [ "{{stage}}" == "rounds" ]; then
-        uv run zp-db-loader --console photometer --input-dir {{folder}}
-        uv run zp-db-loader --console summary --input-dir {{folder}}
-        uv run zp-db-loader --console rounds --input-dir {{folder}}
-    elif [ "{{stage}}" == "samples" ]; then
-        uv run zp-db-loader --console photometer --input-dir {{folder}}
-        uv run zp-db-loader --console summary --input-dir {{folder}}
-        uv run zp-db-loader --console rounds --input-dir {{folder}}
-        uv run zp-db-loader --console samples --input-dir {{folder}}
-    else
-        echo "No known stage"
-        exit 1
-    fi
 
 # ========================= #
 # QUCK COMMAND LINE TESTING #
@@ -212,7 +174,7 @@ write zp dry_run="":
     set -euxo pipefail
     uv run zp-write --console  --log-file zptess.log --trace  test -z {{zp}} {{dry_run}}
 
-# Cdisplay photometer info and quit
+# Display photometer info and quit
 info:
     #!/usr/bin/env bash
     set -euxo pipefail
@@ -259,38 +221,6 @@ purge:
     #!/usr/bin/env bash
     set -euxo pipefail
     uv run zp-batch --console --log-file zptool.log --trace purge
-
-# Database migration. Execute onle once !
-migrate date="20250121" stage="samples" folder="migra" drive=def_drive: (check_mnt drive)
-    #!/usr/bin/env bash
-    set -exuo pipefail
-    cp {{ def_drive }}/zptess/zptess-{{date}}.db zptess.prod.db
-    uv run zp-db-fix-src
-    test -d {{ folder }} || mkdir {{ folder }}
-    # Create the database and export data from the old database
-    uv run zp-db-schema --console --log-file zpdbase.log
-    uv run zp-db-extract --console --log-file zpdbase.log all --output-dir {{ folder }}
-    # load data into new database
-    uv run zp-db-loader --console --log-file zpdbase.log config --input-dir {{folder}}
-    uv run zp-db-loader --console --log-file zpdbase.log batch --input-dir {{folder}}
-    if [ "{{stage}}" == "photometer" ]; then
-        uv run zp-db-loader --console --log-file zpdbase.log photometer --input-dir {{folder}}
-    elif [ "{{stage}}" == "summary" ]; then
-        uv run zp-db-loader --console --log-file zpdbase.log photometer --input-dir {{folder}}
-        uv run zp-db-loader --console --log-file zpdbase.log summary --input-dir {{folder}}
-    elif [ "{{stage}}" == "rounds" ]; then
-        uv run zp-db-loader --console --log-file zpdbase.log photometer --input-dir {{folder}}
-        uv run zp-db-loader --console --log-file zpdbase.log summary --input-dir {{folder}}
-        uv run zp-db-loader --console --log-file zpdbase.log rounds --input-dir {{folder}}
-    elif [ "{{stage}}" == "samples" ]; then
-        uv run zp-db-loader --console --log-file zpdbase.log photometer --input-dir {{folder}}
-        uv run zp-db-loader --console --log-file zpdbase.log summary --input-dir {{folder}}
-        uv run zp-db-loader --console --log-file zpdbase.log rounds --input-dir {{folder}}
-        uv run zp-db-loader --console --log-file zpdbase.log samples --input-dir {{folder}}
-    else
-        echo "Unknown stage"
-        exit 1
-    fi
 
 # Backup zptess database and log file
 backup drive=def_drive: (check_mnt drive)

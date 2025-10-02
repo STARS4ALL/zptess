@@ -9,31 +9,6 @@
 # Third party libraries
 # ---------------------
 
-import enum
-
-
-class CentralTendency(enum.Enum):
-    MEDIAN = "median"
-    MODE = "mode"
-    MEAN = "mean"
-
-    def __repr__(self):
-        return self.value
-
-    def __str__(self):
-        return self.value
-
-
-class Calibration(enum.Enum):
-    MANUAL = "MANUAL"
-    AUTO = "AUTO"
-
-    def __repr__(self):
-        return self.value
-
-    def __str__(self):
-        return self.value
-
 
 SERIAL_PORT_PREFIX = "/dev/ttyUSB"
 

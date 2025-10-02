@@ -23,17 +23,19 @@ from typing import Any, Mapping, Dict, List
 from sqlalchemy import select
 from pubsub import pub
 from lica.asyncio.photometer import Role
-from lica.sqlalchemy.asyncio.dbase import AsyncSession
+from zptessdao.asyncio import Photometer, Summary, Round, Sample
+from zptessdao.constants import Calibration
+
 # --------------
 # local imports
 # -------------
 
+from ...dao import Session
 from ..batch import get_open_batch
 from .volatile import Controller as VolatileCalibrator
 from .types import Event
-from ...dbase.model import Photometer, Batch, Summary, Round, Sample
-from ... import Calibration
-from .... import __version__
+
+from ... import __version__
 
 # ----------------
 # Module constants
@@ -170,7 +172,7 @@ class Controller(VolatileCalibrator):
     # Private helper methods
     # ----------------------
 
-    async def _save_photometers(self, session: AsyncSession) -> Dict[Role, Photometer]:
+    async def _save_photometers(self, session: Session) -> Dict[Role, Photometer]:
         phot = dict()
         for role in self.roles:
             name = self.phot_info[role]["name"]
@@ -187,7 +189,7 @@ class Controller(VolatileCalibrator):
         return phot
 
     def _save_summaries(
-        self, session: AsyncSession, photometers: Dict[Role, Photometer]
+        self, session: Session, photometers: Dict[Role, Photometer]
     ) -> Dict[Role, Summary]:
         db_summary = dict()
         for role, phot in photometers.items():
@@ -216,7 +218,7 @@ class Controller(VolatileCalibrator):
         return db_summary
 
     def _save_rounds(
-        self, session: AsyncSession, db_summaries: Dict[Role, Summary]
+        self, session: Session, db_summaries: Dict[Role, Summary]
     ) -> Dict[Role, List[Round]]:
         db_rounds = defaultdict(list)
         for i, round_info in enumerate(self.temp_round_info):
@@ -245,7 +247,7 @@ class Controller(VolatileCalibrator):
 
     def _save_samples(
         self,
-        session: AsyncSession,
+        session: Session,
         db_summaries: Dict[Role, Summary],
         db_rounds: Dict[Role, List[Round]],
     ) -> Dict[Role, List[Sample]]:

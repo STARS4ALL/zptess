@@ -16,9 +16,7 @@ from typing import Any, Mapping
 # Third-party library imports
 # ----------------------------
 
-from lica.sqlalchemy.asyncio.dbase import engine, AsyncSession
-from lica.asyncio.photometer.builder import PhotometerBuilder
-from lica.asyncio.photometer import Model as PhotModel, Sensor, Role
+from lica.asyncio.photometer import Role
 
 # --------------
 # local imports

@@ -24,6 +24,7 @@ from typing import Any, Mapping, Sequence
 
 from pubsub import pub
 from lica.asyncio.photometer import Role
+from zptessdao.constants import CentralTendency
 
 # --------------
 # local imports
@@ -34,7 +35,7 @@ from .types import Event, RoundStatistics, SummaryStatistics
 from .ring import RingBuffer
 from .base import Controller as BaseController
 from ..  import load_config
-from ... import CentralTendency
+
 
 # ----------------
 # Module constants

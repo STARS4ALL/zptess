@@ -24,6 +24,9 @@ from lica.sqlalchemy import sqa_logging
 from lica.asyncio.cli import execute
 from lica.asyncio.photometer import Role, Message
 
+from zptessdao.constants import CentralTendency
+
+
 # --------------
 # local imports
 # -------------
@@ -31,9 +34,8 @@ from lica.asyncio.photometer import Role, Message
 from .. import __version__
 from .util import parser as prs
 from .util.misc import log_phot_info, update_zp
-from ..lib.controller.photometer import VolatileCalibrator, PersistentCalibrator, Event, RoundStatsType
-from ..lib.controller.batch import Controller as BatchController
-from ..lib import CentralTendency
+from ..controller.photometer import VolatileCalibrator, PersistentCalibrator, Event, RoundStatsType
+from ..controller.batch import Controller as BatchController
 
 # ----------------
 # Module constants

@@ -3,7 +3,7 @@ import statistics
 
 from typing import  Sequence, Tuple
 
-from ... import CentralTendency
+from zptessdao.constants import CentralTendency
 
 def mode(sequence: Sequence) -> float:
     try:

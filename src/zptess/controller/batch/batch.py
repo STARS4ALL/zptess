@@ -21,13 +21,13 @@ from typing import Tuple, Iterable
 
 from sqlalchemy import select, delete, func
 
-from lica.sqlalchemy.asyncio.dbase import AsyncSession
+from zptessdao.asyncio import Batch, SummaryView
 
 # --------------
 # local imports
 # -------------
 
-from ...dbase.model import Batch, SummaryView
+from ...dao import Session
 
 # -----------------------
 # Module global variables
@@ -65,7 +65,7 @@ def pack(base_dir: str, zip_file: str):
 
 class Controller:
     def __init__(self):
-        self.Session = AsyncSession
+        self.Session = Session
 
     async def open(self, comment: str | None) -> datetime:
         begin_tstamp = datetime.now(timezone.utc).replace(microsecond=0)
@@ -165,7 +165,7 @@ class Controller:
 
     async def _is_open(
         self,
-        session: AsyncSession,
+        session: Session,
     ) -> bool:
         q = select(func.count("*")).select_from(Batch).where(Batch.end_tstamp.is_(None))
         count = (await session.scalars(q)).one()
@@ -173,7 +173,7 @@ class Controller:
 
     async def _get_open(
         self,
-        session: AsyncSession,
+        session: Session,
     ) -> Batch | None:
         q = select(Batch).where(Batch.end_tstamp.is_(None))
         batch = (await session.scalars(q)).one_or_none()
@@ -181,7 +181,7 @@ class Controller:
 
     async def _latest(
         self,
-        session: AsyncSession,
+        session: Session,
         load_summaries: bool,
     ) -> Batch | None:
         sub_q = select(func.max(Batch.begin_tstamp))
@@ -195,7 +195,7 @@ class Controller:
 
     async def _by_date(
         self,
-        session: AsyncSession,
+        session: Session,
         tstamp: datetime,
         load_summaries: bool,
     ) -> Batch | None:
@@ -209,7 +209,7 @@ class Controller:
 
     async def _assert_closed(
         self,
-        session: AsyncSession,
+        session: Session,
     ) -> None:
         already_open = await self._is_open(session)
         if already_open:
@@ -217,7 +217,7 @@ class Controller:
 
     async def _assert_open(
         self,
-        session: AsyncSession,
+        session: Session,
     ) -> None:
         already_open = await self._is_open(session)
         if not already_open:

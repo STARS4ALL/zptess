@@ -37,16 +37,19 @@ async def log_phot_info(controller: Controller, role: Role) -> None:
 async def log_messages(controller: Controller, role: Role, num: int | None = None) -> None:
     log = logging.getLogger(role.tag())
     name = controller.phot_info[role]["name"]
+    zp = controller.phot_info[role]["zp"]
     # Although in this case, it doesn't matter, in general
     # async generatores may not close as expected,
     # hence the use of closing() context manager
     async with contextlib.aclosing(controller.receive(role, num)) as gen:
         async for role, msg in gen:
             log.info(
-                "%-9s [%d] f=%s Hz, tbox=%s, tsky=%s",
+                "%-9s [%d] f=%s Hz, mag=%s @ %s, tbox=%s, tsky=%s",
                 name,
                 msg.get("seq"),
                 msg["freq"],
+                msg["mag"],
+                zp,
                 msg["tamb"],
                 msg["tsky"],
             )
@@ -54,7 +57,7 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
 
 async def update_zp(controller: Controller, zero_point: float) -> None:
     log = logging.getLogger(Role.TEST.tag())
-    zero_point = round(zero_point,2)
+    zero_point = round(zero_point, 2)
     log.info("Updating ZP : %0.2f", zero_point)
     name = controller.phot_info[Role.TEST]["name"]
     try:

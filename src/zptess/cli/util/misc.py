@@ -27,7 +27,7 @@ from ...controller.photometer import Controller
 
 
 def mag(zp: float, freq_offset: float, freq: float):
-        return zp - 2.5 * math.log10(freq - freq_offset)
+        return float(zp) - 2.5 * math.log10(freq - freq_offset)
 
 async def log_phot_info(controller: Controller, role: Role) -> None:
     log = logging.getLogger(role.tag())

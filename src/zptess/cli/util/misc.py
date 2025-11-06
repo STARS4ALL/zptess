@@ -8,6 +8,7 @@
 # System wide imports
 # -------------------
 
+import math
 import logging
 import asyncio
 import contextlib
@@ -25,6 +26,9 @@ from lica.asyncio.photometer import Role
 from ...controller.photometer import Controller
 
 
+def mag(zp: float, freq_offset: float, freq: float):
+        return zp - 2.5 * math.log10(freq - freq_offset)
+
 async def log_phot_info(controller: Controller, role: Role) -> None:
     log = logging.getLogger(role.tag())
     phot_info = await controller.info(role)
@@ -38,6 +42,7 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
     log = logging.getLogger(role.tag())
     name = controller.phot_info[role]["name"]
     zp = controller.phot_info[role]["zp"]
+    fo = controller.phot_info[role]["freq_offset"]
     # Although in this case, it doesn't matter, in general
     # async generatores may not close as expected,
     # hence the use of closing() context manager
@@ -48,7 +53,7 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
                 name,
                 msg.get("seq"),
                 msg["freq"],
-                msg["mag"],
+                msg.get("mag", mag(zp, fo,msg["freq"])),
                 zp,
                 msg["tamb"],
                 msg["tsky"],

@@ -17,3 +17,4 @@ src/zptess/_version.py
 *.bak
 *.log
 test*.py
+notebook/.ipynb_checkpoints/

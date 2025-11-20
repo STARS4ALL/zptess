@@ -246,6 +246,13 @@ restore drive=def_drive: (check_mnt drive)
     cp ${bak_dir}/zpdbase.log  .
     cp ${bak_dir}/justfile .
 
+# -------------------------
+# Jupyter Notebook analysis
+# -------------------------
+
+notebook:
+    uv run jupyter notebook &
+
 # =======================================================================
 
 [private]

@@ -30,6 +30,15 @@ dependencies = [
    "aiohttp >= 3.11",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "mypy>=1.15.0",
+]
+analysis = ["notebook","matplotlib","astropy"]
+
+
 [project.urls]
 Homepage = "https://github.com/astrorafael/textual-zptess"
 Repository = "https://github.com/astrorafael/textual-zptess.git"

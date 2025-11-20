@@ -202,6 +202,12 @@ summary:
 export:
     #!/usr/bin/env bash
     set -euxo pipefail
+    uv run zp-batch --console --log-file zptool.log --trace export --latest
+
+# Export latest batch and send email
+export-email:
+    #!/usr/bin/env bash
+    set -euxo pipefail
     uv run zp-batch --console --log-file zptool.log --trace export --latest --email
 
 # See orphan calibrations not within a batch
@@ -251,7 +257,7 @@ restore drive=def_drive: (check_mnt drive)
 # -------------------------
 
 notebook:
-    uv run jupyter notebook &
+    uv run jupyter notebook
 
 # =======================================================================
 

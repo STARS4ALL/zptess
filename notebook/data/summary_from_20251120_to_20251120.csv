@@ -1,0 +1,2 @@
+Model;Name;MAC;Firmware;Sensor;Calibration Date (UTC);Calibration;Cal. SW. Version;Ref. Mag.;Ref. Freq.;Test Mag.;test freq.;Ref-Test Mag. Diff.;Raw ZP;ZP Offset;Final ZP;Prev. ZP;Filter;Plug;Box;Collector;Author;Comment
+TESS-W;stars237;5C:CF:7F:76:69:E3;;TSL237;2025-11-20 11:41:48;AUTO;6.1.4;20.99;0.636;0.58;21.09;-0.1;20.29;0.05;20.34;20.38;UV/IR-740;USB-A;;standard;Rafael González;

@@ -36,7 +36,7 @@ dev = [
     "pytest-asyncio>=1.1.0",
     "mypy>=1.15.0",
 ]
-analysis = ["notebook","matplotlib","astropy"]
+analysis = ["notebook","matplotlib","polars"]
 
 
 [project.urls]

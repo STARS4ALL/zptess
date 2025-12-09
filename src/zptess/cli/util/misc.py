@@ -49,9 +49,10 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
     async with contextlib.aclosing(controller.receive(role, num)) as gen:
         async for role, msg in gen:
             log.info(
-                "%-9s [%d] f=%s Hz, mag=%0.2f @ %s, tbox=%s, tsky=%s",
+                "%-9s [%d] T=%s, f=%s Hz, mag=%0.2f @ %s, tbox=%s, tsky=%s",
                 name,
                 msg.get("seq"),
+                msg.get("tstamp"),
                 msg["freq"],
                 msg.get("mag", mag(zp, fo,msg["freq"])),
                 zp,

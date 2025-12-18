@@ -78,7 +78,7 @@ class Controller(VolatileCalibrator):
 
     async def init(self) -> None:
         await super().init()
-        async with self.Session() as session:
+        async with Session() as session:
             self.batch = await get_open_batch(session)
         self.db_task = asyncio.create_task(self.db_writer_task())
 
@@ -97,7 +97,7 @@ class Controller(VolatileCalibrator):
             updated = False
         else:
             updated = True
-        async with self.Session() as session:
+        async with Session() as session:
             async with session.begin():
                 q = select(Summary).where(Summary.session == self.meas_session)
                 db_summaries = (await session.scalars(q)).all()
@@ -109,7 +109,7 @@ class Controller(VolatileCalibrator):
 
     async def not_updated(self, zero_point: float, msg: str):
         """What to do when the Zero Point is not updated by the client code"""
-        async with self.Session() as session:
+        async with Session() as session:
             async with session.begin():
                 q = select(Summary).where(Summary.session == self.meas_session)
                 db_summaries = (await session.scalars(q)).all()
@@ -287,7 +287,7 @@ class Controller(VolatileCalibrator):
         return db_samples
 
     async def _save_all(self):
-        async with self.Session() as session:
+        async with Session() as session:
             async with session.begin():
                 db_photometers = await self._save_photometers(session)
                 log.info("Saving %d photometer entries", len(db_photometers))

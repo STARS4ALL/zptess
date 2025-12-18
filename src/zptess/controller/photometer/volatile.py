@@ -36,6 +36,7 @@ from .types import Event, RoundStatistics, SummaryStatistics
 from .ring import RingBuffer
 from .base import Controller as BaseController
 from .. import load_config
+from ...dao import Session
 
 
 # ----------------
@@ -91,7 +92,7 @@ class Controller(BaseController):
     async def init(self) -> None:
         await super().init()
         self.meas_session = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
-        async with self.Session() as session:
+        async with Session() as session:
             val_db = await load_config(session, SECTION[Role.TEST], "samples")
             val_arg = self.common_param["buffer"]
             self.capacity = val_arg if val_arg is not None else int(val_db)

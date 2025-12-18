@@ -65,11 +65,11 @@ def pack(base_dir: str, zip_file: str):
 
 class Controller:
     def __init__(self):
-        self.Session = Session
+        pass
 
     async def open(self, comment: str | None) -> datetime:
         begin_tstamp = datetime.now(timezone.utc).replace(microsecond=0)
-        async with self.Session() as session:
+        async with Session() as session:
             async with session.begin():
                 await self._assert_closed(session)
                 batch = Batch(
@@ -79,26 +79,26 @@ class Controller:
         return begin_tstamp
 
     async def is_open(self) -> bool:
-        async with self.Session() as session:
+        async with Session() as session:
             return await self._is_open(session)
 
     async def get_open(self) -> Batch:
         """Used by the persistent controller"""
-        async with self.Session() as session:
+        async with Session() as session:
             return await self._get_open(session)
 
     async def latest(self, load_summaries: bool = False) -> Batch | None:
         """Used by the persistent controller"""
-        async with self.Session() as session:
+        async with Session() as session:
             return await self._latest(session, load_summaries)
 
     async def by_date(self, tstamp: datetime, load_summaries: bool = False) -> Batch | None:
-        async with self.Session() as session:
+        async with Session() as session:
             return await self._by_date(session, tstamp)
 
     async def close(self) -> Tuple[datetime, datetime, int]:
         end_tstamp = datetime.now(timezone.utc).replace(microsecond=0)
-        async with self.Session() as session:
+        async with Session() as session:
             async with session.begin():
                 await self._assert_open(session)
                 batch = await self._get_open(session)
@@ -118,7 +118,7 @@ class Controller:
         return t0, t1, N
 
     async def purge(self) -> int:
-        async with self.Session() as session:
+        async with Session() as session:
             async with session.begin():
                 stmt = delete(Batch).where(Batch.calibrations == 0, Batch.end_tstamp.is_not(None))
                 result = await session.execute(stmt)
@@ -127,7 +127,7 @@ class Controller:
     async def orphan(self) -> set:
         in_batches = set()
         all_summaries = set()
-        async with self.Session() as session:
+        async with Session() as session:
             async with session.begin():
                 q = select(Batch.begin_tstamp, Batch.end_tstamp).where(
                     Batch.end_tstamp.is_not(None)
@@ -144,7 +144,7 @@ class Controller:
     async def view(
         self,
     ) -> Iterable[Tuple[datetime, datetime, bool, int, str]]:
-        async with self.Session() as session:
+        async with Session() as session:
             async with session.begin():
                 q = select(
                     Batch.begin_tstamp,

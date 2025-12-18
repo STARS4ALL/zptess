@@ -65,7 +65,6 @@ class Controller(ABC):
     ):
         self.param = {Role.REF: ref_params, Role.TEST: test_params}
         self.roles = list()
-        self.Session = Session
         self.photometer = dict()
         self.ring = dict()
         self.phot_info = dict()
@@ -89,7 +88,7 @@ class Controller(ABC):
             self.roles,
         )
         builder = PhotometerBuilder(engine)  # For the reference photometer using database info
-        async with self.Session() as session:
+        async with Session() as session:
             for role in self.roles:
                 val_db = await load_config(session, SECTION[role], "model")
                 val_arg = self.param[role]["model"]

@@ -8,10 +8,10 @@
 # System wide imports
 # -------------------
 
+import sys
 from abc import ABC, abstractmethod
 import logging
 import asyncio
-
 from typing import Mapping, Any, Dict, Tuple, AsyncIterator
 
 
@@ -20,14 +20,14 @@ from typing import Mapping, Any, Dict, Tuple, AsyncIterator
 # ----------------------------
 
 from lica.asyncio.photometer import Role, Message as PhotMessage, Model as PhotModel, Sensor
-from lica.asyncio.photometer.builder import PhotometerBuilder
 
 # --------------
 # local imports
 # -------------
 
-from ..  import load_config
+from .. import load_config
 from ...dao import engine, Session
+from .builder import PhotometerBuilder
 
 # ----------------
 # Module constants
@@ -115,9 +115,6 @@ class Controller(ABC):
         except asyncio.exceptions.TimeoutError:
             log.error("Failed contacting %s photometer", role.tag())
             raise
-        except Exception as e:
-            log.error(e)
-            raise
         else:
             phot_info["endpoint"] = role.endpoint()
             phot_info["sensor"] = phot_info["sensor"] or self.param[role]["sensor"].value
@@ -126,18 +123,18 @@ class Controller(ABC):
             self.phot_info[role] = phot_info
             return phot_info
 
-    async def receive(
+    async def readings(
         self, role: Role, num_messages: int | None = None
     ) -> AsyncIterator[Tuple[Role, PhotMessage]]:
         """An asynchronous generator, to be used by clients with async for"""
-        if num_messages is None:
-            while True:
-                msg = await self.photometer[role].queue.get()
-                yield role, msg
-        else:
-            for i in range(num_messages):
-                msg = await self.photometer[role].queue.get()
-                yield role, msg
+        num_messages = num_messages or sys.maxsize
+        i = 0
+        async with self.photometer[role]:
+            while i < num_messages:
+                reading = await anext(self.photometer[role].readings)
+                if reading is not None:
+                    i += 1
+                    yield role, reading
 
     async def write_zp(self, zero_point: float) -> float:
         """May raise asyncio.exceptions.TimeoutError in particular"""
@@ -149,38 +146,3 @@ class Controller(ABC):
     async def calibrate(self) -> float:
         """Calibrate the test photometer against the refrence photometer returnoing a Zero Point"""
         pass
-
-    # ===========
-    # Private API
-    # ===========
-
-    # ----------------------------------
-    # Coroutines to be turned into Tasks
-    # ----------------------------------
-
-    async def _phot_receive_task(self, role):
-        """The background, long live photometer reading tasks that feed the queue"""
-        log = logging.getLogger(role.tag())
-        try:
-            await self.photometer[role].readings()  # Endless loop inside
-        except asyncio.CancelledError:
-            pass
-        except Exception as e:
-            log.error("%s: %s", e.__class__.__name__, e)
-        else:
-            pass
-
-    # ----------------------
-    # Private helper methods
-    # ----------------------
-
-    async def _launch_phot_tasks(self):
-        for role in self.roles:
-            self.phot_task[role] = asyncio.create_task(
-                self._phot_receive_task(role), name=f"PHOT {role.tag()} TASK"
-            )
-            await asyncio.sleep(0)  # wait for it to be scheduled
-            if self.phot_task[role].done():
-                raise RuntimeError(
-                    f"Background task {self.phot_task[role].get_name()} is not running"
-                )

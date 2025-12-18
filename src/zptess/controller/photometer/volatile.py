@@ -13,9 +13,10 @@ import datetime
 import logging
 import asyncio
 import statistics
-from collections import defaultdict
 
+from collections import defaultdict
 from typing import Any, Mapping, Sequence
+
 
 # ---------------------------
 # Third-party library imports
@@ -34,7 +35,7 @@ from .util import best
 from .types import Event, RoundStatistics, SummaryStatistics
 from .ring import RingBuffer
 from .base import Controller as BaseController
-from ..  import load_config
+from .. import load_config
 
 
 # ----------------
@@ -118,7 +119,6 @@ class Controller(BaseController):
         self.update = self.common_param["update"]
         for role in self.roles:
             self.ring[role] = RingBuffer(capacity=self.capacity, central=self.central)
-        await self._launch_phot_tasks()
 
     async def calibrate(self) -> float:
         """
@@ -154,16 +154,22 @@ class Controller(BaseController):
     # Private API
     # ===========
 
-    async def _producer_task(self, role: Role) -> None:
-        while not self.is_calibrated:
-            msg = await self.photometer[role].queue.get()
-            self.ring[role].append(msg)
-
     async def _fill_buffer_task(self, role: Role) -> None:
-        while len(self.ring[role]) < self.capacity:
-            msg = await self.photometer[role].queue.get()
-            self.ring[role].append(msg)
-            pub.sendMessage(Event.READING, role=role, reading=msg)
+        """Finite task to fill the ring buffer"""
+        async with self.photometer[role]:
+            while len(self.ring[role]) < self.capacity:
+                msg = await anext(self.photometer[role].readings)
+                if msg is not None:
+                    self.ring[role].append(msg)
+                    pub.sendMessage(Event.READING, role=role, reading=msg)
+
+    async def _producer_task(self, role: Role) -> None:
+        """This task continues to re-fill the buffer when statistics are being computed"""
+        async with self.photometer[role]:
+            while not self.is_calibrated:
+                msg = await anext(self.photometer[role].readings)
+                if msg is not None:
+                    self.ring[role].append(msg)
 
     def _magnitude(self, role: Role, freq: float, freq_offset):
         return self.zp_fict - 2.5 * math.log10(freq - freq_offset)

@@ -46,8 +46,8 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
     # Although in this case, it doesn't matter, in general
     # async generatores may not close as expected,
     # hence the use of closing() context manager
-    async with contextlib.aclosing(controller.receive(role, num)) as gen:
-        async for role, msg in gen:
+    async with contextlib.aclosing(controller.readings(role, num)) as generator:
+        async for role, msg in generator:
             log.info(
                 "%-9s [%d] T=%s, f=%s Hz, mag=%0.2f @ %s, tbox=%s, tsky=%s",
                 name,

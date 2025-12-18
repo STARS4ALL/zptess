@@ -44,6 +44,7 @@ log = logging.getLogger(__name__.split(".")[-1])
 # This meant for easy sample de-duplication
 # which are usually shared between rounds
 
+
 class UniqueReading(dict):
     """A hashable, subclaased dictionary based on the "tstamp" keyword and value"""
 
@@ -65,7 +66,6 @@ class UniqueReading(dict):
     def update(self, *args, **kwargs):
         for k, v in dict(*args, **kwargs).items():
             self[k] = v
-
 
 
 class RingBuffer:
@@ -102,7 +102,7 @@ class RingBuffer:
         return set(UniqueReading(item) for item in self._buffer)
 
     def intervals(self) -> Tuple[datetime, datetime]:
-            return self._buffer[0]["tstamp"], self._buffer[-1]["tstamp"]
+        return self._buffer[0]["tstamp"], self._buffer[-1]["tstamp"]
 
     def statistics(self) -> Tuple[float, float]:
         frequencies = tuple(item["freq"] for item in self._buffer)

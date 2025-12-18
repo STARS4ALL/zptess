@@ -70,4 +70,3 @@ class Controller(BaseController):
         await super().init()
         for role in self.roles:
             self.ring[role] = RingBuffer(capacity=1)
-        await self._launch_phot_tasks()

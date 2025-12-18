@@ -26,8 +26,17 @@ dependencies = [
   #'asyncstdlib', # async counterparts such as aenumerate()
   # synchronous style publish/subscribe mechanism
   "pypubsub >= 4.0",
-  "lica[photometer,tabular]>=1.2",
-   "aiohttp >= 3.11",
+  "lica[photometer,tabular]>=3.0",
+  "aiohttp >= 3.11",
+  "pyserial-asyncio >= 0.6",
+]
+
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "mypy>=1.15.0",
 ]
 
 [project.urls]
@@ -66,9 +75,3 @@ script-files = [
 
 [tool.ruff]
 line-length = 100
-
-[tool.uv]
-dev-dependencies = [
-    "pytest>=8.3.3",
-    "mypy>=1.15.0",
-]

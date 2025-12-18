@@ -79,7 +79,7 @@ class Controller(VolatileCalibrator):
     async def init(self) -> None:
         await super().init()
         async with self.Session() as session:
-            self.batch = await get_open_batch(session) 
+            self.batch = await get_open_batch(session)
         self.db_task = asyncio.create_task(self.db_writer_task())
 
     async def calibrate(self) -> float:
@@ -89,9 +89,11 @@ class Controller(VolatileCalibrator):
 
     async def write_zp(self, zero_point: float) -> float:
         """May raise asyncio.exceptions.TimeoutError in particular"""
+        stored_zero_point = None
         try:
             stored_zero_point = await super().write_zp(zero_point)
-        except Exception:
+        except Exception as e:
+            log.error(e)
             updated = False
         else:
             updated = True
@@ -212,7 +214,7 @@ class Controller(VolatileCalibrator):
                 mag=self.temp_summary["best_mag"][role],
                 nrounds=self.nrounds,
                 photometer=phot,  # This is really a many to one relationship
-                batch=self.batch  # Optional many-to-one relationships (NULLS are allowed)
+                batch=self.batch,  # Optional many-to-one relationships (NULLS are allowed)
             )
             session.add(db_summary[role])
         return db_summary

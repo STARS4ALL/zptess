@@ -60,7 +60,7 @@ async def cli_update_zp(args: Namespace) -> None:
         "sensor": args.test_sensor,
         "endpoint": args.test_endpoint,
         "old_proto": args.test_old_proto,
-        "log_level": logging.INFO if args.test_raw_message else logging.WARN,
+        "log_level": logging.DEBUG if args.test_raw_message else logging.INFO,
     }
     controller = Writer(
         test_params=test_params,

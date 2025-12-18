@@ -179,14 +179,14 @@ async def cli_calib_test(args: Namespace) -> None:
         "sensor": args.ref_sensor,
         "endpoint": args.ref_endpoint,
         "old_proto": args.ref_old_proto,
-        "log_level": logging.INFO if args.ref_raw_message else logging.WARN,
+        "log_level": logging.DEBUG if args.ref_raw_message else logging.INFO,
     }
     test_params = {
         "model": args.test_model,
         "sensor": args.test_sensor,
         "endpoint": args.test_endpoint,
         "old_proto": args.test_old_proto,
-        "log_level": logging.INFO if args.test_raw_message else logging.WARN,
+        "log_level": logging.DEBUG if args.test_raw_message else logging.INFO,
     }
     common_params = {
         "buffer": args.buffer,

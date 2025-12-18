@@ -64,16 +64,15 @@ async def cli_read_ref(args: Namespace) -> None:
         "sensor": args.ref_sensor,
         "endpoint": args.ref_endpoint,
         "old_proto": args.ref_old_proto,
-        "log_level": logging.INFO if args.ref_raw_message else logging.WARN,
+        "log_level": logging.DEBUG if args.ref_raw_message else logging.INFO,
     }
     controller = Reader(
         ref_params=ref_params,
     )
     await controller.init()
     await log_phot_info(controller, Role.REF)
-    if args.info:
-        return
-    await log_messages(controller, Role.REF, args.num_messages)
+    if not args.info:
+        await log_messages(controller, Role.REF, args.num_messages)
 
 
 async def cli_read_test(args: Namespace) -> None:
@@ -83,16 +82,15 @@ async def cli_read_test(args: Namespace) -> None:
         "sensor": args.test_sensor,
         "endpoint": args.test_endpoint,
         "old_proto": args.test_old_proto,
-        "log_level": logging.INFO if args.test_raw_message else logging.WARN,
+        "log_level": logging.DEBUG if args.test_raw_message else logging.INFO,
     }
     controller = Reader(
         test_params=test_params,
     )
     await controller.init()
     await log_phot_info(controller, Role.TEST)
-    if args.info:
-        return
-    await log_messages(controller, Role.TEST, args.num_messages)
+    if not args.info:
+        await log_messages(controller, Role.TEST, args.num_messages)
 
 
 async def cli_read_both(args: Namespace) -> None:
@@ -102,14 +100,14 @@ async def cli_read_both(args: Namespace) -> None:
         "sensor": args.ref_sensor,
         "endpoint": args.ref_endpoint,
         "old_proto": args.ref_old_proto,
-        "log_level": logging.INFO if args.ref_raw_message else logging.WARN,
+        "log_level": logging.DEBUG if args.ref_raw_message else logging.INFO,
     }
     test_params = {
         "model": args.test_model,
         "sensor": args.test_sensor,
         "endpoint": args.test_endpoint,
         "old_proto": args.test_old_proto,
-        "log_level": logging.INFO if args.test_raw_message else logging.WARN,
+        "log_level": logging.DEBUG if args.test_raw_message else logging.INFO,
     }
     controller = Reader(
         ref_params=ref_params,

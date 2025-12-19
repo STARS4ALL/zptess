@@ -941,13 +941,11 @@ wheels = [
 
 [[package]]
 name = "zptess"
-version = "6.1.6.dev4+g36acfa382.d20251219"
+version = "6.2.2.dev0+g141056d8e.d20251219"
 source = { editable = "." }
 dependencies = [
-    { name = "aiohttp" },
     { name = "lica", extra = ["photometer", "tabular"] },
     { name = "pypubsub" },
-    { name = "pyserial-asyncio" },
     { name = "python-decouple" },
     { name = "typing-extensions" },
     { name = "zptess-dao" },
@@ -962,10 +960,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp", specifier = ">=3.11" },
     { name = "lica", extras = ["photometer", "tabular"], specifier = ">=3.0" },
     { name = "pypubsub", specifier = ">=4.0" },
-    { name = "pyserial-asyncio", specifier = ">=0.6" },
     { name = "python-decouple", specifier = ">=3.8" },
     { name = "typing-extensions", specifier = ">=4.12" },
     { name = "zptess-dao", specifier = ">=1.0" },

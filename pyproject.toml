@@ -27,8 +27,6 @@ dependencies = [
   # synchronous style publish/subscribe mechanism
   "pypubsub >= 4.0",
   "lica[photometer,tabular]>=3.0",
-  "aiohttp >= 3.11",
-  "pyserial-asyncio >= 0.6",
 ]
 
 

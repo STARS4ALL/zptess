@@ -27,6 +27,7 @@ from .. import __version__
 from ..controller.photometer import Writer
 from .util.misc import log_phot_info, update_zp
 from .util import parser as prs
+from ..dao import engine
 
 # ----------------
 # Module constants
@@ -90,6 +91,7 @@ def add_args(parser: ArgumentParser):
 async def cli_main(args: Namespace) -> None:
     sqa_logging(args)
     await args.func(args)
+    await engine.dispose()
 
 
 def main():

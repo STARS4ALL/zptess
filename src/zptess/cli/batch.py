@@ -31,7 +31,7 @@ from .util import parser as prs
 
 from ..controller.batch import Controller as BatchController
 from ..controller.exporter import Controller as Exporter
-
+from ..dao import engine
 
 # ----------------
 # Module constants
@@ -193,6 +193,7 @@ def add_args(parser: ArgumentParser):
 async def cli_main(args: Namespace) -> None:
     sqa_logging(args)
     await args.func(args)
+    await engine.dispose()
 
 
 def main():

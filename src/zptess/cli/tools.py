@@ -28,7 +28,7 @@ from lica.tabulate import paging
 
 from .. import __version__
 from .util import parser as prs
-
+from ..dao import engine
 from ..controller.exporter import Controller as Exporter
 
 
@@ -89,6 +89,7 @@ def add_args(parser: ArgumentParser):
 async def cli_main(args: Namespace) -> None:
     sqa_logging(args)
     await args.func(args)
+    await engine.dispose()
 
 
 def main():

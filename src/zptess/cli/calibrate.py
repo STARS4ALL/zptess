@@ -36,6 +36,7 @@ from .util import parser as prs
 from .util.misc import log_phot_info, update_zp
 from ..controller.photometer import VolatileCalibrator, PersistentCalibrator, Event, RoundStatsType
 from ..controller.batch import Controller as BatchController
+from ..dao import engine
 
 # ----------------
 # Module constants
@@ -275,6 +276,7 @@ def add_args(parser: ArgumentParser):
 async def cli_main(args: Namespace) -> None:
     sqa_logging(args)
     await args.func(args)
+    await engine.dispose()
 
 
 def main():

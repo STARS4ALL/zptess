@@ -189,20 +189,11 @@ class Controller:
     # Public API
     # ----------
 
+
     async def query_nsummaries(self) -> int:
         """Return the number of summaries from a time span, even if they are not updated"""
-        async with Session() as session:
-            async with session.begin():
-                t0 = self.begin_tstamp
-                t1 = self.end_tstamp
-                # We count summaries even if the upd_flag is False
-                q = (
-                    select(func.count("*"))
-                    .select_from(SummaryView)
-                    .where(SummaryView.session.between(t0, t1), SummaryView.upd_flag == True)  # noqa: E712
-                )
-                N = (await session.scalars(q)).one()
-        return N
+        summaries = await self.query_summaries()
+        return len(summaries)
 
     async def query_summaries(self) -> Sequence[Tuple[Any]]:
         async with Session() as session:

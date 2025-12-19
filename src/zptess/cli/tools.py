@@ -50,6 +50,19 @@ log = logging.getLogger(__name__.split(".")[-1])
 # Auxiliar function
 # -----------------
 
+
+def this_year(value: datetime | None) -> datetime:
+    """Date & time validator for the command line interface"""
+    return value or datetime.now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+
+
+def next_year(value: datetime | None) -> datetime:
+    """Date & time validator for the command line interface"""
+    return value or datetime.now().replace(month=12, day=31, hour=23, minute=59, second=59, microsecond=0)
+    
+
+
 # -----------------
 # CLI API functions
 # -----------------
@@ -80,14 +93,38 @@ async def cli_session_export(args: Namespace) -> None:
     return
 
 
+async def cli_session_count(args: Namespace) -> None:
+    args.since = args.since or this_year(args.since)
+    args.until = args.until or next_year(args.until)
+    exporter = Exporter(
+        base_dir=args.base_dir,
+        begin_tstamp=args.since,
+        end_tstamp=args.until,
+        filename_prefix="count",
+    )
+    N = await exporter.query_nsummaries()
+    log.info("%d calibrations made between %s and %s", N, args.since, args.until)
+    if args.detailed:
+        # Sort result by calibration date
+        summaries = sorted(await exporter.query_summaries(), key=lambda x: x[5]) # Sort by session (calibration date)
+        await asyncio.to_thread(exporter.export_summaries, summaries)
+    return
+
+
 def add_args(parser: ArgumentParser):
     subparser = parser.add_subparsers(dest="command", required=True)
     p = subparser.add_parser(
-        "export",
-        parents=[prs.sess()],
+        "single",
+        parents=[prs.sess(), prs.bdir()],
         help="Export a single calibration session to CSV files",
     )
     p.set_defaults(func=cli_session_export)
+    p = subparser.add_parser(
+        "count",
+        parents=[prs.trange(), prs.bdir(), prs.detailed()],
+        help="Count number of calibrations from a given time range",
+    )
+    p.set_defaults(func=cli_session_count)
 
 
 async def cli_main(args: Namespace) -> None:

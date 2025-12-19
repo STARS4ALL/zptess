@@ -28,6 +28,18 @@ from zptessdao.constants import CentralTendency
 from .validator import vendpoint
 
 
+def bdir() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-b",
+        "--base-dir",
+        type=vdir,
+        default=os.getcwd(),
+        metavar="<Dir>",
+        help="Base directory for CSV export (default %(default)s)",
+    )
+    return parser
+
 def idir() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -296,7 +308,6 @@ def sess() -> ArgumentParser:
         required=True,
         help="session identifier",
     )
-    parser.add_argument("-d", "--base-dir", type=vdir, default=".", help="Base dir for the export")
     return parser
 
 
@@ -365,5 +376,35 @@ def expor() -> ArgumentParser:
         "--updated",
         action="store_true",
         help="Do action only when ZP updated flag is True|False",
+    )
+    return parser
+
+def trange() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-s",
+        "--since",
+        type=vdate,
+        metavar="<YYYY-MM-DDTHH:MM:SS>",
+        default=None,
+        help="since date, defaults to beginning of current year",
+    )
+    parser.add_argument(
+        "-u",
+        "--until",
+        type=vdate,
+        metavar="<YYYY-MM-DDTHH:MM:SS>",
+        default=None,
+        help="until date, defaults to end of current year",
+    )
+    return parser
+
+def detailed() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-d",
+        "--detailed",
+        action="store_true",
+        help="Expor a CSV with a summary (only) for a given time span",
     )
     return parser

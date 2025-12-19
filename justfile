@@ -151,10 +151,25 @@ test-export-all  verbose="" trace="":
 # ======================================================================= 
 
 #export single calibration data
+count start="" end="":
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    since={{start}}
+    until={{end}}
+    if [ -n "$since" ]; then
+        since="--since $since"
+    fi
+    if [ -n "$until" ]; then
+        until="--until $until"
+    fi
+    uv run zp-tools --console --log-file zptool.log --trace count --detailed $since $until 
+
+
+#export single calibration data
 single date:
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-tools --console --log-file zptool.log --trace export --session {{date}}
+    uv run zp-tools --console --log-file zptool.log --trace single --session {{date}}
 
 # Open a new batch
 open:

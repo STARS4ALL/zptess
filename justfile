@@ -150,6 +150,12 @@ test-export-all  verbose="" trace="":
 # calibration-related task from there
 # ======================================================================= 
 
+#export single calibration data
+single date:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    uv run zp-tools --console --log-file zptool.log --trace export --session {{date}}
+
 # Open a new batch
 open:
     #!/usr/bin/env bash

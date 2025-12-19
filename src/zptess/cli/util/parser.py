@@ -286,6 +286,20 @@ def no_bat() -> ArgumentParser:
     return parser
 
 
+def sess() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-s",
+        "--session",
+        type=vdate,
+        metavar="<YYYY-MM-DDTHH:MM:SS>",
+        required=True,
+        help="session identifier",
+    )
+    parser.add_argument("-d", "--base-dir", type=vdir, default=".", help="Base dir for the export")
+    return parser
+
+
 # ------------------------------
 # These are for batch management
 # ------------------------------

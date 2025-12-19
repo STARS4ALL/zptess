@@ -50,7 +50,7 @@ zp-calib =  "zptess.cli.calibrate:main"
 zp-write =  "zptess.cli.writer:main"
 # Additional tools
 zp-batch = "zptess.cli.batch:main"
-
+zp-tools = "zptess.cli.tools:main"
 
 [build-system]
 requires = ["setuptools >= 78.1", "wheel", "setuptools_scm[toml]>=8.2"]

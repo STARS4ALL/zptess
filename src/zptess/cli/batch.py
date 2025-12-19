@@ -126,7 +126,7 @@ async def cli_batch_export(args: Namespace) -> None:
             await asyncio.to_thread(exporter.export_summaries, summaries)
             rounds = await exporter.query_rounds()
             await asyncio.to_thread(exporter.export_rounds, rounds)
-            samples = await exporter.query_rounds()
+            samples = await exporter.query_samples()
             await asyncio.to_thread(exporter.export_samples, samples)
             zip_file_path = await asyncio.to_thread(exporter.pack)
             if not args.email:

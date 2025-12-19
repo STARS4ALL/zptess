@@ -14,6 +14,7 @@ import glob
 import zipfile
 import logging
 import itertools
+import contextlib
 
 import ssl
 import smtplib
@@ -188,6 +189,21 @@ class Controller:
     # Public API
     # ----------
 
+    async def query_nsummaries(self) -> int:
+        """Return the number of summaries from a time span, even if they are not updated"""
+        async with Session() as session:
+            async with session.begin():
+                t0 = self.begin_tstamp
+                t1 = self.end_tstamp
+                # We count summaries even if the upd_flag is False
+                q = (
+                    select(func.count("*"))
+                    .select_from(SummaryView)
+                    .where(SummaryView.session.between(t0, t1), SummaryView.upd_flag == True)  # noqa: E712
+                )
+                N = (await session.scalars(q)).one()
+        return N
+
     async def query_summaries(self) -> Sequence[Tuple[Any]]:
         async with Session() as session:
             async with session.begin():
@@ -332,9 +348,10 @@ class Controller:
             os.path.join(os.path.basename(self.base_dir), fname)
             for fname in glob.glob("*.csv", root_dir=self.base_dir)
         ]
-        with zipfile.ZipFile(zip_file, "w") as myzip:
-            for myfile in file_paths:
-                myzip.write(myfile)
+        with contextlib.chdir(parent_dir):
+            with zipfile.ZipFile(zip_file, "w") as myzip:
+                for myfile in file_paths:
+                    myzip.write(myfile)
         return zip_file
 
     async def check_internet(self) -> bool:

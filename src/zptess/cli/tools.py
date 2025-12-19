@@ -65,14 +65,18 @@ async def cli_session_export(args: Namespace) -> None:
         end_tstamp=args.session,
         filename_prefix="session",
     )
-    summaries = await exporter.query_summaries()
-    await asyncio.to_thread(exporter.export_summaries, summaries)
-    rounds = await exporter.query_rounds()
-    await asyncio.to_thread(exporter.export_rounds, rounds)
-    samples = await exporter.query_rounds()
-    await asyncio.to_thread(exporter.export_samples, samples)
-    zip_file_path = await asyncio.to_thread(exporter.pack)
-    log.info("zipped file in  %s", zip_file_path)
+    N = await exporter.query_nsummaries()
+    if N > 0:
+        summaries = await exporter.query_summaries()
+        await asyncio.to_thread(exporter.export_summaries, summaries)
+        rounds = await exporter.query_rounds()
+        await asyncio.to_thread(exporter.export_rounds, rounds)
+        samples = await exporter.query_samples()
+        await asyncio.to_thread(exporter.export_samples, samples)
+        zip_file_path = await asyncio.to_thread(exporter.pack)
+        log.info("zipped file in  %s", zip_file_path)
+    else:
+        log.warn("No calibration session found for %s", args.session)
     return
 
 

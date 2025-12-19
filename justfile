@@ -150,7 +150,7 @@ test-export-all  verbose="" trace="":
 # calibration-related task from there
 # ======================================================================= 
 
-#export single calibration data
+#export how many calibrations have been made in a period, regardless of batches
 count start="" end="":
     #!/usr/bin/env bash
     set -euxo pipefail
@@ -162,7 +162,7 @@ count start="" end="":
     if [ -n "$until" ]; then
         until="--until $until"
     fi
-    uv run zp-tools --console --log-file zptool.log --trace count --detailed $since $until 
+    uv run zp-tools --console --log-file zptool.log --trace count --detailed --mode AUTO $since $until 
 
 
 #export single calibration data

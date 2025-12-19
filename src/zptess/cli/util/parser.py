@@ -18,7 +18,7 @@ from argparse import ArgumentParser
 
 from lica.validators import vdir, vdate
 from lica.asyncio.photometer import Model as PhotModel, Sensor
-from zptessdao.constants import CentralTendency
+from zptessdao.constants import CentralTendency, Calibration
 
 
 # --------------
@@ -406,5 +406,17 @@ def detailed() -> ArgumentParser:
         "--detailed",
         action="store_true",
         help="Expor a CSV with a summary (only) for a given time span",
+    )
+    return parser
+
+def mode() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "-m",
+        "--mode",
+        type=Calibration,
+        default=None,
+        choices=Calibration,
+        help="Calibration mode, defaults to %(default)s",
     )
     return parser

@@ -37,6 +37,7 @@ from sqlalchemy import select, func, cast, Integer
 
 
 from zptessdao.asyncio import SummaryView, RoundsView, SampleView, Config, Batch
+from zptessdao.constants import Calibration
 
 # --------------
 # local imports
@@ -190,12 +191,12 @@ class Controller:
     # ----------
 
 
-    async def query_nsummaries(self) -> int:
+    async def query_nsummaries(self, mode: Calibration = None) -> int:
         """Return the number of summaries from a time span, even if they are not updated"""
-        summaries = await self.query_summaries()
+        summaries = await self.query_summaries(mode)
         return len(summaries)
 
-    async def query_summaries(self) -> Sequence[Tuple[Any]]:
+    async def query_summaries(self, mode: Calibration = None) -> Sequence[Tuple[Any]]:
         async with Session() as session:
             async with session.begin():
                 t0 = self.begin_tstamp
@@ -225,6 +226,8 @@ class Controller:
                     SummaryView.author,
                     SummaryView.comment,
                 )
+                if mode is not None:
+                    q = q.where(SummaryView.calibration == mode)
                 if t0 is not None:
                     q = q.where(
                         SummaryView.session.between(t0, t1),

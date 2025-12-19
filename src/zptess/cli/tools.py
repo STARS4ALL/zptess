@@ -102,11 +102,11 @@ async def cli_session_count(args: Namespace) -> None:
         end_tstamp=args.until,
         filename_prefix="count",
     )
-    N = await exporter.query_nsummaries()
+    N = await exporter.query_nsummaries(mode=args.mode)
     log.info("%d calibrations made between %s and %s", N, args.since, args.until)
     if args.detailed:
         # Sort result by calibration date
-        summaries = sorted(await exporter.query_summaries(), key=lambda x: x[5]) # Sort by session (calibration date)
+        summaries = sorted(await exporter.query_summaries(args.mode), key=lambda x: x[5]) # Sort by session (calibration date)
         await asyncio.to_thread(exporter.export_summaries, summaries)
     return
 
@@ -121,7 +121,7 @@ def add_args(parser: ArgumentParser):
     p.set_defaults(func=cli_session_export)
     p = subparser.add_parser(
         "count",
-        parents=[prs.trange(), prs.bdir(), prs.detailed()],
+        parents=[prs.trange(), prs.bdir(), prs.mode(), prs.detailed()],
         help="Count number of calibrations from a given time range",
     )
     p.set_defaults(func=cli_session_count)

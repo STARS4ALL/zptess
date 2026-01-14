@@ -40,6 +40,7 @@ def bdir() -> ArgumentParser:
     )
     return parser
 
+
 def idir() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -192,6 +193,13 @@ def ref() -> ArgumentParser:
         default=False,
         help="Log raw messages, defaults to %(default)s",
     )
+    parser.add_argument(
+        "-rT",
+        "--ref-strict",
+        action="store_true",
+        default=False,
+        help="Strict samples rejection by timestamp difference, defaults to %(default)s",
+    )
     return parser
 
 
@@ -235,6 +243,13 @@ def test() -> ArgumentParser:
         action="store_true",
         default=False,
         help="Log raw messages, defaults to %(default)s",
+    )
+    parser.add_argument(
+        "-tT",
+        "--test-strict",
+        action="store_true",
+        default=False,
+        help="Strict samples rejection by timestamp difference, defaults to %(default)s",
     )
     return parser
 
@@ -379,6 +394,7 @@ def expor() -> ArgumentParser:
     )
     return parser
 
+
 def trange() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -399,15 +415,17 @@ def trange() -> ArgumentParser:
     )
     return parser
 
+
 def detailed() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         "-d",
         "--detailed",
         action="store_true",
-        help="Expor a CSV with a summary (only) for a given time span",
+        help="Export a CSV with a summary (only) for a given time span",
     )
     return parser
+
 
 def mode() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)

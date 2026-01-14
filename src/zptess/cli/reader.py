@@ -66,6 +66,7 @@ async def cli_read_ref(args: Namespace) -> None:
         "endpoint": args.ref_endpoint,
         "old_proto": args.ref_old_proto,
         "log_level": logging.DEBUG if args.ref_raw_message else logging.INFO,
+        "strict": args.ref_strict,
     }
     controller = Reader(
         ref_params=ref_params,
@@ -84,6 +85,7 @@ async def cli_read_test(args: Namespace) -> None:
         "endpoint": args.test_endpoint,
         "old_proto": args.test_old_proto,
         "log_level": logging.DEBUG if args.test_raw_message else logging.INFO,
+        "strict": args.test_strict,
     }
     controller = Reader(
         test_params=test_params,
@@ -102,6 +104,7 @@ async def cli_read_both(args: Namespace) -> None:
         "endpoint": args.ref_endpoint,
         "old_proto": args.ref_old_proto,
         "log_level": logging.DEBUG if args.ref_raw_message else logging.INFO,
+        "strict": args.ref_strict,
     }
     test_params = {
         "model": args.test_model,
@@ -109,6 +112,7 @@ async def cli_read_both(args: Namespace) -> None:
         "endpoint": args.test_endpoint,
         "old_proto": args.test_old_proto,
         "log_level": logging.DEBUG if args.test_raw_message else logging.INFO,
+        "strict": args.test_strict,
     }
     controller = Reader(
         ref_params=ref_params,

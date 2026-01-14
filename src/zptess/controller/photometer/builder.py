@@ -25,7 +25,9 @@ class PhotometerBuilder:
     def __init__(self, engine=None):
         self._engine = engine
 
-    def build(self, model: Model, role: Role, endpoint: str | None = None) -> Photometer:
+    def build(
+        self, model: Model, role: Role, endpoint: str | None = None, strict: bool = False
+    ) -> Photometer:
         url = role.endpoint() if endpoint is None else endpoint
         transport, name, number = chop(url, sep=":")
         number = int(number) if number else 80
@@ -37,7 +39,7 @@ class PhotometerBuilder:
             assert self._engine is not None, "Database engine is needed for the REF photometer"
             info_obj = DBaseInfo(logger=photometer.log, engine=self._engine)
             transport_obj = SerialProtocol(logger=photometer.log, port=name, baudrate=number)
-            decoder_obj = OldPayload(logger=photometer.log)
+            decoder_obj = OldPayload(logger=photometer.log, strict=strict)
         else:
             if transport == "serial":
                 # Although we are able to get readings from serial port,
@@ -50,12 +52,12 @@ class PhotometerBuilder:
                 assert model is Model.TESSW, "Test photometer using TCP should be a TESS-W model"
                 info_obj = HTMLInfo(logger=photometer.log, addr=name)
                 transport_obj = TcpProtocol(logger=photometer.log, host=name, port=number)
-                decoder_obj = OldPayload(log=photometer.log)
+                decoder_obj = OldPayload(log=photometer.log, strict=strict)
             elif transport == "udp":
                 assert model is Model.TESSW, "Test photometer using UDP should be a TESS-W model"
                 info_obj = HTMLInfo(logger=photometer.log, addr=name)
                 transport_obj = UdpProtocol(logger=photometer.log, local_port=number)
-                decoder_obj = JsonPayload(logger=photometer.log)
+                decoder_obj = JsonPayload(logger=photometer.log, strict=strict)
             else:
                 raise ValueError(f"Transport {transport} not known")
         photometer.attach(transport_obj, info_obj, decoder_obj)

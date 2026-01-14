@@ -181,6 +181,7 @@ async def cli_calib_test(args: Namespace) -> None:
         "endpoint": args.ref_endpoint,
         "old_proto": args.ref_old_proto,
         "log_level": logging.DEBUG if args.ref_raw_message else logging.INFO,
+        "strict": args.ref_strict,
     }
     test_params = {
         "model": args.test_model,
@@ -188,6 +189,7 @@ async def cli_calib_test(args: Namespace) -> None:
         "endpoint": args.test_endpoint,
         "old_proto": args.test_old_proto,
         "log_level": logging.DEBUG if args.test_raw_message else logging.INFO,
+        "strict": args.test_strict,
     }
     common_params = {
         "buffer": args.buffer,
@@ -222,7 +224,6 @@ async def cli_calib_test(args: Namespace) -> None:
     pub.subscribe(on_round, Event.ROUND)
     pub.subscribe(on_summary, Event.SUMMARY)
 
-    
     await controller.init()
     try:
         async with asyncio.TaskGroup() as tg:
@@ -239,13 +240,12 @@ async def cli_calib_test(args: Namespace) -> None:
         log.info("Only displaying info. Stopping here.")
         return
     final_zero_point = await controller.calibrate()
-    if args.update:    
+    if args.update:
         await update_zp(controller, final_zero_point)
     else:
         msg = f"Zero Point {final_zero_point:.2f} not saved to {Role.TEST} {controller.phot_info[Role.TEST]['name']}"
         log.info(msg)
         await controller.not_updated(final_zero_point, msg)
-    
 
 
 # -----------------

@@ -87,7 +87,8 @@ class Controller(ABC):
             self.__class__.__name__,
             self.roles,
         )
-        builder = PhotometerBuilder(engine)  # For the reference photometer using database info
+        # Use engine parameter for the reference photometer when using database info
+        builder = PhotometerBuilder(engine)
         async with Session() as session:
             for role in self.roles:
                 val_db = await load_config(session, SECTION[role], "model")
@@ -103,7 +104,10 @@ class Controller(ABC):
                 val_arg = self.param[role]["endpoint"]
                 self.param[role]["endpoint"] = val_arg if val_arg is not None else val_db
                 self.photometer[role] = builder.build(
-                    self.param[role]["model"], role, self.param[role]["endpoint"]
+                    self.param[role]["model"],
+                    role,
+                    self.param[role]["endpoint"],
+                    self.param[role]["strict"],
                 )
                 logging.getLogger(str(role)).setLevel(self.param[role]["log_level"])
 

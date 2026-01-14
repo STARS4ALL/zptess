@@ -8,7 +8,6 @@
 # System wide imports
 # -------------------
 
-import os
 import asyncio
 import logging
 from datetime import datetime
@@ -20,7 +19,6 @@ from argparse import Namespace, ArgumentParser
 
 from lica.sqlalchemy import sqa_logging
 from lica.asyncio.cli import execute
-from lica.tabulate import paging
 
 # --------------
 # local imports
@@ -53,14 +51,16 @@ log = logging.getLogger(__name__.split(".")[-1])
 
 def this_year(value: datetime | None) -> datetime:
     """Date & time validator for the command line interface"""
-    return value or datetime.now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-    
+    return value or datetime.now().replace(
+        month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+    )
 
 
 def next_year(value: datetime | None) -> datetime:
     """Date & time validator for the command line interface"""
-    return value or datetime.now().replace(month=12, day=31, hour=23, minute=59, second=59, microsecond=0)
-    
+    return value or datetime.now().replace(
+        month=12, day=31, hour=23, minute=59, second=59, microsecond=0
+    )
 
 
 # -----------------
@@ -106,7 +106,9 @@ async def cli_session_count(args: Namespace) -> None:
     log.info("%d calibrations made between %s and %s", N, args.since, args.until)
     if args.detailed:
         # Sort result by calibration date
-        summaries = sorted(await exporter.query_summaries(args.mode), key=lambda x: x[5]) # Sort by session (calibration date)
+        summaries = sorted(
+            await exporter.query_summaries(args.mode), key=lambda x: x[5]
+        )  # Sort by session (calibration date)
         await asyncio.to_thread(exporter.export_summaries, summaries)
     return
 

@@ -27,7 +27,9 @@ from ...controller.photometer import Controller
 
 
 def mag(zp: float, freq_offset: float, freq: float):
-        return float(zp) - 2.5 * math.log10(freq - freq_offset)
+    """Single sample magnitude calculation that takes into account zero frequencies"""
+    f = freq - freq_offset
+    return (float(zp) - 2.5 * math.log10(f)) if f > 0.0 else math.inf
 
 async def log_phot_info(controller: Controller, role: Role) -> None:
     log = logging.getLogger(role.tag())
@@ -49,16 +51,17 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
     async with contextlib.aclosing(controller.readings(role, num)) as generator:
         async for role, msg in generator:
             log.info(
-                "%-9s [%d] T=%s, f=%s Hz, mag=%0.2f @ %s, tbox=%s, tsky=%s",
-                name,
-                msg.get("seq"),
-                msg.get("tstamp"),
-                msg["freq"],
-                msg.get("mag", mag(zp, fo,msg["freq"])),
-                zp,
-                msg["tamb"],
-                msg["tsky"],
+                    "%-9s [%d] T=%s, f=%s Hz, mag=%0.2f @ %s, tbox=%s, tsky=%s",
+                    name,
+                    msg.get("seq"),
+                    msg.get("tstamp"),
+                    msg["freq"],
+                    msg.get("mag", mag(zp, fo,msg["freq"])),
+                    zp,
+                    msg["tamb"],
+                    msg["tsky"],
             )
+
 
 
 async def update_zp(controller: Controller, zero_point: float) -> None:

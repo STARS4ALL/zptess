@@ -12,6 +12,8 @@ import math
 import logging
 import asyncio
 import contextlib
+import statistics
+from typing import Any
 
 # -------------------
 # Third party imports
@@ -32,6 +34,26 @@ def mag(zp: float, freq_offset: float, freq: float):
     return (float(zp) - 2.5 * math.log10(f)) if f > 0.0 else math.inf
 
 
+def log_msgs_stats(msgs: list[dict[str, Any], ...], role: Role, name: str) -> None:
+
+    freqs = [msg["freq"] for msg in msgs]
+    mean = statistics.fmean(freqs)
+    median = statistics.median_low(freqs)
+    stddev_mean = statistics.stdev(freqs, xbar=mean)
+    stddev_median = statistics.stdev(freqs, xbar=median)
+    multimode = statistics.multimode(freqs)
+    log = logging.getLogger(role.tag())
+    log.info(
+        "%-9s stats => mean = %.03f, median = %.03f, \u03c3(mean) = %.03f, \u03c3(median) = %.03f, local maxima = %s",
+        name,
+        mean,
+        median,
+        stddev_mean,
+        stddev_median,
+        multimode,
+    )
+
+
 async def log_phot_info(controller: Controller, role: Role) -> None:
     log = logging.getLogger(role.tag())
     phot_info = await controller.info(role)
@@ -49,8 +71,10 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
     # Although in this case, it doesn't matter, in general
     # async generatores may not close as expected,
     # hence the use of closing() context manager
+    messages = list()
     async with contextlib.aclosing(controller.readings(role, num)) as generator:
         async for role, msg in generator:
+            messages.append(msg)
             log.info(
                 "%-9s [%d] T=%s, f=%s Hz, mag=%0.2f @ %s, tbox=%s, tsky=%s",
                 name,
@@ -62,6 +86,7 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
                 msg["tamb"],
                 msg["tsky"],
             )
+    log_msgs_stats(messages, role, name)
 
 
 async def update_zp(controller: Controller, zero_point: float) -> None:

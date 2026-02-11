@@ -257,7 +257,6 @@ def test() -> ArgumentParser:
 def stats() -> ArgumentParser:
     """Statistics parser options"""
     parser = ArgumentParser(add_help=False)
-    parser.add_argument("-S", "--samples", type=int, default=None, help="# samples in each round")
     parser.add_argument(
         "-C",
         "--central",

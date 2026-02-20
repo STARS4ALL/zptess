@@ -111,7 +111,7 @@ class Controller(ABC):
                 )
                 logging.getLogger(str(role)).setLevel(self.param[role]["log_level"])
 
-    async def info(self, role: Role) -> Dict[str, str]:
+    async def info(self, role: Role) -> Dict[str, Any]:
         log = logging.getLogger(role.tag())
         try:
             phot_info = await self.photometer[role].get_info()
@@ -123,6 +123,7 @@ class Controller(ABC):
             phot_info["sensor"] = phot_info["sensor"] or self.param[role]["sensor"].value
             v = phot_info["freq_offset"] or 0.0
             phot_info["freq_offset"] = float(v)
+            phot_info["zp"] = float(phot_info["zp"]) # ref photometer zp has a string, coming from database
             self.phot_info[role] = phot_info
             return phot_info
 

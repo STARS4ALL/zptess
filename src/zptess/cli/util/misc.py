@@ -54,7 +54,7 @@ def log_msgs_stats(msgs: list[dict[str, Any], ...], controller: Controller, role
         multimode,
     )
     log.info(
-        "%-9s stats => mean mag = %.03f @ %.02f",
+        "%-9s stats => mean mag = %.02f @ %.02f",
         name,
         mag(zp, fo, mean),
         zp,

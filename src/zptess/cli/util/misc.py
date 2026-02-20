@@ -34,17 +34,18 @@ def mag(zp: float, freq_offset: float, freq: float):
     return (float(zp) - 2.5 * math.log10(f)) if f > 0.0 else math.inf
 
 
-def log_msgs_stats(msgs: list[dict[str, Any], ...], role: Role, name: str) -> None:
-
+def log_msgs_stats(msgs: list[dict[str, Any], ...], controller: Controller, role: Role, name: str) -> None:
     freqs = [msg["freq"] for msg in msgs]
     mean = statistics.fmean(freqs)
     median = statistics.median_low(freqs)
     stddev_mean = statistics.stdev(freqs, xbar=mean)
     stddev_median = statistics.stdev(freqs, xbar=median)
     multimode = statistics.multimode(freqs)
+    zp = controller.phot_info[role]["zp"]
+    fo = controller.phot_info[role]["freq_offset"]
     log = logging.getLogger(role.tag())
     log.info(
-        "%-9s stats => mean = %.03f, median = %.03f, \u03c3(mean) = %.03f, \u03c3(median) = %.03f, local maxima = %s",
+        "%-9s stats => mean freq = %.03f Hz, median = %.03f Hz, \u03c3(mean) = %.03f, \u03c3(median) = %.03f, local maxima = %s",
         name,
         mean,
         median,
@@ -52,6 +53,13 @@ def log_msgs_stats(msgs: list[dict[str, Any], ...], role: Role, name: str) -> No
         stddev_median,
         multimode,
     )
+    log.info(
+        "%-9s stats => mean mag = %.03f @ %.02f",
+        name,
+        mag(zp, fo, mean),
+        zp,
+    )
+
 
 
 async def log_phot_info(controller: Controller, role: Role) -> None:
@@ -86,7 +94,7 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
                 msg["tamb"],
                 msg["tsky"],
             )
-    log_msgs_stats(messages, role, name)
+    log_msgs_stats(messages, controller, role, name)
 
 
 async def update_zp(controller: Controller, zero_point: float) -> None:

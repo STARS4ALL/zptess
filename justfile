@@ -243,6 +243,11 @@ purge:
     set -euxo pipefail
     uv run zp-batch --console --log-file zptool.log --trace purge
 
+plot session:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    uv run zp-plot --console session --session {{session}} --both 
+
 # Backup zptess database and log file
 backup drive=def_drive: (check_mnt drive)
     #!/usr/bin/env bash

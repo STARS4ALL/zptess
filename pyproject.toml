@@ -22,11 +22,13 @@ dependencies = [
   "python-decouple >= 3.8",  # Get info from enviromental variables
   "typing-extensions >= 4.12", # Self for Python < 3.11
   "zptess-dao >= 1.0", # Own database model
-  #'exceptiongroups', # For Python < 3.11 when using TaskGroups
   #'asyncstdlib', # async counterparts such as aenumerate()
   # synchronous style publish/subscribe mechanism
   "pypubsub >= 4.0",
   "lica[photometer,tabular]>=3.0",
+   # Para la parte de hacer gráficos
+   "matplotlib >= 3.9",
+   "pyqt5 >= 5.15",
 ]
 
 
@@ -35,6 +37,7 @@ dev = [
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
     "mypy>=1.15.0",
+
 ]
 
 [project.urls]
@@ -49,6 +52,7 @@ zp-write =  "zptess.cli.writer:main"
 # Additional tools
 zp-batch = "zptess.cli.batch:main"
 zp-tools = "zptess.cli.tools:main"
+zp-plot = "zptess.cli.plot:main"
 
 [build-system]
 requires = ["setuptools >= 78.1", "wheel", "setuptools_scm[toml]>=8.2"]

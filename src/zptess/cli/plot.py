@@ -19,6 +19,7 @@ from argparse import Namespace, ArgumentParser
 
 from lica.sqlalchemy import sqa_logging
 from lica.asyncio.cli import execute
+from lica.asyncio.photometer import Role
 
 # --------------
 # local imports
@@ -27,7 +28,7 @@ from lica.asyncio.cli import execute
 from .. import __version__
 from .util import parser as prs
 from ..dao import engine
-from ..controller.exporter import Controller as Exporter
+from ..controller.dbsamples import Controller as Sampler
 
 
 # ----------------
@@ -54,33 +55,12 @@ log = logging.getLogger(__name__.split(".")[-1])
 # -----------------
 
 
-async def cli_session_export(args: Namespace) -> None:
-    log.info("exporting session %s", args.session)
-    log.info("exporting to directory %s", args.base_dir)
-    assert isinstance(args.session, datetime)
-    exporter = Exporter(
-        base_dir=args.base_dir,
-        begin_tstamp=args.session,
-        end_tstamp=args.session,
-        filename_prefix="session",
-    )
-    N = await exporter.query_nsummaries()
-    if N > 0:
-        summaries = await exporter.query_summaries()
-        await asyncio.to_thread(exporter.export_summaries, summaries)
-        rounds = await exporter.query_rounds()
-        await asyncio.to_thread(exporter.export_rounds, rounds)
-        samples = await exporter.query_samples()
-        await asyncio.to_thread(exporter.export_samples, samples)
-        zip_file_path = await asyncio.to_thread(exporter.pack)
-        log.info("zipped file in  %s", zip_file_path)
-    else:
-        log.warn("No calibration session found for %s", args.session)
-    return
-
 
 async def cli_plot_session(args: Namespace) -> None:
     session = args.session
+    sampler = Sampler()
+    ref_tstamps, ref_freqs = await sampler.samples(session, Role.REF)
+    tst_tstamps, tst_freqs = await sampler.samples(session, Role.TEST)
     return
 
 

@@ -19,7 +19,7 @@ from typing import Tuple, Iterable
 # Third-party library imports
 # ----------------------------
 
-from sqlalchemy import select, distinct
+from sqlalchemy import select
 from lica.asyncio.photometer import Role
 from zptessdao.asyncio import SampleView
 

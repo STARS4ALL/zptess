@@ -8,9 +8,8 @@
 # System wide imports
 # -------------------
 
-import asyncio
 import logging
-from datetime import datetime
+from collections import Counter
 from argparse import Namespace, ArgumentParser
 
 # -------------------
@@ -29,7 +28,7 @@ from .. import __version__
 from .util import parser as prs
 from ..dao import engine
 from ..controller.dbsamples import Controller as Sampler
-
+from ..mpl import plot
 
 # ----------------
 # Module constants
@@ -55,12 +54,37 @@ log = logging.getLogger(__name__.split(".")[-1])
 # -----------------
 
 
-
 async def cli_plot_session(args: Namespace) -> None:
     session = args.session
     sampler = Sampler()
     ref_tstamps, ref_freqs = await sampler.samples(session, Role.REF)
     tst_tstamps, tst_freqs = await sampler.samples(session, Role.TEST)
+    ref_histo = Counter(ref_freqs)
+    test_histo=Counter(tst_freqs)
+    if args.samples:
+        plot.plot_samples(
+            session=session,
+            ref_tstamps=ref_tstamps,
+            ref_freqs=ref_freqs,
+            test_tstamps=tst_tstamps,
+            test_freqs=tst_freqs,
+        )
+    elif args.histo:
+        plot.plot_histograms(
+            disttributions=(ref_histo, test_histo),
+        )
+    else:
+        plot.plot_samples(
+            session=session,
+            ref_tstamps=ref_tstamps,
+            ref_freqs=ref_freqs,
+            test_tstamps=tst_tstamps,
+            test_freqs=tst_freqs,
+        )
+        plot.plot_histograms(
+            distributions=(ref_histo, test_histo),
+        )
+
     return
 
 
@@ -72,7 +96,6 @@ def add_args(parser: ArgumentParser):
         help="Plot calibration session samples",
     )
     p.set_defaults(func=cli_plot_session)
-
 
 
 async def cli_main(args: Namespace) -> None:

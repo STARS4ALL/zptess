@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from datetime import datetime
-from polars import DataFrame
 from math import log10
 import statistics
 from collections import Counter
@@ -30,7 +29,7 @@ def plot_samples(
     session_id = session.strftime("%Y-%m-%dT%H:%M:%S")
     fig, axes = plt.subplots(1, figsize=(15, 5))
     axes = [axes]
-    for i, ax in zip(range(1, len(axes)), axes):
+    for i, ax in zip(range(1, len(axes)+1), axes):
         ref_med, ref_std, _ = stats(ref_freqs)
         tst_med, tst_std, _ = stats(test_freqs)
         delta_mag = -2.5 * log10(ref_med / tst_med)

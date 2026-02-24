@@ -81,7 +81,7 @@ async def cli_read_ref(args: Namespace) -> None:
         if args.histo:
             freqs = [msg["freq"] for msg in messages]
             tstamps = [msg["tstamp"] for msg in messages]
-            name = messages[0]["name"]
+            name = messages[0].get("name", "stars3")
             plot.histograms(
                 session=session,
                 roles=[Role.REF],
@@ -162,7 +162,7 @@ async def cli_read_both(args: Namespace) -> None:
             ref_tstamps = [msg["tstamp"] for msg in task_ref.result()]
             tst_freqs = [msg["freq"] for msg in task_tst.result()]
             tst_tstamps = [msg["tstamp"] for msg in task_tst.result()]
-            ref_name = task_ref.result()[0]["name"]
+            ref_name = task_ref.result()[0].get("name", "stars3")
             tst_name = task_tst.result()[0]["name"]
             plot.histograms(
                 session=session,

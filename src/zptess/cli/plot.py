@@ -59,38 +59,33 @@ async def cli_plot_session(args: Namespace) -> None:
     sampler = Sampler()
     ref_freqs, ref_tstamps, ref_name = await sampler.samples(session, Role.REF)
     tst_freqs, tst_tstamps, tst_name = await sampler.samples(session, Role.TEST)
+    ref_name, tst_name = ref_name[0], tst_name[0]
     if args.samples:
         plot.samples(
             session=session,
-            ref_tstamps=ref_tstamps,
-            ref_freqs=ref_freqs,
-            test_tstamps=tst_tstamps,
-            test_freqs=tst_freqs,
-            ref_name=ref_name[0],
-            test_name=tst_name[0],
+            roles=[Role.REF, Role.TEST],
+            freqs=[ref_freqs, tst_freqs],
+            tstamps=[ref_tstamps, tst_tstamps],
+            names=[ref_name, tst_name],
             use_median=args.median,
         )
     elif args.histo:
         plot.histograms(
             session=session,
-            ref_tstamps=ref_tstamps,
-            ref_freqs=ref_freqs,
-            test_tstamps=tst_tstamps,
-            test_freqs=tst_freqs,
-            ref_name=ref_name[0],
-            test_name=tst_name[0],
+            roles=[Role.REF, Role.TEST],
+            freqs=[ref_freqs, tst_freqs],
+            tstamps=[ref_tstamps, tst_tstamps],
+            names=[ref_name, tst_name],
             use_median=args.median,
         )
     else:
         plot.samples(
             session=session,
-            ref_tstamps=ref_tstamps,
-            ref_freqs=ref_freqs,
-            test_tstamps=tst_tstamps,
-            test_freqs=tst_freqs,
-            ref_name=ref_name[0],
-            test_name=tst_name[0],
-             use_median=args.median,
+            roles=[Role.REF, Role.TEST],
+            freqs=[ref_freqs, tst_freqs],
+            tstamps=[ref_tstamps, tst_tstamps],
+            names=[ref_name, tst_name],
+            use_median=args.median,
         )
         plot.histograms(
             session=session,
@@ -98,8 +93,8 @@ async def cli_plot_session(args: Namespace) -> None:
             ref_freqs=ref_freqs,
             test_tstamps=tst_tstamps,
             test_freqs=tst_freqs,
-            ref_name=ref_name[0],
-            test_name=tst_name[0],
+            ref_name=ref_name,
+            test_name=tst_name,
              use_median=args.median,
         )
 

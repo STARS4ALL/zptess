@@ -25,10 +25,12 @@ from lica.asyncio.photometer import Role
 # local imports
 # -------------
 
-from ..constants import ZP_ABS
+from ..constants import ZP_ABS, FreqSequence, TimeSequence
 
 
-def stats(series: list[float, ...], use_median: bool = False) -> tuple[float, float, list[float,...]]:
+def stats(
+    series: list[float, ...], use_median: bool = False
+) -> tuple[float, float, list[float, ...]]:
     """Compute mean(/median and std dev around central tendency"""
     central = statistics.median_low(series) if use_median else statistics.fmean(series)
     std_dev = statistics.stdev(series, xbar=central)
@@ -38,12 +40,10 @@ def stats(series: list[float, ...], use_median: bool = False) -> tuple[float, fl
 
 def samples(
     session: datetime,
-    ref_freqs: list[float, ...],
-    ref_tstamps: list[datetime, ...],
-    test_freqs: list[float, ...],
-    test_tstamps: list[datetime, ...],
-    ref_name: str,
-    test_name: str,
+    roles: list[Role, ...],
+    freqs: list[FreqSequence, ...],
+    tstamps: list[FreqSequence, ...],
+    names: list[str, ...],
     use_median: bool = False,
     zp_abs: float = ZP_ABS,
 ) -> None:
@@ -51,40 +51,38 @@ def samples(
     session_id = session.strftime("%Y-%m-%dT%H:%M:%S")
     fig, axes = plt.subplots(1, figsize=(15, 5))
     central = "median" if use_median else "mean"
-    axes = [axes]
-    for i, ax in zip(range(1, len(axes)+1), axes):
-        ref_cen, ref_std, _ = stats(ref_freqs, use_median=use_median)
-        tst_cen, tst_std, _ = stats(test_freqs, use_median=use_median)
-        delta_mag = -2.5 * log10(ref_cen / tst_cen)
-        zp = zp_abs + delta_mag
+    n = len(roles)
+    axes = [
+        axes,
+    ] * n
+    colors = ("tab:red", "tab:blue") if n == 2 else ("tab:red",)
+    roles_dict = dict()
+    for i, ax, role, freq, tstamp, name, color, role in zip(
+        range(1, n + 1), axes, roles, freqs, tstamps, names, colors, roles
+    ):
+        cen, std, modes = stats(freq, use_median=use_median)
+        roles_dict[role] = (cen, std, modes)
         ax.set_title(f"Session {session_id}")
         ax.set_ylabel("Frecuency (Hz)")
         # Medidas
-        ax.plot(ref_tstamps, ref_freqs, color="tab:red", marker=".", linestyle="none", label=f"{ref_name}")
-        ax.plot(
-            test_tstamps, test_freqs, color="tab:blue", marker=".", linestyle="none", label=f"{test_name}"
-        )
+        ax.plot(tstamp, freq, color=color, marker=".", linestyle="none", label=f"{name}")
         # Tendencias centrales
-        ax.axhline(y=ref_cen, linestyle=":", color="tab:red", label=f"{central} = {ref_cen:.3f}")
-        ax.axhline(y=tst_cen, linestyle=":", color="tab:blue", label=f"{central} = {tst_cen:.3f}")
+        ax.axhline(y=cen, linestyle=":", color=color, label=f"{central} = {cen:.3f}")
         # Barra horizontal semitransparente para la cota de error estimada (2 sigma)
         ax.axhspan(
-            ref_cen - 2 * ref_std,
-            ref_cen + 2 * ref_std,
+            cen - 2 * std,
+            cen + 2 * std,
             alpha=0.1,
-            color="red",
-            label=rf"$2\sigma$ ref = {ref_std:.3f}",
+            color=color,
+            label=rf"$2\sigma$ ref = {std:.3f}",
         )
-        ax.axhspan(
-            tst_cen - 2 * tst_std,
-            tst_cen + 2 * tst_std,
-            alpha=0.1,
-            color="blue",
-            label=rf"$2\sigma$ test = {tst_std:.3f}",
-        )
+        ax.legend()
+    if n == 2:
         # caja central de calibración de ronda
+        delta_mag = -2.5 * log10(roles_dict[Role.REF][0] / roles_dict[Role.TEST][0])
+        zp = zp_abs + delta_mag
         texto = rf"$ \Delta m = {delta_mag:.02f}$;  $ZP_{i} = \Delta m + ZP_{{abs}} = {zp:.02f}$"
-        ax.annotate(
+        axes[0].annotate(
             texto,
             xy=(0.5, 0.5),
             xycoords="axes fraction",
@@ -92,43 +90,44 @@ def samples(
             va="center",
             bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.3),
         )
-        ax.legend()
     plt.tight_layout()
     plt.show()
 
 
 def histograms(
     session: datetime,
-    ref_freqs: list[float, ...],
-    ref_tstamps: list[datetime, ...],
-    test_freqs: list[float, ...],
-    test_tstamps: list[datetime, ...],
-    ref_name: str,
-    test_name: str,
+    roles: list[Role, ...],
+    freqs: list[FreqSequence, ...],
+    tstamps: list[FreqSequence, ...],
+    names: list[str, ...],
     use_median: bool = False,
     title: str | None = None,
-    subtitles: tuple[str, str] | None = None,
-    labels: tuple[str, str] | None = None,
-    decimals: tuple[int, int] = (3, 2),
+    subtitles: list[str, ...] | None = None,
+    labels: list[str, ...] | None = None,
+    decimals: list[int, ...] = None,
 ) -> None:
     """
     Histogram for the ref and test photometer frequencies.
     One row, two couluns
     """
-    # Crear figura con 1 fila, 2 columnas para dos histogramas
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    title = title or f"Histograms of {ref_name} & {test_name} on {session}"
+    # Crear figura con 1 fila, n columnas para uno/dos histogramas
+    n = len(roles)
+    fig, axes = plt.subplots(1, n, figsize=(12, 5))
+    if n == 2:
+        title = title or f"Histograms of {names[0]} & {names[1]} on {session}"
+    else:
+        title = title or f"Histograms of {names[0]} on {session}"
     fig.suptitle(title)
     central = "median" if use_median else "mean"
-    names = [ref_name, test_name]
-    subtitles = subtitles or [None, None]
-    labels = labels or [None, None]
-    ref_histo = Counter([round(f, decimals[0]) for f in ref_freqs])
-    test_histo = Counter([round(f, decimals[1]) for f in test_freqs])
-    ref_stats = stats(ref_freqs, use_median=use_median)
-    test_stats = stats(test_freqs, use_median=use_median)
-    distributions = [ref_histo, test_histo]
-    allstats = [ref_stats, test_stats]
+    subtitles = subtitles or [None] * n
+    labels = labels or [None] * n
+    decimals = decimals or [3] * n
+    distributions = list()
+    allstats = list()
+    for i in range(n):
+        distributions.append(Counter([round(f, decimals[i]) for f in freqs[i]]))
+        allstats.append(stats(freqs[i], use_median=use_median))
+
     for i, (ax, distr, name, label, subtitle, mystats, decim) in enumerate(
         zip(axes, distributions, names, labels, subtitles, allstats, decimals)
     ):

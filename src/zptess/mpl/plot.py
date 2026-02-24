@@ -17,6 +17,9 @@ from collections import Counter
 # Third-party library imports
 # ----------------------------
 
+import matplotlib
+matplotlib.use('TkAgg') # For very old laptop
+
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from lica.asyncio.photometer import Role

@@ -26,7 +26,7 @@ from zptessdao.asyncio import SampleView
 # -------------
 
 from ..dao import Session
-from ..constants import FreqSequence, TimeSequence
+from ..constants import FreqSequence, TimeSequence, NameSequence
 
 # -----------------------
 # Module global variables
@@ -45,7 +45,7 @@ class Controller:
     def __init__(self):
         pass
 
-    async def samples(self, session_id: datetime, role: Role) -> tuple[FreqSequence, TimeSequence]:
+    async def samples(self, session_id: datetime, role: Role) -> tuple[FreqSequence, TimeSequence, NameSequence]:
         """Used by the persistent controller"""
         log.info("fetching samples from session %s", session_id)
         async with Session() as session:
@@ -58,7 +58,3 @@ class Controller:
                 log.info("found %d %s samples", len(samples), role)
                 return zip(*samples)
 
-
-    # ----------------
-    # Helper functions
-    # ----------------

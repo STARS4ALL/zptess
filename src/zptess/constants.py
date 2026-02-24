@@ -32,3 +32,4 @@ ZP_ABS = 20.44
 
 type FreqSequence = list[float, ...]
 type TimeSequence = list[float, ...]
+type NameSequence = list[str, ...]

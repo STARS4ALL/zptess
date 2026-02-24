@@ -9,7 +9,6 @@
 # -------------------
 
 import logging
-from collections import Counter
 from argparse import Namespace, ArgumentParser
 
 # -------------------
@@ -78,7 +77,7 @@ async def cli_plot_session(args: Namespace) -> None:
             names=[ref_name, tst_name],
             use_median=args.median,
         )
-    else:
+    elif args.both:
         plot.samples(
             session=session,
             roles=[Role.REF, Role.TEST],
@@ -87,16 +86,17 @@ async def cli_plot_session(args: Namespace) -> None:
             names=[ref_name, tst_name],
             use_median=args.median,
         )
+
         plot.histograms(
             session=session,
-            ref_tstamps=ref_tstamps,
-            ref_freqs=ref_freqs,
-            test_tstamps=tst_tstamps,
-            test_freqs=tst_freqs,
-            ref_name=ref_name,
-            test_name=tst_name,
-             use_median=args.median,
+            roles=[Role.REF, Role.TEST],
+            freqs=[ref_freqs, tst_freqs],
+            tstamps=[ref_tstamps, tst_tstamps],
+            names=[ref_name, tst_name],
+            use_median=args.median,
         )
+    else:
+        pass
 
     return
 

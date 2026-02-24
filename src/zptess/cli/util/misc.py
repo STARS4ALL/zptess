@@ -13,6 +13,7 @@ import logging
 import asyncio
 import contextlib
 import statistics
+
 from typing import Any
 
 # -------------------
@@ -71,7 +72,7 @@ async def log_phot_info(controller: Controller, role: Role) -> None:
     log.info("-" * 40)
 
 
-async def log_messages(controller: Controller, role: Role, num: int | None = None) -> None:
+async def log_messages(controller: Controller, role: Role, num: int | None = None) -> list[dict[str,Any]]:
     log = logging.getLogger(role.tag())
     name = controller.phot_info[role]["name"]
     zp = controller.phot_info[role]["zp"]
@@ -95,6 +96,8 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
                 msg["tsky"],
             )
     log_msgs_stats(messages, controller, role, name)
+    return messages
+
 
 
 async def update_zp(controller: Controller, zero_point: float) -> None:

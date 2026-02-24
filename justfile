@@ -187,7 +187,7 @@ close  verbose="" trace="":
 read which="both" N="10" :
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-read --console --log-file zptess.log --trace {{which}} -N {{N}}
+    uv run zp-read --console --log-file zptess.log --trace {{which}} -N {{N}} --histo
 
 # manually write a new zero point to a photometer
 write zp dry_run="":
@@ -246,7 +246,7 @@ purge:
 plot session="2025-07-08T10:45:12":
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-plot --trace --console session --session {{session}} --histo
+    uv run zp-plot --trace --console session --session {{session}} --both
 
 # Backup zptess database and log file
 backup drive=def_drive: (check_mnt drive)

@@ -27,7 +27,6 @@ from lica.asyncio.photometer import Role
 
 from ..constants import ZP_ABS, FreqSequence, TimeSequence
 
-
 def stats(
     series: list[float, ...], use_median: bool = False
 ) -> tuple[float, float, list[float, ...]]:
@@ -42,7 +41,7 @@ def samples(
     session: datetime,
     roles: list[Role, ...],
     freqs: list[FreqSequence, ...],
-    tstamps: list[FreqSequence, ...],
+    tstamps: list[TimeSequence, ...],
     names: list[str, ...],
     use_median: bool = False,
     zp_abs: float = ZP_ABS,
@@ -117,6 +116,7 @@ def histograms(
         title = title or f"Histograms of {names[0]} & {names[1]} on {session}"
     else:
         title = title or f"Histograms of {names[0]} on {session}"
+        axes = [axes]
     fig.suptitle(title)
     central = "median" if use_median else "mean"
     subtitles = subtitles or [None] * n
@@ -137,8 +137,8 @@ def histograms(
         width = 10 ** (-decim)
         cen, stddev, modes = mystats[0], mystats[1], mystats[2]
         ax.axvline(cen, color="red", linestyle="--", label=f"{central} = {cen:.3f}")
-        for mode in modes:
-            ax.axvline(mode, color="red", linestyle=":", label=f"mode = {mode:.3f}")
+        for i, mode in enumerate(modes, start=1):
+            ax.axvline(mode, color="red", linestyle=":", label=f"mode {i}= {mode:.3f}")
         ax.axvspan(
             cen - 2 * stddev,
             cen + 2 * stddev,

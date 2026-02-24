@@ -41,25 +41,26 @@ log = logging.getLogger(__name__.split(".")[-1])
 # Auxiliar functions
 # ------------------
 
+type FreqSequence = list[float, ...]
+type TimeSequence = list[float, ...]
+
 
 class Controller:
     def __init__(self):
         pass
 
-    async def samples(self, session_id: datetime, role: Role) -> tuple[list[float, ...], list[float, ...]]:
+    async def samples(self, session_id: datetime, role: Role) -> tuple[FreqSequence, TimeSequence]:
         """Used by the persistent controller"""
         log.info("fetching samples from session %s", session_id)
         async with Session() as session:
             async with session.begin():
                 q = (
-                    select(SampleView.freq, SampleView.tstamp).distinct()
+                    select(SampleView.freq, SampleView.tstamp, SampleView.name).distinct()
                     .where(SampleView.session == session_id, SampleView.role == role)
                 )
                 samples = (await session.execute(q)).all()
                 log.info("found %d %s samples", len(samples), role)
-                freqs = [s.freq for s in samples]
-                tstamps = [s.tstamp for s in samples]
-        return tstamps, freqs
+                return zip(*samples)
 
 
     # ----------------

@@ -445,5 +445,10 @@ def ploto() -> ArgumentParser:
     ex1.add_argument("-sa", "--samples", action="store_true", help="Ref/test samples vs time")
     ex1.add_argument("-hi", "--histo", action="store_true", help="Ref/Test samples histogram")
     ex1.add_argument("-bo", "--both", action="store_true", help="Ref/Test hist + samples vs time")
-
+    parser.add_argument(
+        "-me",
+        "--median",
+        action="store_true",
+        help="Stats use median instead of mean",
+    )
     return parser

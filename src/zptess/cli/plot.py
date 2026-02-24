@@ -57,32 +57,50 @@ log = logging.getLogger(__name__.split(".")[-1])
 async def cli_plot_session(args: Namespace) -> None:
     session = args.session
     sampler = Sampler()
-    ref_tstamps, ref_freqs = await sampler.samples(session, Role.REF)
-    tst_tstamps, tst_freqs = await sampler.samples(session, Role.TEST)
-    ref_histo = Counter(ref_freqs)
-    test_histo=Counter(tst_freqs)
+    ref_freqs, ref_tstamps, ref_name = await sampler.samples(session, Role.REF)
+    tst_freqs, tst_tstamps, tst_name = await sampler.samples(session, Role.TEST)
     if args.samples:
-        plot.plot_samples(
+        plot.samples(
             session=session,
             ref_tstamps=ref_tstamps,
             ref_freqs=ref_freqs,
             test_tstamps=tst_tstamps,
             test_freqs=tst_freqs,
+            ref_name=ref_name[0],
+            test_name=tst_name[0],
+            use_median=args.median,
         )
     elif args.histo:
-        plot.plot_histograms(
-            disttributions=(ref_histo, test_histo),
-        )
-    else:
-        plot.plot_samples(
+        plot.histograms(
             session=session,
             ref_tstamps=ref_tstamps,
             ref_freqs=ref_freqs,
             test_tstamps=tst_tstamps,
             test_freqs=tst_freqs,
+            ref_name=ref_name[0],
+            test_name=tst_name[0],
+            use_median=args.median,
         )
-        plot.plot_histograms(
-            distributions=(ref_histo, test_histo),
+    else:
+        plot.samples(
+            session=session,
+            ref_tstamps=ref_tstamps,
+            ref_freqs=ref_freqs,
+            test_tstamps=tst_tstamps,
+            test_freqs=tst_freqs,
+            ref_name=ref_name[0],
+            test_name=tst_name[0],
+             use_median=args.median,
+        )
+        plot.histograms(
+            session=session,
+            ref_tstamps=ref_tstamps,
+            ref_freqs=ref_freqs,
+            test_tstamps=tst_tstamps,
+            test_freqs=tst_freqs,
+            ref_name=ref_name[0],
+            test_name=tst_name[0],
+             use_median=args.median,
         )
 
     return

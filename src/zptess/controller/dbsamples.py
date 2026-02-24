@@ -8,12 +8,10 @@
 # System wide imports
 # -------------------
 
-import os
 import logging
 
 
-from datetime import datetime, timezone
-from typing import Tuple, Iterable
+from datetime import datetime
 
 # ---------------------------
 # Third-party library imports
@@ -28,6 +26,7 @@ from zptessdao.asyncio import SampleView
 # -------------
 
 from ..dao import Session
+from ..constants import FreqSequence, TimeSequence
 
 # -----------------------
 # Module global variables
@@ -40,9 +39,6 @@ log = logging.getLogger(__name__.split(".")[-1])
 # ------------------
 # Auxiliar functions
 # ------------------
-
-type FreqSequence = list[float, ...]
-type TimeSequence = list[float, ...]
 
 
 class Controller:

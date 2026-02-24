@@ -25,3 +25,10 @@ TSTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
 # Condensed timestamp
 TSTAMP_SESSION_FMT = "%Y-%m-%dT%H:%M:%S"
+
+# ZP of stars3
+ZP_ABS = 20.44
+
+
+type FreqSequence = list[float, ...]
+type TimeSequence = list[float, ...]

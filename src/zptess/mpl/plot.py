@@ -1,12 +1,31 @@
-import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
+# ----------------------------------------------------------------------
+# Copyright (c) 2024 Rafael Gonzalez.
+#
+# See the LICENSE file for details
+# ----------------------------------------------------------------------
+
+# --------------------
+# System wide imports
+# -------------------
+
 from datetime import datetime
 from math import log10
 import statistics
 from collections import Counter
 
+# ---------------------------
+# Third-party library imports
+# ----------------------------
 
-ZP_ABS = 20.44
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
+from lica.asyncio.photometer import Role
+
+# --------------
+# local imports
+# -------------
+
+from ..constants import ZP_ABS
 
 
 def stats(series: list[float, ...], use_median: bool = False) -> tuple[float, float, list[float,...]]:

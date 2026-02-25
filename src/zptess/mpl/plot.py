@@ -51,7 +51,7 @@ def samples(
 ) -> None:
     """Grafica Frecuencia vs Tiempo en N rondas"""
     session_id = session.strftime("%Y-%m-%dT%H:%M:%S")
-    fig, axes = plt.subplots(1, figsize=(15, 5))
+    fig, axes = plt.subplots(1, figsize=(12, 5))
     central = "median" if use_median else "mean"
     n = len(roles)
     axes = [

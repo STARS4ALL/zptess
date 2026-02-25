@@ -202,10 +202,10 @@ info:
     uv run zp-calib --console --log-file zptess.log --trace test --info
 
 # Calibrate a new photometer, but don't write new ZP nor update database
-dry-run:
+dry-run buffer="25":
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-calib --console --log-file zptess.log --trace test
+    uv run zp-calib --console --log-file zptess.log --trace test --buffer {{buffer}}
 
 # Calibrate a new photometer and stores results in database
 calib:

@@ -159,6 +159,8 @@ def on_summary(
     )
     log.info("REF. rounds overlap \u0394T = %s", overlapping_windows[Role.REF])
     log.info("TEST rounds overlap \u0394T = %s", overlapping_windows[Role.TEST])
+    log.info("REF. unique samples: %d", len(controller.unique_samples(Role.REF)))
+    log.info("TEST unique samples: %d", len(controller.unique_samples(Role.TEST)))
     log.info("#" * 74)
 
 

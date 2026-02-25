@@ -33,7 +33,7 @@ from zptessdao.constants import CentralTendency
 
 from .util import best
 from .types import Event, RoundStatistics, SummaryStatistics
-from .ring import RingBuffer
+from .ring import RingBuffer, Message
 from .base import Controller as BaseController
 from .. import load_config
 from ...dao import Session
@@ -84,6 +84,7 @@ class Controller(BaseController):
         self.author = None
         self.accum_samples = defaultdict(list)
         self.time_intervals = defaultdict(list)
+        self._unique_samples = defaultdict(set)
 
     # ==========
     # Public API
@@ -151,6 +152,9 @@ class Controller(BaseController):
     async def not_updated(self, zero_point: float, msg: str):
         pass
 
+    def unique_samples(self, role: Role) -> set[Message]:
+        return self._unique_samples[role]
+
     # ===========
     # Private API
     # ===========
@@ -217,7 +221,9 @@ class Controller(BaseController):
             stats_per_round = dict()
             for role in self.roles:
                 stats_per_round[role] = self._round_statistics(role)
-                self.accum_samples[role].append(self.ring[role].copy())
+                samples = self.ring[role].copy()
+                self.accum_samples[role].append(samples)
+                self._unique_samples[role].update(samples)
                 self.time_intervals[role].append(self.ring[role].intervals())
             mag_diff = stats_per_round[Role.REF][2] - stats_per_round[Role.TEST][2]
             zero_points.append(self.zp_abs + mag_diff)

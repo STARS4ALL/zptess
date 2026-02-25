@@ -271,7 +271,6 @@ async def cli_calib_test(args: Namespace) -> None:
             freqs=[ref_freqs, tst_freqs],
             tstamps=[ref_tstamps, tst_tstamps],
             names=[ref_name, tst_name],
-            decimals=[3,2]
         )
     elif args.plot_both:
         plot.histograms(
@@ -288,7 +287,6 @@ async def cli_calib_test(args: Namespace) -> None:
             freqs=[ref_freqs, tst_freqs],
             tstamps=[ref_tstamps, tst_tstamps],
             names=[ref_name, tst_name],
-            decimals=[3,2]
         )
 
 

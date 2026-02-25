@@ -78,7 +78,7 @@ async def cli_read_ref(args: Namespace) -> None:
     await log_phot_info(controller, Role.REF)
     if not args.info:
         messages = await log_messages(controller, Role.REF, args.num_messages)
-        if args.histo:
+        if args.plot_histo:
             freqs = [msg["freq"] for msg in messages]
             tstamps = [msg["tstamp"] for msg in messages]
             name = messages[0].get("name", "stars3")
@@ -110,7 +110,7 @@ async def cli_read_test(args: Namespace) -> None:
     await log_phot_info(controller, Role.TEST)
     if not args.info:
         messages = await log_messages(controller, Role.TEST, args.num_messages)
-        if args.histo:
+        if args.plot_histo:
             freqs = [msg["freq"] for msg in messages]
             tstamps = [msg["tstamp"] for msg in messages]
             name = messages[0]["name"]
@@ -157,7 +157,7 @@ async def cli_read_both(args: Namespace) -> None:
         async with asyncio.TaskGroup() as tg:
             task_ref = tg.create_task(log_messages(controller, Role.REF, args.num_messages))
             task_tst = tg.create_task(log_messages(controller, Role.TEST, args.num_messages))
-        if args.histo:
+        if args.plot_histo:
             ref_freqs = [msg["freq"] for msg in task_ref.result()]
             ref_tstamps = [msg["tstamp"] for msg in task_ref.result()]
             tst_freqs = [msg["freq"] for msg in task_tst.result()]

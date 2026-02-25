@@ -205,7 +205,7 @@ info:
 dry-run buffer="25":
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-calib --console --log-file zptess.log --trace test --buffer {{buffer}}
+    uv run zp-calib --console --log-file zptess.log --trace test --buffer {{buffer}} --plot-both
 
 # Calibrate a new photometer and stores results in database
 calib:

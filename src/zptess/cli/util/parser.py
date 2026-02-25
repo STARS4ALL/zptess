@@ -442,9 +442,9 @@ def mode() -> ArgumentParser:
 def ploto() -> ArgumentParser:
     parser = ArgumentParser(add_help=False)
     ex1 = parser.add_mutually_exclusive_group(required=False)
-    ex1.add_argument("-sa", "--samples", action="store_true", help="Ref/test samples vs time")
-    ex1.add_argument("-hi", "--histo", action="store_true", help="Ref/Test samples histogram")
-    ex1.add_argument("-bo", "--both", action="store_true", help="Ref/Test hist + samples vs time")
+    ex1.add_argument("-sa", "--plot-samples", action="store_true", help="Ref/test samples vs time")
+    ex1.add_argument("-hi", "--plot-histo", action="store_true", help="Ref/Test samples histogram")
+    ex1.add_argument("-bo", "--plot-both", action="store_true", help="Ref/Test hist + samples vs time")
     parser.add_argument(
         "-me",
         "--median",

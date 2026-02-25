@@ -37,6 +37,7 @@ from .util.misc import log_phot_info, update_zp
 from ..controller.photometer import VolatileCalibrator, PersistentCalibrator, Event, RoundStatsType
 from ..controller.batch import Controller as BatchController
 from ..dao import engine
+from ..mpl import plot
 
 # ----------------
 # Module constants
@@ -248,6 +249,50 @@ async def cli_calib_test(args: Namespace) -> None:
         msg = f"Zero Point {final_zero_point:.2f} not saved to {Role.TEST} {controller.phot_info[Role.TEST]['name']}"
         log.info(msg)
         await controller.not_updated(final_zero_point, msg)
+    ref_freqs = [msg["freq"] for msg in controller.unique_samples(Role.REF)]
+    ref_tstamps = [msg["tstamp"] for msg in controller.unique_samples(Role.REF)]
+    tst_freqs = [msg["freq"] for msg in controller.unique_samples(Role.TEST)]
+    tst_tstamps = [msg["tstamp"] for msg in controller.unique_samples(Role.TEST)]
+    ref_name = controller.phot_info[Role.REF]["name"]
+    tst_name = controller.phot_info[Role.TEST]["name"]
+    if args.plot_histo:
+        plot.histograms(
+            session=controller.meas_session,
+            roles=[Role.REF, Role.TEST],
+            freqs=[ref_freqs, tst_freqs],
+            tstamps=[ref_tstamps, tst_tstamps],
+            names=[ref_name, tst_name],
+            decimals=[3,2]
+        )
+    elif args.plot_samples:
+        plot.samples(
+            session=controller.meas_session,
+            roles=[Role.REF, Role.TEST],
+            freqs=[ref_freqs, tst_freqs],
+            tstamps=[ref_tstamps, tst_tstamps],
+            names=[ref_name, tst_name],
+            decimals=[3,2]
+        )
+    elif args.plot_both:
+        plot.histograms(
+            session=controller.meas_session,
+            roles=[Role.REF, Role.TEST],
+            freqs=[ref_freqs, tst_freqs],
+            tstamps=[ref_tstamps, tst_tstamps],
+            names=[ref_name, tst_name],
+            decimals=[3,2]
+        )
+        plot.samples(
+            session=controller.meas_session,
+            roles=[Role.REF, Role.TEST],
+            freqs=[ref_freqs, tst_freqs],
+            tstamps=[ref_tstamps, tst_tstamps],
+            names=[ref_name, tst_name],
+            decimals=[3,2]
+        )
+
+
+
 
 
 # -----------------
@@ -269,6 +314,7 @@ def add_args(parser: ArgumentParser):
             prs.ref(),
             prs.test(),
             prs.no_bat(),
+            prs.ploto(),
         ],
         help="Calibrate test photometer",
     )

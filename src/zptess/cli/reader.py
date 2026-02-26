@@ -159,13 +159,13 @@ async def cli_read_both(args: Namespace) -> None:
         async with asyncio.TaskGroup() as tg:
             task_ref = tg.create_task(log_messages(controller, Role.REF, args.num_messages))
             task_tst = tg.create_task(log_messages(controller, Role.TEST, args.num_messages))
-            ref_freqs = [msg["freq"] for msg in task_ref.result()]
-            ref_tstamps = [msg["tstamp"] for msg in task_ref.result()]
-            tst_freqs = [msg["freq"] for msg in task_tst.result()]
-            tst_tstamps = [msg["tstamp"] for msg in task_tst.result()]
-            ref_name = task_ref.result()[0].get("name", "stars3")
-            tst_name = task_tst.result()[0]["name"]
-            decimals = 2 if statistics.mean(ref_freqs) > 3 else 3
+        ref_freqs = [msg["freq"] for msg in task_ref.result()]
+        ref_tstamps = [msg["tstamp"] for msg in task_ref.result()]
+        tst_freqs = [msg["freq"] for msg in task_tst.result()]
+        tst_tstamps = [msg["tstamp"] for msg in task_tst.result()]
+        ref_name = task_ref.result()[0].get("name", "stars3")
+        tst_name = task_tst.result()[0]["name"]
+        decimals = 2 if statistics.mean(ref_freqs) > 3 else 3
         if args.plot_histo:
             plot.histograms(
                 session=session,

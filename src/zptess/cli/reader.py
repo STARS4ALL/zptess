@@ -159,7 +159,6 @@ async def cli_read_both(args: Namespace) -> None:
         async with asyncio.TaskGroup() as tg:
             task_ref = tg.create_task(log_messages(controller, Role.REF, args.num_messages))
             task_tst = tg.create_task(log_messages(controller, Role.TEST, args.num_messages))
-        if args.plot_histo:
             ref_freqs = [msg["freq"] for msg in task_ref.result()]
             ref_tstamps = [msg["tstamp"] for msg in task_ref.result()]
             tst_freqs = [msg["freq"] for msg in task_tst.result()]
@@ -167,6 +166,7 @@ async def cli_read_both(args: Namespace) -> None:
             ref_name = task_ref.result()[0].get("name", "stars3")
             tst_name = task_tst.result()[0]["name"]
             decimals = 2 if statistics.mean(ref_freqs) > 3 else 3
+        if args.plot_histo:
             plot.histograms(
                 session=session,
                 roles=[Role.REF, Role.TEST],
@@ -175,6 +175,31 @@ async def cli_read_both(args: Namespace) -> None:
                 names=[ref_name, tst_name],
                 decimals=[decimals, 2],
             )
+        elif args.plot_samples:
+            plot.samples(
+                session=controller.meas_session,
+                roles=[Role.REF, Role.TEST],
+                freqs=[ref_freqs, tst_freqs],
+                tstamps=[ref_tstamps, tst_tstamps],
+                names=[ref_name, tst_name],
+            )
+        elif args.plot_both:
+            plot.histograms(
+                session=controller.meas_session,
+                roles=[Role.REF, Role.TEST],
+                freqs=[ref_freqs, tst_freqs],
+                tstamps=[ref_tstamps, tst_tstamps],
+                names=[ref_name, tst_name],
+                decimals=[decimals, 2],
+            )
+            plot.samples(
+                session=controller.meas_session,
+                roles=[Role.REF, Role.TEST],
+                freqs=[ref_freqs, tst_freqs],
+                tstamps=[ref_tstamps, tst_tstamps],
+                names=[ref_name, tst_name],
+            )
+
     except* Exception as eg:
         for e in eg.exceptions:
             if args.trace:

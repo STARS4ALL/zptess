@@ -10,6 +10,7 @@
 
 import logging
 import asyncio
+import statistics
 from datetime import timedelta
 from argparse import Namespace, ArgumentParser
 from typing import Sequence, Mapping
@@ -255,6 +256,7 @@ async def cli_calib_test(args: Namespace) -> None:
     tst_tstamps = [msg["tstamp"] for msg in controller.unique_samples(Role.TEST)]
     ref_name = controller.phot_info[Role.REF]["name"]
     tst_name = controller.phot_info[Role.TEST]["name"]
+    decimals = 2 if statistics.mean(ref_freqs) > 3 else 3
     if args.plot_histo:
         plot.histograms(
             session=controller.meas_session,
@@ -262,7 +264,7 @@ async def cli_calib_test(args: Namespace) -> None:
             freqs=[ref_freqs, tst_freqs],
             tstamps=[ref_tstamps, tst_tstamps],
             names=[ref_name, tst_name],
-            decimals=[3,2]
+            decimals=[decimals,2]
         )
     elif args.plot_samples:
         plot.samples(
@@ -279,7 +281,7 @@ async def cli_calib_test(args: Namespace) -> None:
             freqs=[ref_freqs, tst_freqs],
             tstamps=[ref_tstamps, tst_tstamps],
             names=[ref_name, tst_name],
-            decimals=[3,2]
+            decimals=[decimals,2]
         )
         plot.samples(
             session=controller.meas_session,

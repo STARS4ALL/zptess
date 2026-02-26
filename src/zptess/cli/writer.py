@@ -62,6 +62,7 @@ async def cli_update_zp(args: Namespace) -> None:
         "endpoint": args.test_endpoint,
         "old_proto": args.test_old_proto,
         "log_level": logging.DEBUG if args.test_raw_message else logging.INFO,
+        "strict": args.test_strict,
     }
     controller = Writer(
         test_params=test_params,
@@ -72,6 +73,7 @@ async def cli_update_zp(args: Namespace) -> None:
         return
     await update_zp(controller, args.zero_point)
 
+
 # -----------------
 # CLI API functions
 # -----------------
@@ -79,12 +81,8 @@ async def cli_update_zp(args: Namespace) -> None:
 
 def add_args(parser: ArgumentParser):
     subparser = parser.add_subparsers(dest="command", required=True)
-    p = subparser.add_parser(
-        "test", parents=[prs.wrzp(), prs.test()], help="Read test photometer"
-    )
-    p.add_argument(
-        "-d", "--dry-run", action="store_true", help="Do not update photometer"
-    )
+    p = subparser.add_parser("test", parents=[prs.wrzp(), prs.test()], help="Read test photometer")
+    p.add_argument("-d", "--dry-run", action="store_true", help="Do not update photometer")
     p.set_defaults(func=cli_update_zp)
 
 

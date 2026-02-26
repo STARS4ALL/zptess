@@ -27,6 +27,7 @@ dependencies = [
   "pypubsub >= 4.0",
   "lica[photometer,tabular]>=3.0",
    # Para la parte de hacer gráficos
+   "numpy<2", # PC antiguo da core dump
    "matplotlib >= 3.9",
    "pyqt5 >= 5.15",
 ]

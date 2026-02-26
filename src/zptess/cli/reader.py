@@ -10,6 +10,7 @@
 
 import logging
 import asyncio
+import statistics
 from argparse import Namespace, ArgumentParser
 from datetime import datetime, timezone
 
@@ -80,6 +81,7 @@ async def cli_read_ref(args: Namespace) -> None:
         messages = await log_messages(controller, Role.REF, args.num_messages)
         if args.plot_histo:
             freqs = [msg["freq"] for msg in messages]
+            decimals = 2 if statistics.mean(freqs) > 3 else 3
             tstamps = [msg["tstamp"] for msg in messages]
             name = messages[0].get("name", "stars3")
             plot.histograms(
@@ -88,8 +90,8 @@ async def cli_read_ref(args: Namespace) -> None:
                 freqs=[freqs],
                 tstamps=[tstamps],
                 names=[name],
-                decimals=[3]
-        )
+                decimals=[decimals],
+            )
 
 
 async def cli_read_test(args: Namespace) -> None:
@@ -120,8 +122,8 @@ async def cli_read_test(args: Namespace) -> None:
                 freqs=[freqs],
                 tstamps=[tstamps],
                 names=[name],
-                decimals=[2]
-        )
+                decimals=[2],
+            )
 
 
 async def cli_read_both(args: Namespace) -> None:
@@ -164,14 +166,15 @@ async def cli_read_both(args: Namespace) -> None:
             tst_tstamps = [msg["tstamp"] for msg in task_tst.result()]
             ref_name = task_ref.result()[0].get("name", "stars3")
             tst_name = task_tst.result()[0]["name"]
+            decimals = 2 if statistics.mean(ref_freqs) > 3 else 3
             plot.histograms(
                 session=session,
                 roles=[Role.REF, Role.TEST],
                 freqs=[ref_freqs, tst_freqs],
                 tstamps=[ref_tstamps, tst_tstamps],
                 names=[ref_name, tst_name],
-                decimals=[3,2]
-        )
+                decimals=[decimals, 2],
+            )
     except* Exception as eg:
         for e in eg.exceptions:
             if args.trace:

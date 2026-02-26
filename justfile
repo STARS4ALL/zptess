@@ -187,7 +187,7 @@ close  verbose="" trace="":
 read which="both" N="10" :
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-read --console --log-file zptess.log --trace {{which}} -N {{N}} --histo
+    uv run zp-read --console --log-file zptess.log --trace {{which}} -N {{N}} --plot-histo
 
 # manually write a new zero point to a photometer
 write zp dry_run="":

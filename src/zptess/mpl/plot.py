@@ -17,9 +17,8 @@ from collections import Counter
 # Third-party library imports
 # ----------------------------
 
+import decouple
 import matplotlib
-matplotlib.use('TkAgg') # For very old laptop
-
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from lica.asyncio.photometer import Role
@@ -29,6 +28,12 @@ from lica.asyncio.photometer import Role
 # -------------
 
 from ..constants import ZP_ABS, FreqSequence, TimeSequence
+
+# Load-time configuration
+TK_AGG = decouple.config("MPL_USE_TK", default=False, cast=bool)
+if TK_AGG:
+    matplotlib.use("TkAgg")  # For very old laptops
+
 
 def stats(
     series: list[float, ...], use_median: bool = False

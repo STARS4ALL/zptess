@@ -63,7 +63,7 @@ controller = None
 
 async def cli_read_ref(args: Namespace) -> None:
     global controller
-    session = datetime.now(timezone.utc)
+    meas_session = datetime.now(timezone.utc)
     ref_params = {
         "model": args.ref_model,
         "sensor": args.ref_sensor,
@@ -85,7 +85,7 @@ async def cli_read_ref(args: Namespace) -> None:
             tstamps = [msg["tstamp"] for msg in messages]
             name = messages[0].get("name", "stars3")
             plot.histograms(
-                session=session,
+                session=meas_session,
                 roles=[Role.REF],
                 freqs=[freqs],
                 tstamps=[tstamps],
@@ -96,7 +96,7 @@ async def cli_read_ref(args: Namespace) -> None:
 
 async def cli_read_test(args: Namespace) -> None:
     global controller
-    session = datetime.now(timezone.utc)
+    meas_session = datetime.now(timezone.utc)
     test_params = {
         "model": args.test_model,
         "sensor": args.test_sensor,
@@ -117,7 +117,7 @@ async def cli_read_test(args: Namespace) -> None:
             tstamps = [msg["tstamp"] for msg in messages]
             name = messages[0]["name"]
             plot.histograms(
-                session=session,
+                session=meas_session,
                 roles=[Role.REF],
                 freqs=[freqs],
                 tstamps=[tstamps],
@@ -128,7 +128,7 @@ async def cli_read_test(args: Namespace) -> None:
 
 async def cli_read_both(args: Namespace) -> None:
     global controller
-    session = datetime.now(timezone.utc)
+    meas_session = datetime.now(timezone.utc)
     ref_params = {
         "model": args.ref_model,
         "sensor": args.ref_sensor,
@@ -168,7 +168,7 @@ async def cli_read_both(args: Namespace) -> None:
         decimals = 2 if statistics.mean(ref_freqs) > 3 else 3
         if args.plot_histo:
             plot.histograms(
-                session=session,
+                session=meas_session,
                 roles=[Role.REF, Role.TEST],
                 freqs=[ref_freqs, tst_freqs],
                 tstamps=[ref_tstamps, tst_tstamps],
@@ -177,7 +177,7 @@ async def cli_read_both(args: Namespace) -> None:
             )
         elif args.plot_samples:
             plot.samples(
-                session=controller.meas_session,
+                session=meas_session,
                 roles=[Role.REF, Role.TEST],
                 freqs=[ref_freqs, tst_freqs],
                 tstamps=[ref_tstamps, tst_tstamps],
@@ -185,7 +185,7 @@ async def cli_read_both(args: Namespace) -> None:
             )
         elif args.plot_both:
             plot.histograms(
-                session=controller.meas_session,
+                session=meas_session,
                 roles=[Role.REF, Role.TEST],
                 freqs=[ref_freqs, tst_freqs],
                 tstamps=[ref_tstamps, tst_tstamps],
@@ -193,7 +193,7 @@ async def cli_read_both(args: Namespace) -> None:
                 decimals=[decimals, 2],
             )
             plot.samples(
-                session=controller.meas_session,
+                session=meas_session,
                 roles=[Role.REF, Role.TEST],
                 freqs=[ref_freqs, tst_freqs],
                 tstamps=[ref_tstamps, tst_tstamps],

@@ -8,6 +8,7 @@
 # System wide imports
 # -------------------
 
+import sys
 import logging
 import asyncio
 import statistics
@@ -17,6 +18,8 @@ from datetime import datetime, timezone
 # -------------------
 # Third party imports
 # -------------------
+
+import aiohttp
 
 from lica.sqlalchemy import sqa_logging
 from lica.asyncio.cli import execute
@@ -29,7 +32,7 @@ from lica.asyncio.photometer import Role
 from .. import __version__
 from ..controller.photometer import Reader
 from .util import parser as prs
-from .util.misc import log_phot_info, log_messages
+from .util.misc import log_phot_info, log_messages, log_and_exit
 from ..dao import engine
 from ..mpl import plot
 
@@ -75,23 +78,29 @@ async def cli_read_ref(args: Namespace) -> None:
     controller = Reader(
         ref_params=ref_params,
     )
-    await controller.init()
-    await log_phot_info(controller, Role.REF)
-    if not args.info:
-        messages = await log_messages(controller, Role.REF, args.num_messages)
-        if args.plot_histo:
-            freqs = [msg["freq"] for msg in messages]
-            decimals = 2 if statistics.mean(freqs) > 3 else 3
-            tstamps = [msg["tstamp"] for msg in messages]
-            name = messages[0].get("name", "stars3")
-            plot.histograms(
-                session=meas_session,
-                roles=[Role.REF],
-                freqs=[freqs],
-                tstamps=[tstamps],
-                names=[name],
-                decimals=[decimals],
-            )
+    try:
+        await controller.init()
+        await log_phot_info(controller, Role.REF)
+        if not args.info:
+            messages = await log_messages(controller, Role.REF, args.num_messages)
+            if args.plot_histo:
+                freqs = [msg["freq"] for msg in messages]
+                decimals = 2 if statistics.mean(freqs) > 3 else 3
+                tstamps = [msg["tstamp"] for msg in messages]
+                name = messages[0].get("name", "stars3")
+                plot.histograms(
+                    session=meas_session,
+                    roles=[Role.REF],
+                    freqs=[freqs],
+                    tstamps=[tstamps],
+                    names=[name],
+                    decimals=[decimals],
+                )
+    except asyncio.TimeoutError as e:
+        log_and_exit(log, e, args.trace)
+    except aiohttp.client_exceptions.ClientConnectorError as e:
+        log_and_exit(log, e, args.trace)
+
 
 
 async def cli_read_test(args: Namespace) -> None:
@@ -108,22 +117,28 @@ async def cli_read_test(args: Namespace) -> None:
     controller = Reader(
         test_params=test_params,
     )
-    await controller.init()
-    await log_phot_info(controller, Role.TEST)
-    if not args.info:
-        messages = await log_messages(controller, Role.TEST, args.num_messages)
-        if args.plot_histo:
-            freqs = [msg["freq"] for msg in messages]
-            tstamps = [msg["tstamp"] for msg in messages]
-            name = messages[0]["name"]
-            plot.histograms(
-                session=meas_session,
-                roles=[Role.REF],
-                freqs=[freqs],
-                tstamps=[tstamps],
-                names=[name],
-                decimals=[2],
-            )
+    try:
+        await controller.init()
+        await log_phot_info(controller, Role.TEST)
+        if not args.info:
+            messages = await log_messages(controller, Role.TEST, args.num_messages)
+            if args.plot_histo:
+                freqs = [msg["freq"] for msg in messages]
+                tstamps = [msg["tstamp"] for msg in messages]
+                name = messages[0]["name"]
+                plot.histograms(
+                    session=meas_session,
+                    roles=[Role.REF],
+                    freqs=[freqs],
+                    tstamps=[tstamps],
+                    names=[name],
+                    decimals=[2],
+                )
+    except asyncio.TimeoutError as e:
+        log_and_exit(log, e, args.trace)
+    except aiohttp.client_exceptions.ClientConnectorError as e:
+        log_and_exit(log, e, args.trace)
+
 
 
 async def cli_read_both(args: Namespace) -> None:
@@ -206,7 +221,7 @@ async def cli_read_both(args: Namespace) -> None:
                 log.exception(e)
             else:
                 log.error(e)
-        raise RuntimeError("Could't continue execution, check errors above")
+        sys.exit(1)
 
 
 # -----------------

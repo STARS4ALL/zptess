@@ -8,12 +8,14 @@
 # System wide imports
 # -------------------
 
+import sys
 import math
 import logging
 import asyncio
 import contextlib
 import statistics
 
+from logging import Logger
 from typing import Any
 
 # -------------------
@@ -129,3 +131,10 @@ async def update_zp(controller: Controller, zero_point: float) -> None:
             )
         else:
             log.info("[%s] ZP Write (%0.2f) verification Ok.", name, zero_point)
+
+def log_and_exit(log: Logger, excp: Exception, trace: bool) -> None:
+    if trace:
+        log.exception(excp)
+    else:
+        log.error(excp)
+    sys.exit(1)

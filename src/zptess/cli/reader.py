@@ -87,7 +87,7 @@ async def cli_read_ref(args: Namespace) -> None:
                 freqs = [msg["freq"] for msg in messages]
                 decimals = 2 if statistics.mean(freqs) > 3 else 3
                 tstamps = [msg["tstamp"] for msg in messages]
-                name = messages[0].get("name", "stars3")
+                name = controller.phot_info[Role.REF]["name"]
                 plot.histograms(
                     session=meas_session,
                     roles=[Role.REF],
@@ -125,7 +125,7 @@ async def cli_read_test(args: Namespace) -> None:
             if args.plot_histo:
                 freqs = [msg["freq"] for msg in messages]
                 tstamps = [msg["tstamp"] for msg in messages]
-                name = messages[0]["name"]
+                name = controller.phot_info[Role.TEST]["name"]
                 plot.histograms(
                     session=meas_session,
                     roles=[Role.REF],
@@ -178,8 +178,8 @@ async def cli_read_both(args: Namespace) -> None:
         ref_tstamps = [msg["tstamp"] for msg in task_ref.result()]
         tst_freqs = [msg["freq"] for msg in task_tst.result()]
         tst_tstamps = [msg["tstamp"] for msg in task_tst.result()]
-        ref_name = task_ref.result()[0].get("name", "stars3")
-        tst_name = task_tst.result()[0]["name"]
+        ref_name = controller.phot_info[Role.REF]["name"]
+        tst_name = controller.phot_info[Role.TEST]["name"]
         decimals = 2 if statistics.mean(ref_freqs) > 3 else 3
         if args.plot_histo:
             plot.histograms(

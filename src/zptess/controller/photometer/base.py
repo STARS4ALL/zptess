@@ -55,7 +55,7 @@ log = logging.getLogger(__name__.split(".")[-1])
 class Controller(ABC):
     """
     Reader Controller specialized in reading the photometers
-    Serves ans an interface and a base class at the same tine.
+    Serves ans an interface and a base class at the same time.
     """
 
     def __init__(

@@ -121,7 +121,6 @@ class UdpProtocol(asyncio.DatagramProtocol):
             self.log.exception(e)
         else:
             if isinstance(message, dict):
-                message["tstamp"] = now
                 message["seq"] = message["udp"]
                 del message["udp"]
                 if (
@@ -129,7 +128,7 @@ class UdpProtocol(asyncio.DatagramProtocol):
                     and not self.on_data_received.cancelled()
                     and not self.on_data_received.done()
                 ):
-                    self.on_data_received.set_result(message)
+                    self.on_data_received.set_result((now, message))
 
     # ----------------------
     # The iterator interface
@@ -182,11 +181,13 @@ async def cli_multi(args: Namespace) -> None:
     messages = defaultdict(list)
     await proto.open()
     for i in range(N):
-        msg = await anext(proto)
-        log.info(msg)
+        tstamp, msg = await anext(proto)
+        log.info("%s %s",tstamp.strftime("%H:%M:%S.%f"), msg)
+        msg["tstamp"] = tstamp
         messages[msg["name"]].append(msg)
     stats = stats_by_name(messages)
-    log.info(stats)
+    for name, stat in stats.items():
+        log.info("%8s => %s", name, stat)
 
 
 # -----------------

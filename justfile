@@ -189,6 +189,12 @@ read which="both" N="10" :
     set -euxo pipefail
     uv run zp-read --console --log-file zptess.log --trace {{which}} -N {{N}} --plot-histo
 
+# Reads several test photometers N times
+multi N="20" :
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    uv run zp-multi --console --log-file zptess.log --trace test -N {{N}}
+
 # manually write a new zero point to a photometer
 write zp dry_run="":
     #!/usr/bin/env bash

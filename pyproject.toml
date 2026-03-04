@@ -48,8 +48,10 @@ Repository = "https://github.com/astrorafael/textual-zptess.git"
 [project.scripts]
 # These are photometer related commands
 zp-read =  "zptess.cli.reader:main"
+zp-multi = "zptess.cli.multi:main"
 zp-calib =  "zptess.cli.calibrate:main"
 zp-write =  "zptess.cli.writer:main"
+
 # Additional tools
 zp-batch = "zptess.cli.batch:main"
 zp-tools = "zptess.cli.tools:main"

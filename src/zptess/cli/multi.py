@@ -147,13 +147,14 @@ class UdpProtocol(asyncio.DatagramProtocol):
 
 @dataclass
 class Stats:
+    N: int
     mean: float
     median: float
     stdev: float
     mode: float
 
     def __repr__(self) -> str:
-        return f"mean={self.mean:.2f}, \u03c3={self.stdev:.3f}, median={self.median:.2f}, mode={self.mode:.2f}"
+        return f"N={self.N:03d}, mean={self.mean:.2f}, \u03c3={self.stdev:.3f}, median={self.median:.2f}, mode={self.mode:.2f}"
 
 
 # -------------------
@@ -169,7 +170,7 @@ def stats_by_name(hashable) -> dict[str, Stats]:
         median = statistics.median_low(values)
         stdev = statistics.stdev(values, xbar=mean)
         modes = statistics.multimode(values)
-        stats[name] = Stats(mean=mean, median=median, stdev=stdev, mode=modes[0])
+        stats[name] = Stats(N=len(values), mean=mean, median=median, stdev=stdev, mode=modes[0])
     return stats
 
 

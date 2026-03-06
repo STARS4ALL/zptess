@@ -184,10 +184,29 @@ close  verbose="" trace="":
     uv run zp-batch --console --log-file zptool.log --trace end
 
 # Reads [test|ref|both] photometers N times
-read which="both" N="10" :
+read which="both" N="10" strict="":
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-read --console --log-file zptess.log --trace {{which}} -N {{N}} --plot-histo
+    strict="{{strict}}"
+    which="{{which}}"
+    if [[ "$strict" = "both" && "$which" = "both" ]]; then
+       uv run zp-read --console --trace {{which}} -N {{N}} --ref-strict --test-strict --plot-histo
+    elif [[ "$strict" = "ref" && "$which" = "both" ]]; then
+       uv run zp-read --console --trace {{which}} -N {{N}} --ref-strict --plot-histo
+    elif [[ "$strict" = "test" && "$which" = "both" ]]; then
+       uv run zp-read --console --trace {{which}} -N {{N}} --test-strict --plot-histo
+    elif [[ "$strict" = "ref" && "$which" = "ref" ]]; then
+       uv run zp-read --console --trace {{which}} -N {{N}} --ref-strict --plot-histo
+    elif [[ "$strict" != "ref" && "$which" = "ref" ]]; then
+       uv run zp-read --console --trace {{which}} -N {{N}} --plot-histo
+    elif [[ "$strict" = "test" && "$which" = "test" ]]; then
+       uv run zp-read --console --trace {{which}} -N {{N}} --test-strict --plot-histo
+    elif [[ "$strict" != "test" && "$which" = "test" ]]; then
+       uv run zp-read --console --trace {{which}} -N {{N}} --plot-histo
+    else
+       uv run zp-read --console --trace {{which}} -N {{N}} --plot-histo
+    fi
+
 
 # Reads several test photometers N times
 multi N="20" :
@@ -207,17 +226,29 @@ info:
     set -euxo pipefail
     uv run zp-calib --console --log-file zptess.log --trace test --info
 
+
 # Calibrate a new photometer, but don't write new ZP nor update database
-dry-run buffer="25":
+dry-run update="" buffer="125" zp-offset="0":
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-calib --console --log-file zptess.log --trace test --buffer {{buffer}} --plot-both
+    zp_offset={{zp-offset}}
+    if [[ "${zp_offset}" != "" ]]; then
+        uv run zp-calib --console --log-file zptess.log --trace test {{update}} --buffer {{buffer}} --rounds 1 --central mean --zp-offset ${zp_offset} --plot-both --ref-strict --test-strict 
+    else
+        uv run zp-calib --console --log-file zptess.log --trace test {{update}} --buffer {{buffer}} --rounds 1 --central mean --plot-both --ref-strict --test-strict 
+    fi
+
 
 # Calibrate a new photometer and stores results in database
-calib:
+calib buffer="125" zp-offset="0":
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-calib --console --log-file zptess.log --trace test --update --persist
+    zp_offset={{zp-offset}}
+    if [[ "${zp_offset}" != "" ]]; then
+        uv run zp-calib --console --log-file zptess.log --trace test --update --persist --buffer {{buffer}} --rounds 1 --central mean --zp-offset ${zp_offset} --ref-strict --test-strict --plot-both
+    else
+       uv run zp-calib --console --log-file zptess.log --trace test --update --persist --buffer {{buffer}} --rounds 1 --central mean --ref-strict --test-strict --plot-both
+    fi
 
 # Export all summaries
 summary:

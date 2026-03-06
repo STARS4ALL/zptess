@@ -168,7 +168,13 @@ class Controller(VolatileCalibrator):
             elif event == Event.SUMMARY:
                 self.temp_summary = msg["info"]
             else:
-                await self._save_all()
+                try:
+                    await self._save_all()
+                except Exception as e:
+                    log.error(e)
+                    log.critical(
+                        "Probably an incomplete manual purge forgot table samples_rounds_t references"
+                    )
 
     # ----------------------
     # Private helper methods
@@ -301,4 +307,5 @@ class Controller(VolatileCalibrator):
                 db_samples = self._save_samples(session, db_summaries, db_rounds)
                 log.info("Saving %d %s sample entries", len(db_samples[Role.REF]), Role.REF)
                 log.info("Saving %d %s sample entries", len(db_samples[Role.TEST]), Role.TEST)
+                log.info(db_samples)
         self.db_active = False

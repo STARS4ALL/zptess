@@ -307,5 +307,4 @@ class Controller(VolatileCalibrator):
                 db_samples = self._save_samples(session, db_summaries, db_rounds)
                 log.info("Saving %d %s sample entries", len(db_samples[Role.REF]), Role.REF)
                 log.info("Saving %d %s sample entries", len(db_samples[Role.TEST]), Role.TEST)
-                log.info(db_samples)
         self.db_active = False

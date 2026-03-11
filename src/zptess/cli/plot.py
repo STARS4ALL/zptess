@@ -59,7 +59,7 @@ async def cli_plot_session(args: Namespace) -> None:
     ref_freqs, ref_tstamps, ref_name = await sampler.samples(session, Role.REF)
     tst_freqs, tst_tstamps, tst_name = await sampler.samples(session, Role.TEST)
     ref_name, tst_name = ref_name[0], tst_name[0]
-    if args.samples:
+    if args.plot_samples:
         plot.samples(
             session=session,
             roles=[Role.REF, Role.TEST],
@@ -68,7 +68,7 @@ async def cli_plot_session(args: Namespace) -> None:
             names=[ref_name, tst_name],
             use_median=args.median,
         )
-    elif args.histo:
+    elif args.plot_histo:
         plot.histograms(
             session=session,
             roles=[Role.REF, Role.TEST],
@@ -77,7 +77,7 @@ async def cli_plot_session(args: Namespace) -> None:
             names=[ref_name, tst_name],
             use_median=args.median,
         )
-    elif args.both:
+    elif args.plot_both:
         plot.samples(
             session=session,
             roles=[Role.REF, Role.TEST],

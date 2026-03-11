@@ -9,6 +9,7 @@
 # -------------------
 
 import logging
+import statistics
 from argparse import Namespace, ArgumentParser
 
 # -------------------
@@ -59,6 +60,7 @@ async def cli_plot_session(args: Namespace) -> None:
     ref_freqs, ref_tstamps, ref_name = await sampler.samples(session, Role.REF)
     tst_freqs, tst_tstamps, tst_name = await sampler.samples(session, Role.TEST)
     ref_name, tst_name = ref_name[0], tst_name[0]
+    decimals = 2 if statistics.mean(ref_freqs) > 3 else 3
     if args.plot_samples:
         plot.samples(
             session=session,
@@ -76,6 +78,7 @@ async def cli_plot_session(args: Namespace) -> None:
             tstamps=[ref_tstamps, tst_tstamps],
             names=[ref_name, tst_name],
             use_median=args.median,
+            decimals=[decimals, 2],
         )
     elif args.plot_both:
         plot.samples(
@@ -94,6 +97,7 @@ async def cli_plot_session(args: Namespace) -> None:
             tstamps=[ref_tstamps, tst_tstamps],
             names=[ref_name, tst_name],
             use_median=args.median,
+            decimals=[decimals, 2],
         )
     else:
         pass

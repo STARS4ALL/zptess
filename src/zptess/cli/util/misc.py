@@ -48,7 +48,7 @@ def log_msgs_stats(msgs: list[dict[str, Any], ...], controller: Controller, role
     fo = controller.phot_info[role]["freq_offset"]
     log = logging.getLogger(role.tag())
     log.info(
-        "%-9s stats => mean freq = %.03f Hz, median = %.03f Hz, \u03c3(mean) = %.03f, \u03c3(median) = %.03f, local maxima = %s",
+        "%-9s stats => mean freq = %.03e Hz, median = %.03e Hz, \u03c3(mean) = %.03e, \u03c3(median) = %.03e, local maxima = %s",
         name,
         mean,
         median,
@@ -57,7 +57,7 @@ def log_msgs_stats(msgs: list[dict[str, Any], ...], controller: Controller, role
         multimode,
     )
     log.info(
-        "%-9s stats => mean mag = %.02f @ %.02f",
+        "%-9s stats => mean mag = %.03f @ %.02f",
         name,
         mag(zp, fo, mean),
         zp,
@@ -87,7 +87,7 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
         async for role, msg in generator:
             messages.append(msg)
             log.info(
-                "%-9s [%d] T=%s, f=%s Hz, mag=%0.2f @ %s, tbox=%s, tsky=%s",
+                "%-9s [%d] T=%s, f=%0.3f Hz, mag=%0.3f @ %s, tbox=%s, tsky=%s",
                 name,
                 msg.get("seq"),
                 msg.get("tstamp"),

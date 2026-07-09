@@ -452,3 +452,14 @@ def ploto() -> ArgumentParser:
         help="Stats use median instead of mean",
     )
     return parser
+
+def tag() -> ArgumentParser:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--tag",
+        type=str,
+        metavar="<TAG>",
+        default="",
+        help="Additional tag in reader log messages",
+    )
+    return parser

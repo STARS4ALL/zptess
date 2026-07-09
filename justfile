@@ -84,10 +84,10 @@ test-write zp verbose="" trace="":
     uv run zp-write --console {{verbose}} {{trace}} test -z {{zp}}
 
 # Reads test/ref/both photometers
-test-read verbose="" trace="" which="test" N="10" :
+test-read verbose="" trace="" which="test" N="10" tag="":
     #!/usr/bin/env bash
     set -euxo pipefail
-    uv run zp-read --console {{verbose}} {{trace}} {{which}} -N {{N}}
+    uv run zp-read --console {{verbose}} {{trace}} {{which}} -N {{N}} --tag "{{tag}}"
 
 # Calibrate photometer
 test-calib verbose="" trace="" persist="":

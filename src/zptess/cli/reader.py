@@ -82,7 +82,7 @@ async def cli_read_ref(args: Namespace) -> None:
         await controller.init()
         await log_phot_info(controller, Role.REF)
         if not args.info:
-            messages = await log_messages(controller, Role.REF, args.num_messages)
+            messages = await log_messages(controller, Role.REF, args.num_messages, args.tag)
             if args.plot_histo:
                 freqs = [msg["freq"] for msg in messages]
                 decimals = 2 if statistics.mean(freqs) > 3 else 3
@@ -121,7 +121,7 @@ async def cli_read_test(args: Namespace) -> None:
         await controller.init()
         await log_phot_info(controller, Role.TEST)
         if not args.info:
-            messages = await log_messages(controller, Role.TEST, args.num_messages)
+            messages = await log_messages(controller, Role.TEST, args.num_messages, args.tag)
             if args.plot_histo:
                 freqs = [msg["freq"] for msg in messages]
                 tstamps = [msg["tstamp"] for msg in messages]
@@ -172,8 +172,8 @@ async def cli_read_both(args: Namespace) -> None:
         if args.info:
             return
         async with asyncio.TaskGroup() as tg:
-            task_ref = tg.create_task(log_messages(controller, Role.REF, args.num_messages))
-            task_tst = tg.create_task(log_messages(controller, Role.TEST, args.num_messages))
+            task_ref = tg.create_task(log_messages(controller, Role.REF, args.num_messages, args.tag))
+            task_tst = tg.create_task(log_messages(controller, Role.TEST, args.num_messages, args.tag))
         ref_freqs = [msg["freq"] for msg in task_ref.result()]
         ref_tstamps = [msg["tstamp"] for msg in task_ref.result()]
         tst_freqs = [msg["freq"] for msg in task_tst.result()]
@@ -233,19 +233,19 @@ def add_args(parser: ArgumentParser):
     subparser = parser.add_subparsers(dest="command", required=True)
     p = subparser.add_parser(
         "ref",
-        parents=[prs.info(), prs.nmsg(), prs.ref(), prs.ploto()],
+        parents=[prs.info(), prs.nmsg(), prs.ref(), prs.ploto(), prs.tag()],
         help="Read reference photometer",
     )
     p.set_defaults(func=cli_read_ref)
     p = subparser.add_parser(
         "test",
-        parents=[prs.info(), prs.nmsg(), prs.test(), prs.ploto()],
+        parents=[prs.info(), prs.nmsg(), prs.test(), prs.ploto(), prs.tag()],
         help="Read test photometer",
     )
     p.set_defaults(func=cli_read_test)
     p = subparser.add_parser(
         "both",
-        parents=[prs.info(), prs.nmsg(), prs.ref(), prs.test(), prs.ploto()],
+        parents=[prs.info(), prs.nmsg(), prs.ref(), prs.test(), prs.ploto(), prs.tag()],
         help="read both photometers",
     )
     p.set_defaults(func=cli_read_both)

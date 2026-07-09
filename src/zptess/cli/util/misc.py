@@ -37,7 +37,7 @@ def mag(zp: float, freq_offset: float, freq: float):
     return (float(zp) - 2.5 * math.log10(f)) if f > 0.0 else math.inf
 
 
-def log_msgs_stats(msgs: list[dict[str, Any], ...], controller: Controller, role: Role, name: str) -> None:
+def log_msgs_stats(msgs: list[dict[str, Any], ...], controller: Controller, role: Role, name: str, tag: str | None = None) -> None:
     freqs = [msg["freq"] for msg in msgs]
     mean = statistics.fmean(freqs)
     median = statistics.median_low(freqs)
@@ -46,9 +46,11 @@ def log_msgs_stats(msgs: list[dict[str, Any], ...], controller: Controller, role
     multimode = statistics.multimode(freqs)
     zp = controller.phot_info[role]["zp"]
     fo = controller.phot_info[role]["freq_offset"]
+    tag = "" if tag is None else tag
     log = logging.getLogger(role.tag())
     log.info(
-        "%-9s stats => mean freq = %.03e Hz, median = %.03e Hz, \u03c3(mean) = %.03e, \u03c3(median) = %.03e, local maxima = %s",
+        "%s%-9s stats => mean freq = %.03e Hz, median = %.03e Hz, \u03c3(mean) = %.03e, \u03c3(median) = %.03e, local maxima = %s",
+        tag,
         name,
         mean,
         median,
@@ -74,11 +76,12 @@ async def log_phot_info(controller: Controller, role: Role) -> None:
     log.info("-" * 40)
 
 
-async def log_messages(controller: Controller, role: Role, num: int | None = None) -> list[dict[str,Any]]:
+async def log_messages(controller: Controller, role: Role, num: int | None = None, tag: str | None = None) -> list[dict[str,Any]]:
     log = logging.getLogger(role.tag())
     name = controller.phot_info[role]["name"]
     zp = controller.phot_info[role]["zp"]
     fo = controller.phot_info[role]["freq_offset"]
+    tag = f"[{tag}] " if tag else ""
     # Although in this case, it doesn't matter, in general
     # async generatores may not close as expected,
     # hence the use of closing() context manager
@@ -87,7 +90,8 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
         async for role, msg in generator:
             messages.append(msg)
             log.info(
-                "%-9s [%d] T=%s, f=%0.3f Hz, mag=%0.3f @ %s, tbox=%s, tsky=%s",
+                "%s%-9s [%d] T=%s, f=%0.3f Hz, mag=%0.3f @ %s, tbox=%s, tsky=%s",
+                tag,
                 name,
                 msg.get("seq"),
                 msg.get("tstamp"),
@@ -97,7 +101,7 @@ async def log_messages(controller: Controller, role: Role, num: int | None = Non
                 msg["tamb"],
                 msg["tsky"],
             )
-    log_msgs_stats(messages, controller, role, name)
+    log_msgs_stats(messages, controller, role, name, tag)
     return messages
 
 

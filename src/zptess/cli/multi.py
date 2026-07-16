@@ -18,7 +18,7 @@ from collections import defaultdict
 from logging import Logger
 from argparse import Namespace, ArgumentParser
 from datetime import datetime, timezone
-from typing import Tuple
+from typing import Tuple, Dict
 
 # -------------------
 # Third party imports
@@ -34,13 +34,12 @@ from lica.asyncio.cli import execute
 
 from .. import __version__
 from .util import parser as prs
-from ..dao import engine
 
 # ----------------
 # Module constants
 # ----------------
 
-DESCRIPTION = "TESS-W Multi photometer reader tool"
+DESCRIPTION = "TESS-W UDP Multicast photometers reader tool"
 
 # -----------------------
 # Module global variables
@@ -48,7 +47,6 @@ DESCRIPTION = "TESS-W Multi photometer reader tool"
 
 # get the module logger
 log = logging.getLogger(__name__.split(".")[-1])
-controller = None
 
 # ------------------
 # Auxiliar functions
@@ -147,6 +145,7 @@ class UdpProtocol(asyncio.DatagramProtocol):
 
 @dataclass
 class Stats:
+    tag: str # either Mag or Freq
     N: int
     mean: float
     median: float
@@ -154,29 +153,37 @@ class Stats:
     mode: float
 
     def __repr__(self) -> str:
-        return f"N={self.N:03d}, mean={self.mean:.2f}, \u03c3={self.stdev:.3f}, median={self.median:.2f}, mode={self.mode:.2f}"
-
+        return f"{self.tag}: N={self.N:03d}, mean={self.mean:.3f}, \u03c3={self.stdev:.3f}, median={self.median:.3f}, mode={self.mode:.3f}"
 
 # -------------------
 # Auxiliary functions
 # -------------------
 
 
-def stats_by_name(hashable) -> dict[str, Stats]:
-    stats = dict()
+def stats_by_name(hashable) -> Tuple[Dict[str, Stats], Dict[str, Stats]]:
+    stats_mag = dict(); stats_freq = dict()
     for name, messages in hashable.items():
+        # In magnitudes
         values = [msg["mag"] for msg in messages]
         mean = statistics.fmean(values)
         median = statistics.median_low(values)
         stdev = statistics.stdev(values, xbar=mean)
         modes = statistics.multimode(values)
-        stats[name] = Stats(N=len(values), mean=mean, median=median, stdev=stdev, mode=modes[0])
-    return stats
+        stats_mag[name] = Stats(tag="Mag ", N=len(values), mean=mean, median=median, stdev=stdev, mode=modes[0])
+        # In frequencies
+        values = [msg["freq"] for msg in messages]
+        mean = statistics.fmean(values)
+        median = statistics.median_low(values)
+        stdev = statistics.stdev(values, xbar=mean)
+        modes = statistics.multimode(values)
+        stats_freq[name] = Stats(tag="Freq", N=len(values), mean=mean, median=median, stdev=stdev, mode=modes[0])
+
+    return stats_mag, stats_freq
 
 
 async def cli_multi(args: Namespace) -> None:
     meas_session = datetime.now(timezone.utc)
-    log.info("Session de medidas %s", meas_session.strftime("%Y-%m-%dT%H:%M:%S"))
+    log.info("Measurement session %s", meas_session.strftime("%Y-%m-%dT%H:%M:%S"))
     proto = UdpProtocol(log)
     N = args.num_messages
     messages = defaultdict(list)
@@ -186,8 +193,10 @@ async def cli_multi(args: Namespace) -> None:
         log.info("%s %s",tstamp.strftime("%H:%M:%S.%f"), msg)
         msg["tstamp"] = tstamp
         messages[msg["name"]].append(msg)
-    stats = stats_by_name(messages)
-    for name, stat in stats.items():
+    stats_mag, stats_freq = stats_by_name(messages)
+    for name, stat in stats_mag.items():
+        log.info("%8s => %s", name, stat)
+    for name, stat in stats_freq.items():
         log.info("%8s => %s", name, stat)
 
 
@@ -207,10 +216,7 @@ def add_args(parser: ArgumentParser):
 
 
 async def cli_main(args: Namespace) -> None:
-    sqa_logging(args)
     await args.func(args)
-    await engine.dispose()
-
 
 def main():
     """The main entry point specified by pyproject.toml"""

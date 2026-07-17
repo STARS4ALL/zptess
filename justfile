@@ -207,6 +207,10 @@ read which="both" N="10" strict="":
        uv run zp-read --console --trace {{which}} -N {{N}} --plot-histo
     fi
 
+# specialized read for spectral calibration
+spectral phot wave:
+    uv run zp-read --console --log-file {{phot}}.log test -N 25 --test-strict --tag {{wave}}
+
 
 # Reads several test photometers N times
 multi N="20" :

@@ -56,6 +56,7 @@ zp-write =  "zptess.cli.writer:main"
 zp-batch = "zptess.cli.batch:main"
 zp-tools = "zptess.cli.tools:main"
 zp-plot = "zptess.cli.plot:main"
+zp-spectral = "zptess.cli.log2csv:main"
 
 [build-system]
 requires = ["setuptools >= 78.1", "wheel", "setuptools_scm[toml]>=8.2"]

@@ -39,7 +39,7 @@ DESCRIPTION = "Extract aggregate values from individual log file runs"
 LOG_LINE_REGEX = re.compile(
     r"""
     ^(?P<timestamp>\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2},\d{3})      # timestamp
-    \s+\[INFO\s*\]\s+\[REF.\]\s+
+    \s+\[INFO\s*\]\s+\[.{4}\]\s+                                    # skip log level and TEST|REF.
     \[(?P<wavelength>\d+)\]\s+                                      # [350]
     (?P<name>stars\d{1,4})\s+                                       # starsNNNN
     stats\s+=>\s+
